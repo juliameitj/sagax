@@ -4,13 +4,16 @@ import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 // TOKENS — warm-dark palette, amber accent, monospace data
 // ═══════════════════════════════════════════════════════════════════════════════
 const C = {
-  bg: "#0E0D0B", surface: "#1A1816", surfaceHover: "#222019",
-  border: "#2A2620", borderStrong: "#3A362E",
-  amber: "#C8963E", amberMuted: "#C8963E1A", amberStrong: "#DAAB52",
-  steel: "#7A9CC6", steelMuted: "#7A9CC620",
-  green: "#6AAD7C", greenMuted: "#6AAD7C1A",
-  red: "#CC5F5F", redMuted: "#CC5F5F1A",
-  text: "#DDD8CE", textSec: "#908A7E", textMut: "#5E584E", textFaint: "#3E3A34",
+  bg: "#0E0D0B", surface: "#191714", surfaceHover: "#221F1A",
+  border: "#2C2822", borderStrong: "#423B32",
+  // Amber is the only brand accent. It marks the single most important thing on a screen.
+  amber: "#D9A648", amberMuted: "#D9A64818", amberStrong: "#E8B95C",
+  // Semantic only. These appear inside gameplay and diagrams, never as decoration.
+  steel: "#7FA3CC", steelMuted: "#7FA3CC20",
+  green: "#6FB582", greenMuted: "#6FB58218",
+  red: "#D46A6A", redMuted: "#D46A6A18",
+  // Warm greyscale, raised for contrast against the near-black ground.
+  text: "#EAE5DB", textSec: "#ADA598", textMut: "#8A8173", textFaint: "#6E655B",
 };
 const F = { display: "Georgia, 'Times New Roman', serif", body: "system-ui, -apple-system, sans-serif", mono: "'SF Mono', 'Cascadia Code', Consolas, monospace" };
 
@@ -19,35 +22,37 @@ const F = { display: "Georgia, 'Times New Roman', serif", body: "system-ui, -app
 // ═══════════════════════════════════════════════════════════════════════════════
 const Pill = ({ children, active, color, onClick }) => (
   <button onClick={onClick} style={{
-    padding: "5px 14px", borderRadius: "100px", fontSize: "12px", fontFamily: F.body, cursor: "pointer",
+    padding: "5px 14px", borderRadius: "100px", fontSize: "13px", fontFamily: F.body, cursor: "pointer",
     border: active ? `1.5px solid ${color || C.amber}` : `1.5px solid ${C.border}`,
     background: active ? (color || C.amber) + "18" : "transparent",
     color: active ? (color || C.amber) : C.textMut, fontWeight: active ? 500 : 400, transition: "all 0.12s",
   }}>{children}</button>
 );
 
-const Tag = ({ children, color = C.amber }) => (
+const Tag = ({ children, color }) => (
   <span style={{
-    display: "inline-block", padding: "3px 10px", borderRadius: "100px", fontSize: "10px",
-    fontFamily: F.body, letterSpacing: "0.07em", textTransform: "uppercase", fontWeight: 600,
-    color, background: color + "18", border: `1px solid ${color}30`,
+    display: "inline-block", padding: "3px 10px", borderRadius: "100px", fontSize: "12px",
+    fontFamily: F.body, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 600,
+    color: color || C.textMut,
+    background: color ? color + "16" : "transparent",
+    border: `1px solid ${color ? color + "3A" : C.border}`,
   }}>{children}</span>
 );
 
 const Label = ({ children }) => (
-  <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontFamily: F.body, fontWeight: 600, marginBottom: "10px" }}>{children}</div>
+  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontFamily: F.body, fontWeight: 600, marginBottom: "10px" }}>{children}</div>
 );
 
 const Stat = ({ label, value, color = C.text, sub = null }) => (
   <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "12px 18px" }}>
-    <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, marginBottom: "3px" }}>{label}</div>
-    <div style={{ fontSize: "22px", fontFamily: F.mono, color, fontWeight: 600 }}>{value}{sub && <span style={{ fontSize: "13px", color: C.textMut }}>{sub}</span>}</div>
+    <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, marginBottom: "3px" }}>{label}</div>
+    <div style={{ fontSize: "24px", fontFamily: F.mono, color, fontWeight: 600 }}>{value}{sub && <span style={{ fontSize: "14px", color: C.textMut }}>{sub}</span>}</div>
   </div>
 );
 
 const Btn = ({ children, onClick, color = C.amber, textColor, disabled, outline, style = {} }) => (
   <button onClick={disabled ? undefined : onClick} style={{
-    padding: "8px 18px", borderRadius: "3px", fontSize: "13px", fontFamily: F.body, fontWeight: 500,
+    padding: "8px 18px", borderRadius: "3px", fontSize: "14px", fontFamily: F.body, fontWeight: 500,
     cursor: disabled ? "default" : "pointer", transition: "all 0.12s", opacity: disabled ? 0.35 : 1,
     background: outline ? "transparent" : color, color: outline ? C.textSec : (textColor || "#111"),
     border: outline ? `1.5px solid ${C.border}` : "none", letterSpacing: "0.01em", ...style,
@@ -168,12 +173,12 @@ function PrisonersDilemma({ onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "12px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
-        <h2 style={{ margin: 0, fontSize: "20px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Prisoner's Dilemma</h2>
-        <Tag color={C.steel}>Repeated Games</Tag>
+        <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Prisoner's Dilemma</h2>
+        <Tag>Repeated Games</Tag>
       </div>
-      <p style={{ color: C.textSec, fontSize: "13.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px", fontFamily: F.body }}>
+      <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px", fontFamily: F.body }}>
         Two firms independently choose pricing. Both hold → both profit. One undercuts → they capture the market. Both undercut → margins collapse. Play {ROUNDS} rounds against six strategies.
       </p>
 
@@ -181,20 +186,20 @@ function PrisonersDilemma({ onBack }) {
       <div style={{ marginBottom: "20px" }}>
         <Label>Payoff Matrix (you, opponent){lastCell ? " · highlighted cell is the last round" : ""}</Label>
         <div style={{ display: "inline-block", border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
-          <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12.5px" }}>
+          <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13.5px" }}>
             <thead><tr>
-              <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontWeight: 400, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, fontFamily: F.body, fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase" }}>You \ Them</th>
-              <th style={{ padding: "7px 16px", background: C.surface, color: C.green, fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, fontSize: "11px" }}>Hold Price</th>
-              <th style={{ padding: "7px 16px", background: C.surface, color: C.red, fontWeight: 500, borderBottom: `1px solid ${C.border}`, fontSize: "11px" }}>Undercut</th>
+              <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontWeight: 400, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, fontFamily: F.body, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase" }}>You \ Them</th>
+              <th style={{ padding: "7px 16px", background: C.surface, color: C.green, fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, fontSize: "12px" }}>Hold Price</th>
+              <th style={{ padding: "7px 16px", background: C.surface, color: C.red, fontWeight: 500, borderBottom: `1px solid ${C.border}`, fontSize: "12px" }}>Undercut</th>
             </tr></thead>
             <tbody>
               <tr>
-                <td style={{ padding: "7px 14px", borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, color: C.green, fontWeight: 500, fontSize: "11px" }}>Hold Price</td>
+                <td style={{ padding: "7px 14px", borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, color: C.green, fontWeight: 500, fontSize: "12px" }}>Hold Price</td>
                 <td title={CELL_HELP.CC} style={{ ...cell("CC", C.greenMuted), borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>3, 3</td>
                 <td title={CELL_HELP.CD} style={{ ...cell("CD", C.redMuted), borderBottom: `1px solid ${C.border}` }}>0, 5</td>
               </tr>
               <tr>
-                <td style={{ padding: "7px 14px", borderRight: `1px solid ${C.border}`, color: C.red, fontWeight: 500, fontSize: "11px" }}>Undercut</td>
+                <td style={{ padding: "7px 14px", borderRight: `1px solid ${C.border}`, color: C.red, fontWeight: 500, fontSize: "12px" }}>Undercut</td>
                 <td title={CELL_HELP.DC} style={{ ...cell("DC", "transparent"), borderRight: `1px solid ${C.border}` }}>5, 0</td>
                 <td title={CELL_HELP.DD} style={cell("DD", "#CC5F5F0C")}>1, 1</td>
               </tr>
@@ -211,7 +216,7 @@ function PrisonersDilemma({ onBack }) {
             <Pill key={id} active={opp === id} color={st.c} onClick={() => { setOpp(id); setHist([]); }}>{st.n}</Pill>
           ))}
         </div>
-        <p style={{ fontSize: "12px", color: C.textMut, margin: "7px 0 0" }}>
+        <p style={{ fontSize: "13px", color: C.textMut, margin: "7px 0 0" }}>
           <span style={{ fontFamily: F.mono, color: C.textFaint }}>{s.tech}</span>
           <span style={{ margin: "0 7px", color: C.textFaint }}>·</span>
           <span style={{ fontStyle: "italic" }}>{s.d}</span>
@@ -239,18 +244,18 @@ function PrisonersDilemma({ onBack }) {
       {/* Running commentary */}
       {note && !over && (
         <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "18px", padding: "9px 14px", background: C.surface, borderLeft: `2px solid ${note.c}`, borderRadius: "2px" }}>
-          <span style={{ color: note.c, fontFamily: F.mono, fontSize: "12px", flexShrink: 0 }}>&rsaquo;</span>
-          <span style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.5 }}>{note.t}</span>
+          <span style={{ color: note.c, fontFamily: F.mono, fontSize: "13px", flexShrink: 0 }}>&rsaquo;</span>
+          <span style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6 }}>{note.t}</span>
         </div>
       )}
 
       {/* Insight */}
       {over && (
         <div style={{ background: scores.p > scores.o ? C.greenMuted : scores.p < scores.o ? C.redMuted : C.amberMuted, border: `1px solid ${scores.p > scores.o ? C.green : scores.p < scores.o ? C.red : C.amber}30`, borderRadius: "3px", padding: "14px 18px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "14px", color: C.text, fontFamily: F.body, fontWeight: 500, marginBottom: "6px" }}>
+          <div style={{ fontSize: "15px", color: C.text, fontFamily: F.body, fontWeight: 500, marginBottom: "6px" }}>
             {scores.p > scores.o ? "You won." : scores.p < scores.o ? `${s.n} won.` : "Draw."}
           </div>
-          <div style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.65 }}>
+          <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65 }}>
             {INSIGHTS[opp](scores.p >= scores.o, hist.some(r => r.p === "D"))}
           </div>
         </div>
@@ -263,10 +268,10 @@ function PrisonersDilemma({ onBack }) {
         <div>
           <Label>History</Label>
           <div style={{ maxHeight: "200px", overflowY: "auto", border: `1px solid ${C.border}`, borderRadius: "3px" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ position: "sticky", top: 0, background: C.surface }}>
                 {["#", "You", "Them", "+You", "+Them"].map(h => (
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -332,12 +337,12 @@ function SealedBidAuction({ onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "12px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
-        <h2 style={{ margin: 0, fontSize: "20px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sealed-Bid Auction</h2>
-        <Tag color={C.amber}>Winner's Curse</Tag>
+        <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sealed-Bid Auction</h2>
+        <Tag>Winner's Curse</Tag>
       </div>
-      <p style={{ color: C.textSec, fontSize: "13.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px" }}>
+      <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px" }}>
         An asset has an unknown true value. You receive a noisy private estimate and submit a sealed bid against {numAI} competitors. Highest bid wins and pays their bid. The winner is usually the one who overestimated the most.
       </p>
 
@@ -349,22 +354,22 @@ function SealedBidAuction({ onBack }) {
         <div style={{ display: "flex", gap: "6px" }}>
           {[3, 5, 8, 12].map(n => <Pill key={n} active={numAI === n} onClick={() => { setNumAI(n); resetAll(); }}>{n}</Pill>)}
         </div>
-        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "5px 0 0", fontStyle: "italic" }}>More bidders amplifies the curse. The maximum overestimate grows with the field.</p>
+        <p style={{ fontSize: "12.5px", color: C.textMut, margin: "5px 0 0", fontStyle: "italic" }}>More bidders amplifies the curse. The maximum overestimate grows with the field.</p>
       </div>
 
       {!results && (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Your Signal</div>
-              <div style={{ fontSize: "36px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{round.sig}</div>
-              <div style={{ fontSize: "11px", color: C.textMut, marginTop: "2px" }}>True value = signal ± 30</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Your Signal</div>
+              <div style={{ fontSize: "38px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{round.sig}</div>
+              <div style={{ fontSize: "12px", color: C.textMut, marginTop: "2px" }}>True value = signal ± 30</div>
             </div>
             <div style={{ flex: 1, minWidth: "170px" }}>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>Your Bid</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>Your Bid</div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input type="number" value={bid} onChange={e => setBid(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} placeholder="Enter bid..."
-                  style={{ flex: 1, padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "16px", outline: "none", maxWidth: "150px" }} />
+                  style={{ flex: 1, padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "17px", outline: "none", maxWidth: "150px" }} />
                 <Btn onClick={submit} disabled={!bid || isNaN(parseFloat(bid))}>Submit</Btn>
               </div>
             </div>
@@ -385,10 +390,10 @@ function SealedBidAuction({ onBack }) {
               const isYou = b.name === "You";
               const over = b.bid > results.tv;
               return (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "5px 10px", borderRadius: "2px", background: isYou ? (i === 0 ? (results.profit >= 0 ? C.greenMuted : C.redMuted) : C.steelMuted) : "transparent", fontFamily: F.mono, fontSize: "12px" }}>
-                  <span style={{ width: "16px", color: i === 0 ? C.amber : C.textMut, fontSize: "10px", textAlign: "center" }}>{i === 0 ? "★" : ""}</span>
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "5px 10px", borderRadius: "2px", background: isYou ? (i === 0 ? (results.profit >= 0 ? C.greenMuted : C.redMuted) : C.steelMuted) : "transparent", fontFamily: F.mono, fontSize: "13px" }}>
+                  <span style={{ width: "16px", color: i === 0 ? C.amber : C.textMut, fontSize: "11px", textAlign: "center" }}>{i === 0 ? "★" : ""}</span>
                   <span style={{ width: "70px", color: isYou ? C.steel : C.textSec, fontWeight: isYou ? 600 : 400 }}>{b.name}</span>
-                  <span style={{ width: "50px", color: C.textMut, fontSize: "11px" }}>sig {b.sig}</span>
+                  <span style={{ width: "50px", color: C.textMut, fontSize: "12px" }}>sig {b.sig}</span>
                   <span style={{ width: "55px", color: over ? C.red : C.green }}>bid {Math.round(b.bid)}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ height: "5px", width: `${Math.min(100, (b.bid / (results.tv * 1.5)) * 100)}%`, background: over ? C.red + "50" : C.green + "50", borderRadius: "3px", minWidth: "3px" }} />
@@ -398,7 +403,7 @@ function SealedBidAuction({ onBack }) {
             })}
           </div>
           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "13px 16px", marginBottom: "14px" }}>
-            <div style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.65 }}>
+            <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65 }}>
               {results.won && results.profit < 0 && `Winner's curse. You paid ${Math.round(results.playerBid)} for an asset worth ${results.tv}, losing ${Math.abs(Math.round(results.profit))}. Winning a common-value auction is Bayesian bad news: your signal was the highest overestimate. With ${numAI + 1} bidders, bid ~${Math.round(68 - numAI)}% of your signal to compensate.`}
               {results.won && results.profit >= 0 && `Solid bid. You paid ${Math.round(results.playerBid)} for an asset worth ${results.tv}. Bid as if your signal is the highest in the room, because if you win, it was.`}
               {!results.won && `You lost. The winner bid ${Math.round(results.all[0].bid)} for an asset worth ${results.tv}${results.all[0].bid > results.tv ? ` and overpaid by ${Math.round(results.all[0].bid) - results.tv}. The curse strikes.` : `.`} Losing a common-value auction is often the right outcome.`}
@@ -436,12 +441,12 @@ function SealedBidAuction({ onBack }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 const SimHeader = ({ onBack, title, tag, tagColor, children }) => (
   <>
-    <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "12px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
+    <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
     <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
-      <h2 style={{ margin: 0, fontSize: "20px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>{title}</h2>
+      <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>{title}</h2>
       <Tag color={tagColor}>{tag}</Tag>
     </div>
-    <p style={{ color: C.textSec, fontSize: "13.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px" }}>{children}</p>
+    <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px" }}>{children}</p>
   </>
 );
 
@@ -450,8 +455,8 @@ const Insight = ({ tone = "neutral", title, children }) => {
   const [bg, bd] = map[tone];
   return (
     <div style={{ background: bg, border: `1px solid ${bd}30`, borderRadius: "3px", padding: "14px 18px", marginBottom: "18px" }}>
-      {title && <div style={{ fontSize: "14px", color: C.text, fontWeight: 500, marginBottom: "6px" }}>{title}</div>}
-      <div style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.65 }}>{children}</div>
+      {title && <div style={{ fontSize: "15px", color: C.text, fontWeight: 500, marginBottom: "6px" }}>{title}</div>}
+      <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65 }}>{children}</div>
     </div>
   );
 };
@@ -459,12 +464,12 @@ const Insight = ({ tone = "neutral", title, children }) => {
 const Slider = ({ label, value, onChange, min, max, step = 1, suffix = "", hint }) => (
   <div style={{ marginBottom: "14px" }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
-      <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>{label}</span>
-      <span style={{ fontSize: "14px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{value}{suffix}</span>
+      <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: "15px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{value}{suffix}</span>
     </div>
     <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))}
       style={{ width: "100%", maxWidth: "300px", accentColor: C.amber, cursor: "pointer" }} />
-    {hint && <div style={{ fontSize: "11px", color: C.textMut, fontStyle: "italic", marginTop: "3px" }}>{hint}</div>}
+    {hint && <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic", marginTop: "3px" }}>{hint}</div>}
   </div>
 );
 
@@ -480,6 +485,7 @@ const SLUGS = {
   stag: "stag-hunt", attrition: "war-of-attrition", holdup: "hold-up-problem",
   mechanism: "mechanism-design", realopt: "real-options", schelling: "focal-points",
   cheaptalk: "cheap-talk",
+  terms: "terms",
 };
 const SLUG_TO_ID = Object.fromEntries(Object.entries(SLUGS).map(([k, v]) => [v, k]));
 
@@ -498,13 +504,13 @@ function pageToPath(page) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const CATS = {
-  strategic: { label: "Strategic Interaction", color: C.steel, blurb: "Who moves, who responds, and what the response costs." },
-  auctions:  { label: "Auctions & Pricing",    color: C.amber, blurb: "What to bid, and why winning is often the bad outcome." },
-  info:      { label: "Information & Signaling", color: "#E09050", blurb: "Who knows what, who can prove it, and how that distorts behaviour." },
-  coord:     { label: "Coordination & Herding", color: C.red, blurb: "Failures that happen without anyone acting against you." },
-  behave:    { label: "Behavioural",           color: "#D07070", blurb: "Where real people reliably depart from the theory." },
-  commit:    { label: "Commitment & Attrition", color: "#B080D0", blurb: "What you have sunk, and what that buys you." },
-  meta:      { label: "Design & Meta-Strategy", color: "#70B0C0", blurb: "Changing the rules instead of playing them better." },
+  strategic: { label: "Strategic Interaction", blurb: "Who moves, who responds, and what the response costs." },
+  auctions:  { label: "Auctions & Pricing",    blurb: "What to bid, and why winning is often the bad outcome." },
+  info:      { label: "Information & Signaling", blurb: "Who knows what, who can prove it, and how that distorts behaviour." },
+  coord:     { label: "Coordination & Herding", blurb: "Failures that happen without anyone acting against you." },
+  behave:    { label: "Behavioural",           blurb: "Where real people reliably depart from the theory." },
+  commit:    { label: "Commitment & Attrition", blurb: "What you have sunk, and what that buys you." },
+  meta:      { label: "Design & Meta-Strategy", blurb: "Changing the rules instead of playing them better." },
 };
 
 const MODELS = {
@@ -753,17 +759,17 @@ const MODELS = {
 
 const Goal = ({ children }) => (
   <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "18px", padding: "10px 14px", background: C.surface, borderLeft: `2px solid ${C.amber}`, borderRadius: "2px", flexWrap: "wrap" }}>
-    <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.amber, fontWeight: 600, whiteSpace: "nowrap" }}>Your goal</span>
-    <span style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.5 }}>{children}</span>
+    <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.amber, fontWeight: 600, whiteSpace: "nowrap" }}>Your goal</span>
+    <span style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6 }}>{children}</span>
   </div>
 );
 
 const TryThis = ({ items }) => (
   <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderLeft: `2px solid ${C.steel}`, borderRadius: "2px", padding: "14px 18px", marginBottom: "18px" }}>
-    <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "9px" }}>Try this next</div>
+    <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "9px" }}>Try this next</div>
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       {items.map((t, i) => (
-        <div key={i} style={{ display: "flex", gap: "9px", fontSize: "12.5px", color: C.textSec, lineHeight: 1.5 }}>
+        <div key={i} style={{ display: "flex", gap: "9px", fontSize: "13.5px", color: C.textSec, lineHeight: 1.6 }}>
           <span style={{ color: C.textFaint, fontFamily: F.mono, flexShrink: 0 }}>&rarr;</span>
           <span>{t}</span>
         </div>
@@ -847,7 +853,7 @@ function NashBargaining({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Nash Bargaining" tag="Negotiation" tagColor={C.green}>
+      <SimHeader onBack={onBack} title="Nash Bargaining" tag="Negotiation" tagColor={undefined}>
         You and a counterparty split 100 points. Each round you fail to agree, the total shrinks by the discount factor. If nobody agrees within {MAX_ROUNDS} rounds, you each fall back to your outside option (BATNA).
       </SimHeader>
 
@@ -864,14 +870,14 @@ function NashBargaining({ onBack }) {
           <Label>Benchmarks</Label>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "10px 14px" }}>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut }}>Nash Solution</div>
-              <div style={{ fontSize: "18px", fontFamily: F.mono, color: C.textSec, fontWeight: 600 }}>{nbs}</div>
-              <div style={{ fontSize: "11px", color: C.textMut, fontStyle: "italic" }}>Split the surplus evenly above both BATNAs.</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut }}>Nash Solution</div>
+              <div style={{ fontSize: "19px", fontFamily: F.mono, color: C.textSec, fontWeight: 600 }}>{nbs}</div>
+              <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic" }}>Split the surplus evenly above both BATNAs.</div>
             </div>
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "10px 14px" }}>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut }}>Rubinstein (first mover)</div>
-              <div style={{ fontSize: "18px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{rubinstein}</div>
-              <div style={{ fontSize: "11px", color: C.textMut, fontStyle: "italic" }}>Moving first is worth more when patience is low.</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut }}>Rubinstein (first mover)</div>
+              <div style={{ fontSize: "19px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{rubinstein}</div>
+              <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic" }}>Moving first is worth more when patience is low.</div>
             </div>
           </div>
         </div>
@@ -881,16 +887,16 @@ function NashBargaining({ onBack }) {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Pie This Round</div>
-              <div style={{ fontSize: "34px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{pie}</div>
-              <div style={{ fontSize: "11px", color: C.textMut, marginTop: "2px" }}>Round {round} of {MAX_ROUNDS}</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Pie This Round</div>
+              <div style={{ fontSize: "36px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{pie}</div>
+              <div style={{ fontSize: "12px", color: C.textMut, marginTop: "2px" }}>Round {round} of {MAX_ROUNDS}</div>
             </div>
             <div style={{ flex: 1, minWidth: "180px" }}>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>You Keep</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>You Keep</div>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <input type="number" value={offer} onChange={e => setOffer(e.target.value)} onKeyDown={e => e.key === "Enter" && propose()} placeholder="0"
-                  style={{ width: "110px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "16px", outline: "none" }} />
-                <span style={{ fontSize: "12px", color: C.textMut, fontFamily: F.mono }}>
+                  style={{ width: "110px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "17px", outline: "none" }} />
+                <span style={{ fontSize: "13px", color: C.textMut, fontFamily: F.mono }}>
                   they get {offer && !isNaN(parseFloat(offer)) ? Math.max(0, pie - parseFloat(offer)) : "-"}
                 </span>
                 <Btn onClick={propose} disabled={!offer || isNaN(parseFloat(offer))}>Offer</Btn>
@@ -911,7 +917,7 @@ function NashBargaining({ onBack }) {
               <Btn onClick={() => { setOffer(""); setCountering(true); }} outline>Counter</Btn>
             </div>
           </div>
-          <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "10px", fontStyle: "italic" }}>
+          <div style={{ fontSize: "12.5px", color: C.textMut, marginTop: "10px", fontStyle: "italic" }}>
             Rejecting shrinks the pie again. Delay is costly for both sides.
           </div>
         </div>
@@ -947,10 +953,10 @@ function NashBargaining({ onBack }) {
         <div>
           <Label>Offer History</Label>
           <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ background: C.surface }}>
                 {["Rnd", "By", "You", "Them", "Result"].map(h => (
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1012,7 +1018,7 @@ function BankRun({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Bank Run" tag="Coordination Crisis" tagColor={C.red}>
+      <SimHeader onBack={onBack} title="Bank Run" tag="Coordination Crisis" tagColor={undefined}>
         You are one of {n} depositors. The bank has lent out most of its deposits, so it can only pay {failThreshold} people on demand. Wait and the bank pays interest. Withdraw and you get your money back with no interest. If more than {failThreshold} people withdraw, the bank fails and late withdrawers lose most of their deposit.
       </SimHeader>
 
@@ -1039,20 +1045,20 @@ function BankRun({ onBack }) {
         <div style={{ flex: 1, minWidth: "200px" }}>
           <Label>Payoff Structure</Label>
           <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden", display: "inline-block" }}>
-            <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+            <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr>
-                <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.body, fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Your move</th>
-                <th style={{ padding: "7px 14px", background: C.surface, color: C.green, fontSize: "11px", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Bank holds</th>
-                <th style={{ padding: "7px 14px", background: C.surface, color: C.red, fontSize: "11px", fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>Bank fails</th>
+                <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.body, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Your move</th>
+                <th style={{ padding: "7px 14px", background: C.surface, color: C.green, fontSize: "12px", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Bank holds</th>
+                <th style={{ padding: "7px 14px", background: C.surface, color: C.red, fontSize: "12px", fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>Bank fails</th>
               </tr></thead>
               <tbody>
                 <tr>
-                  <td style={{ padding: "7px 14px", color: C.green, fontSize: "11px", borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>Wait</td>
+                  <td style={{ padding: "7px 14px", color: C.green, fontSize: "12px", borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>Wait</td>
                   <td style={{ padding: "8px 14px", textAlign: "center", background: C.greenMuted, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>120</td>
                   <td style={{ padding: "8px 14px", textAlign: "center", background: C.redMuted, borderBottom: `1px solid ${C.border}` }}>{INS[insurance]}</td>
                 </tr>
                 <tr>
-                  <td style={{ padding: "7px 14px", color: C.red, fontSize: "11px", borderRight: `1px solid ${C.border}` }}>Withdraw</td>
+                  <td style={{ padding: "7px 14px", color: C.red, fontSize: "12px", borderRight: `1px solid ${C.border}` }}>Withdraw</td>
                   <td style={{ padding: "8px 14px", textAlign: "center", borderRight: `1px solid ${C.border}` }}>100</td>
                   <td style={{ padding: "8px 14px", textAlign: "center" }}>~{Math.max(INS[insurance], 60)}</td>
                 </tr>
@@ -1083,18 +1089,18 @@ function BankRun({ onBack }) {
               width: "34px", height: "34px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center",
               background: result.myMove === "withdraw" ? C.redMuted : C.greenMuted,
               border: `1.5px solid ${result.myMove === "withdraw" ? C.red : C.green}`,
-              fontSize: "9px", fontFamily: F.body, color: result.myMove === "withdraw" ? C.red : C.green, fontWeight: 600,
+              fontSize: "10px", fontFamily: F.body, color: result.myMove === "withdraw" ? C.red : C.green, fontWeight: 600,
             }}>YOU</div>
             {result.others.map((w, i) => (
               <div key={i} style={{
                 width: "34px", height: "34px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center",
                 background: w ? C.redMuted : C.greenMuted,
                 border: `1px solid ${w ? C.red : C.green}40`,
-                fontSize: "13px", color: w ? C.red : C.green, fontFamily: F.mono,
+                fontSize: "14px", color: w ? C.red : C.green, fontFamily: F.mono,
               }}>{w ? "↓" : "•"}</div>
             ))}
           </div>
-          <div style={{ fontSize: "11px", color: C.textMut, marginBottom: "16px", fontFamily: F.body }}>
+          <div style={{ fontSize: "12px", color: C.textMut, marginBottom: "16px", fontFamily: F.body }}>
             ↓ withdrew · • waited · Bank fails above {result.failThreshold} withdrawals
           </div>
 
@@ -1179,7 +1185,7 @@ function BeautyContest({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Beauty Contest" tag="Second-Order Thinking" tagColor="#B080D0">
+      <SimHeader onBack={onBack} title="Beauty Contest" tag="Second-Order Thinking" tagColor={undefined}>
         Pick a number between 0 and 100. The winner is whoever comes closest to two-thirds of the average guess across all {n} players. Keynes used this to describe markets: you are not picking the best asset, you are picking what everyone else will pick.
       </SimHeader>
 
@@ -1204,8 +1210,8 @@ function BeautyContest({ onBack }) {
             ["Nash", "Everyone reasons infinitely. Guesses 0."],
           ].map(([l, d], i) => (
             <div key={l} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "8px 12px", flex: "1 1 130px" }}>
-              <div style={{ fontSize: "11px", color: i === 4 ? C.amber : C.textSec, fontWeight: 500, marginBottom: "2px" }}>{l}</div>
-              <div style={{ fontSize: "10.5px", color: C.textMut, lineHeight: 1.4 }}>{d}</div>
+              <div style={{ fontSize: "12px", color: i === 4 ? C.amber : C.textSec, fontWeight: 500, marginBottom: "2px" }}>{l}</div>
+              <div style={{ fontSize: "11.5px", color: C.textMut, lineHeight: 1.4 }}>{d}</div>
             </div>
           ))}
         </div>
@@ -1216,11 +1222,11 @@ function BeautyContest({ onBack }) {
           <Label>Your Guess (0–100)</Label>
           <div style={{ display: "flex", gap: "8px" }}>
             <input type="number" value={guess} onChange={e => setGuess(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} placeholder="0–100"
-              style={{ width: "130px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "16px", outline: "none" }} />
+              style={{ width: "130px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "17px", outline: "none" }} />
             <Btn onClick={submit} disabled={!guess || isNaN(parseFloat(guess))}>Submit</Btn>
           </div>
           {history.length > 0 && (
-            <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "10px", fontStyle: "italic" }}>
+            <div style={{ fontSize: "12.5px", color: C.textMut, marginTop: "10px", fontStyle: "italic" }}>
               Last round the target was {history[history.length - 1].target}. The other players saw it too.
             </div>
           )}
@@ -1246,11 +1252,11 @@ function BeautyContest({ onBack }) {
               }}>{p.you ? "▼ YOU" : "•"}</div>
             ))}
             <div style={{ position: "absolute", left: `${result.target}%`, top: 0, bottom: 0, width: "2px", background: C.amber }} />
-            <div style={{ position: "absolute", left: `${result.target}%`, bottom: "-1px", transform: "translateX(-50%)", fontSize: "9px", color: C.amber, fontFamily: F.mono, background: C.surface, padding: "0 3px" }}>
+            <div style={{ position: "absolute", left: `${result.target}%`, bottom: "-1px", transform: "translateX(-50%)", fontSize: "10px", color: C.amber, fontFamily: F.mono, background: C.surface, padding: "0 3px" }}>
               {result.target}
             </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: C.textFaint, fontFamily: F.mono, marginBottom: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: C.textFaint, fontFamily: F.mono, marginBottom: "16px" }}>
             <span>0</span><span>50</span><span>100</span>
           </div>
 
@@ -1283,7 +1289,7 @@ function BeautyContest({ onBack }) {
             {history.map(h => (
               <div key={h.r} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
                 <div style={{ width: "100%", maxWidth: "26px", height: `${Math.max(3, (h.target / 50) * 55)}px`, background: C.amber + "70", borderRadius: "2px" }} />
-                <span style={{ fontSize: "9px", color: C.textMut, fontFamily: F.mono }}>{h.target}</span>
+                <span style={{ fontSize: "10px", color: C.textMut, fontFamily: F.mono }}>{h.target}</span>
               </div>
             ))}
           </div>
@@ -1337,7 +1343,7 @@ function JobMarketSignaling({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Job Market Signaling" tag="Information" tagColor="#E09050">
+      <SimHeader onBack={onBack} title="Job Market Signaling" tag="Costly Signals" tagColor={undefined}>
         You are a worker with private knowledge of your own ability. Education costs you money and adds nothing to your productivity. Employers cannot see your ability, only your education, and they pay {WAGE_HI} above the threshold and {WAGE_LO} below it. The question is whether education can separate the two types when it teaches nobody anything.
       </SimHeader>
 
@@ -1354,10 +1360,10 @@ function JobMarketSignaling({ onBack }) {
         <div style={{ flex: 1, minWidth: "230px" }}>
           <Label>Equilibrium Check</Label>
           <div style={{ background: separates ? C.greenMuted : C.redMuted, border: `1px solid ${separates ? C.green : C.red}30`, borderRadius: "3px", padding: "12px 16px" }}>
-            <div style={{ fontSize: "13px", color: separates ? C.green : C.red, fontWeight: 500, marginBottom: "5px" }}>
+            <div style={{ fontSize: "14px", color: separates ? C.green : C.red, fontWeight: 500, marginBottom: "5px" }}>
               {separates ? "Separating equilibrium" : threshold <= lowBreakeven ? "Pooling equilibrium" : "Nobody signals"}
             </div>
-            <div style={{ fontSize: "11.5px", color: C.textSec, lineHeight: 1.55, fontFamily: F.mono }}>
+            <div style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.65, fontFamily: F.mono }}>
               Low type mimics below {lowBreakeven.toFixed(1)} yrs<br />
               High type signals below {highBreakeven.toFixed(1)} yrs<br />
               Threshold set at {threshold} yrs
@@ -1369,9 +1375,9 @@ function JobMarketSignaling({ onBack }) {
       {!result && (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-            <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>Your Type</span>
+            <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>Your Type</span>
             <Tag color={myType === "high" ? C.green : C.red}>{myType === "high" ? "High Ability" : "Low Ability"}</Tag>
-            <span style={{ fontSize: "11.5px", color: C.textMut, fontFamily: F.mono }}>education costs you {myCost.toFixed(1)}/yr</span>
+            <span style={{ fontSize: "12.5px", color: C.textMut, fontFamily: F.mono }}>education costs you {myCost.toFixed(1)}/yr</span>
           </div>
           <Slider label="Years of education" value={education} onChange={setEducation} min={0} max={12} step={0.5}
             hint={`Total cost: ${(education * myCost).toFixed(1)} · Wage you would be offered: ${education >= threshold ? WAGE_HI : WAGE_LO}`} />
@@ -1416,10 +1422,10 @@ function JobMarketSignaling({ onBack }) {
         <div>
           <Label>History · {history.length} workers</Label>
           <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden", marginBottom: "10px" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ background: C.surface }}>
                 {["#", "Type", "Educ", "Wage", "Net"].map(h => (
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1490,8 +1496,8 @@ function EntryDeterrence({ onBack }) {
     const g = !enters ? MONOPOLY : cap === "high" ? WARRED : DUOPOLY;
     return (
       <div style={{ flex: 1, minWidth: "180px", background: C.surface, border: `1px solid ${invested === cap ? C.amber : C.border}`, borderRadius: "3px", padding: "14px" }}>
-        <div style={{ fontSize: "12px", color: C.text, fontWeight: 500, marginBottom: "8px" }}>{label}</div>
-        <div style={{ fontSize: "11px", color: C.textMut, fontFamily: F.mono, lineHeight: 1.7 }}>
+        <div style={{ fontSize: "13px", color: C.text, fontWeight: 500, marginBottom: "8px" }}>{label}</div>
+        <div style={{ fontSize: "12px", color: C.textMut, fontFamily: F.mono, lineHeight: 1.7 }}>
           Investment cost: −{ic}<br />
           Entrant would: <span style={{ color: enters ? C.red : C.green }}>{enters ? "enter" : "stay out"}</span><br />
           Your gross: {g}<br />
@@ -1503,7 +1509,7 @@ function EntryDeterrence({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Entry Deterrence" tag="Competitive Moats" tagColor="#70B0C0">
+      <SimHeader onBack={onBack} title="Entry Deterrence" tag="Competitive Moats" tagColor={undefined}>
         You are the incumbent in a monopoly worth {MONOPOLY}. A potential entrant is watching. You can invest {INVEST_COST} in excess capacity, which is only worth building if it convinces them to stay out. They observe your choice before deciding. A threat only works when carrying it out is in your interest.
       </SimHeader>
 
@@ -1516,7 +1522,7 @@ function EntryDeterrence({ onBack }) {
           {[["weak", "Weak (entry costs 35)"], ["strong", "Strong (entry costs 5)"]].map(([k, l]) =>
             <Pill key={k} active={entrantStrength === k} color={k === "strong" ? C.red : C.green} onClick={() => { setEntrantStrength(k); reset(); }}>{l}</Pill>)}
         </div>
-        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "6px 0 0", fontStyle: "italic" }}>
+        <p style={{ fontSize: "12.5px", color: C.textMut, margin: "6px 0 0", fontStyle: "italic" }}>
           A strong entrant has low costs and can survive a price war. A weak one cannot.
         </p>
       </div>
@@ -1624,7 +1630,7 @@ function UltimatumGame({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Ultimatum Game" tag="Behavioral Anomalies" tagColor="#D07070">
+      <SimHeader onBack={onBack} title="Ultimatum Game" tag="Fairness Constraint" tagColor={undefined}>
         You have 100 points to divide. Offer the responder any amount. If they accept, you both keep your shares. If they reject, you both get nothing. Standard theory says offer 1 and they should take it. Twenty years of experiments say otherwise.
       </SimHeader>
 
@@ -1638,7 +1644,7 @@ function UltimatumGame({ onBack }) {
             <Pill key={k} active={responder === k} color={k === "rational" ? C.steel : k === "proud" ? C.red : C.amber}
               onClick={() => { setResponder(k); reset(); }}>{p.label}</Pill>)}
         </div>
-        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "6px 0 0", fontStyle: "italic" }}>{PROFILES[responder].desc}</p>
+        <p style={{ fontSize: "12.5px", color: C.textMut, margin: "6px 0 0", fontStyle: "italic" }}>{PROFILES[responder].desc}</p>
       </div>
 
       {!result && (
@@ -1646,10 +1652,10 @@ function UltimatumGame({ onBack }) {
           <Slider label="You offer them" value={offer} onChange={setOffer} min={0} max={100}
             hint={`You would keep ${100 - offer}.`} />
           <div style={{ display: "flex", height: "30px", borderRadius: "3px", overflow: "hidden", border: `1px solid ${C.border}`, marginBottom: "16px", maxWidth: "300px" }}>
-            <div style={{ width: `${100 - offer}%`, background: C.amberMuted, borderRight: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontFamily: F.mono, color: C.amber }}>
+            <div style={{ width: `${100 - offer}%`, background: C.amberMuted, borderRight: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontFamily: F.mono, color: C.amber }}>
               {100 - offer > 12 ? `you ${100 - offer}` : ""}
             </div>
-            <div style={{ width: `${offer}%`, background: C.steelMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontFamily: F.mono, color: C.steel }}>
+            <div style={{ width: `${offer}%`, background: C.steelMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontFamily: F.mono, color: C.steel }}>
               {offer > 12 ? `them ${offer}` : ""}
             </div>
           </div>
@@ -1699,10 +1705,10 @@ function UltimatumGame({ onBack }) {
             <Stat label="Rejections" value={`${rejects}/${history.length}`} color={rejects > 0 ? C.red : C.green} />
           </div>
           <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ background: C.surface }}>
                 {["#", "Offered", "Result", "You Kept"].map(h => (
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1735,23 +1741,23 @@ function ModelBrief({ id }) {
   return (
     <div style={{ marginTop: "40px", paddingTop: "28px", borderTop: `1px solid ${C.border}` }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
-        <span style={{ fontFamily: F.mono, fontSize: "11px", color: C.textFaint }}>MODEL {String(m.n).padStart(2, "0")}</span>
-        <Tag color={cat.color}>{cat.label}</Tag>
+        <span style={{ fontFamily: F.mono, fontSize: "12px", color: C.textFaint }}>MODEL {String(m.n).padStart(2, "0")}</span>
+        <Tag>{cat.label}</Tag>
       </div>
 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderLeft: `2px solid ${C.amber}`, borderRadius: "2px", padding: "18px 20px", marginBottom: "14px" }}>
-        <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.amber, fontWeight: 600, marginBottom: "9px" }}>Where this shows up in your business</div>
-        <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.7, margin: 0 }}>{m.own}</p>
+        <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.amber, fontWeight: 600, marginBottom: "9px" }}>Where this shows up in your business</div>
+        <p style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.7, margin: 0 }}>{m.own}</p>
       </div>
 
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "22px" }}>
         <div style={{ flex: "1 1 260px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
-          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Key insight</div>
-          <p style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.6, margin: 0 }}>{m.key}</p>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Key insight</div>
+          <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6, margin: 0 }}>{m.key}</p>
         </div>
         <div style={{ flex: "1 1 260px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
-          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "7px" }}>Ask yourself</div>
-          <p style={{ fontSize: "12.5px", color: C.text, lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>{m.diag}</p>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "7px" }}>Ask yourself</div>
+          <p style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>{m.diag}</p>
         </div>
       </div>
 
@@ -1760,12 +1766,12 @@ function ModelBrief({ id }) {
         {m.cases.map((cs, i) => (
           <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: "9px", marginBottom: "6px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "13px", color: C.text, fontWeight: 500 }}>{cs.t}</span>
-              <span style={{ fontSize: "11px", color: C.textFaint, fontFamily: F.mono }}>{cs.y}</span>
+              <span style={{ fontSize: "14px", color: C.text, fontWeight: 500 }}>{cs.t}</span>
+              <span style={{ fontSize: "12px", color: C.textFaint, fontFamily: F.mono }}>{cs.y}</span>
             </div>
-            <p style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.6, margin: 0 }}>{cs.b}</p>
+            <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6, margin: 0 }}>{cs.b}</p>
             {cs.s && (
-              <div style={{ marginTop: "8px", fontSize: "11px", color: C.textMut }}>
+              <div style={{ marginTop: "8px", fontSize: "12px", color: C.textMut }}>
                 Source:{" "}
                 {cs.u
                   ? <a href={cs.u} target="_blank" rel="noopener noreferrer" style={{ color: C.steel, textDecoration: "underline", textUnderlineOffset: "2px" }}>{cs.s}</a>
@@ -1790,7 +1796,7 @@ function Diagram({ children, h = 190, caption }) {
       <svg viewBox={`0 0 ${DG.w} ${h}`} style={{ width: "100%", maxWidth: `${DG.w}px`, display: "block", margin: "0 auto" }}>
         {children}
       </svg>
-      {caption && <div style={{ fontSize: "11.5px", color: C.textMut, textAlign: "center", marginTop: "10px", lineHeight: 1.5, fontFamily: F.body }}>{caption}</div>}
+      {caption && <div style={{ fontSize: "12.5px", color: C.textMut, textAlign: "center", marginTop: "10px", lineHeight: 1.5, fontFamily: F.body }}>{caption}</div>}
     </div>
   );
 }
@@ -2230,20 +2236,20 @@ function MatrixGame({ onBack, id, title, tag, tagColor, blurb, goal, la, lb, pay
 
       <Label>Payoff Matrix (you, them){cellKey ? " · highlighted cell is the last round" : ""}</Label>
       <div style={{ display: "inline-block", border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden", marginBottom: "18px" }}>
-        <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12.5px" }}>
+        <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13.5px" }}>
           <thead><tr>
-            <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.body, fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>You \ Them</th>
-            <th style={{ padding: "7px 16px", background: C.surface, color: C.green, fontSize: "11px", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>{la}</th>
-            <th style={{ padding: "7px 16px", background: C.surface, color: C.red, fontSize: "11px", fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{lb}</th>
+            <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.body, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>You \ Them</th>
+            <th style={{ padding: "7px 16px", background: C.surface, color: C.green, fontSize: "12px", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>{la}</th>
+            <th style={{ padding: "7px 16px", background: C.surface, color: C.red, fontSize: "12px", fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{lb}</th>
           </tr></thead>
           <tbody>
             <tr>
-              <td style={{ padding: "7px 14px", color: C.green, fontSize: "11px", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>{la}</td>
+              <td style={{ padding: "7px 14px", color: C.green, fontSize: "12px", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>{la}</td>
               <td title={help.CC} style={{ ...cellSty("CC", C.greenMuted), borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>{pay.CC[0]}, {pay.CC[1]}</td>
               <td title={help.CD} style={{ ...cellSty("CD", "transparent"), borderBottom: `1px solid ${C.border}` }}>{pay.CD[0]}, {pay.CD[1]}</td>
             </tr>
             <tr>
-              <td style={{ padding: "7px 14px", color: C.red, fontSize: "11px", fontWeight: 500, borderRight: `1px solid ${C.border}` }}>{lb}</td>
+              <td style={{ padding: "7px 14px", color: C.red, fontSize: "12px", fontWeight: 500, borderRight: `1px solid ${C.border}` }}>{lb}</td>
               <td title={help.DC} style={{ ...cellSty("DC", "transparent"), borderRight: `1px solid ${C.border}` }}>{pay.DC[0]}, {pay.DC[1]}</td>
               <td title={help.DD} style={cellSty("DD", C.redMuted)}>{pay.DD[0]}, {pay.DD[1]}</td>
             </tr>
@@ -2251,7 +2257,7 @@ function MatrixGame({ onBack, id, title, tag, tagColor, blurb, goal, la, lb, pay
         </table>
       </div>
 
-      <div style={{ fontSize: "11.5px", color: C.textMut, marginBottom: "14px", fontStyle: "italic" }}>{oppLabel}</div>
+      <div style={{ fontSize: "12.5px", color: C.textMut, marginBottom: "14px", fontStyle: "italic" }}>{oppLabel}</div>
 
       <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "18px", flexWrap: "wrap" }}>
         <Btn onClick={() => play("C")} color={C.green}>{la}</Btn>
@@ -2282,7 +2288,7 @@ function MatrixGame({ onBack, id, title, tag, tagColor, blurb, goal, la, lb, pay
 
 function Chicken({ onBack }) {
   return <MatrixGame
-    onBack={onBack} id="chicken" title="Chicken" tag="Brinkmanship" tagColor={C.steel}
+    onBack={onBack} id="chicken" title="Chicken" tag="Brinkmanship" tagColor={undefined}
     blurb="You and a rival are both escalating. If one of you backs down, the one who held firm takes the prize. If neither backs down, you both take serious damage. If both back down, nothing much happens either way."
     goal="Take the prize without triggering mutual destruction. There is no move that is safe against every opponent."
     la="Back Down" lb="Hold Firm"
@@ -2311,7 +2317,7 @@ function Chicken({ onBack }) {
 
 function StagHunt({ onBack }) {
   return <MatrixGame
-    onBack={onBack} id="stag" title="Stag Hunt" tag="Coordination" tagColor={C.green}
+    onBack={onBack} id="stag" title="Stag Hunt" tag="Trust" tagColor={undefined}
     blurb="Two firms can pursue a large joint opportunity that needs both of them, or each can take a small guaranteed one alone. The joint project pays far more, but only if both commit. Nobody gains by defecting here. The only barrier is trust."
     goal="Reach the joint outcome. It pays the most, and it requires believing the other side will show up."
     la="Commit Jointly" lb="Go It Alone"
@@ -2376,7 +2382,7 @@ function CournotBertrand({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Cournot vs Bertrand" tag="Industry Structure" tagColor={C.steel}>
+      <SimHeader onBack={onBack} title="Cournot vs Bertrand" tag="Industry Structure" tagColor={undefined}>
         Two firms, identical costs of {MC} per unit. In Cournot you both choose how much to produce and the market sets the price. In Bertrand you both choose a price and customers buy the cheaper one. Same industry, same costs, radically different outcomes.
       </SimHeader>
       <Goal>Maximise your profit, then switch modes and notice that the winning move reverses.</Goal>
@@ -2387,7 +2393,7 @@ function CournotBertrand({ onBack }) {
         {[["cournot", "Cournot (quantity)"], ["bertrand", "Bertrand (price)"]].map(([k, l]) =>
           <Pill key={k} active={mode === k} onClick={() => { setMode(k); reset(); }}>{l}</Pill>)}
       </div>
-      <p style={{ fontSize: "11.5px", color: C.textMut, margin: "0 0 18px", fontStyle: "italic" }}>
+      <p style={{ fontSize: "12.5px", color: C.textMut, margin: "0 0 18px", fontStyle: "italic" }}>
         {mode === "cournot" ? "Commodities: steel, cement, bulk chemicals, shipping." : "Differentiated goods: software, professional services, consumer brands."}
       </p>
 
@@ -2482,7 +2488,7 @@ function VickreyAuction({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Vickrey Auction" tag="Mechanism Design" tagColor={C.amber}>
+      <SimHeader onBack={onBack} title="Vickrey Auction" tag="Truthful Bidding" tagColor={undefined}>
         Same asset, same bidders, two different rulebooks. Under first-price rules the winner pays their own bid. Under second-price rules the winner pays the runner-up's bid. That single change flips the optimal strategy from shading to honesty.
       </SimHeader>
       <Goal>Win the asset for less than it is worth to you. Your private valuation is shown before you bid.</Goal>
@@ -2493,7 +2499,7 @@ function VickreyAuction({ onBack }) {
         {[["first", "First-price (pay your bid)"], ["second", "Second-price (pay runner-up)"]].map(([k, l]) =>
           <Pill key={k} active={format === k} onClick={() => { setFormat(k); reset(); }}>{l}</Pill>)}
       </div>
-      <p style={{ fontSize: "11.5px", color: C.textMut, margin: "0 0 18px", fontStyle: "italic" }}>
+      <p style={{ fontSize: "12.5px", color: C.textMut, margin: "0 0 18px", fontStyle: "italic" }}>
         {format === "second" ? "Bidding your true value is the dominant strategy. Shading up or down cannot help you." : "Bidding your true value guarantees zero surplus. You must shade below it."}
       </p>
 
@@ -2501,15 +2507,15 @@ function VickreyAuction({ onBack }) {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "28px", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Worth to You</div>
-              <div style={{ fontSize: "34px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{myVal}</div>
-              <div style={{ fontSize: "11px", color: C.textMut }}>Known exactly. No uncertainty here.</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Worth to You</div>
+              <div style={{ fontSize: "36px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{myVal}</div>
+              <div style={{ fontSize: "12px", color: C.textMut }}>Known exactly. No uncertainty here.</div>
             </div>
             <div style={{ flex: 1, minWidth: "170px" }}>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>Your Bid</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>Your Bid</div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input type="number" value={bid} onChange={e => setBid(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} placeholder="0"
-                  style={{ width: "130px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "16px", outline: "none" }} />
+                  style={{ width: "130px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "17px", outline: "none" }} />
                 <Btn onClick={submit} disabled={!bid || isNaN(parseFloat(bid))}>Submit</Btn>
               </div>
             </div>
@@ -2529,10 +2535,10 @@ function VickreyAuction({ onBack }) {
           <Label>All bids</Label>
           <div style={{ marginBottom: "14px" }}>
             {res.all.map((b, i) => (
-              <div key={i} style={{ display: "flex", gap: "10px", padding: "5px 10px", borderRadius: "2px", fontFamily: F.mono, fontSize: "12px", background: b.you ? (res.won ? (res.surplus >= 0 ? C.greenMuted : C.redMuted) : C.steelMuted) : "transparent" }}>
-                <span style={{ width: "16px", color: i === 0 ? C.amber : C.textMut, fontSize: "10px", textAlign: "center" }}>{i === 0 ? "★" : ""}</span>
+              <div key={i} style={{ display: "flex", gap: "10px", padding: "5px 10px", borderRadius: "2px", fontFamily: F.mono, fontSize: "13px", background: b.you ? (res.won ? (res.surplus >= 0 ? C.greenMuted : C.redMuted) : C.steelMuted) : "transparent" }}>
+                <span style={{ width: "16px", color: i === 0 ? C.amber : C.textMut, fontSize: "11px", textAlign: "center" }}>{i === 0 ? "★" : ""}</span>
                 <span style={{ width: "75px", color: b.you ? C.steel : C.textSec, fontWeight: b.you ? 600 : 400 }}>{b.name}</span>
-                <span style={{ width: "70px", color: C.textMut, fontSize: "11px" }}>val {b.val}</span>
+                <span style={{ width: "70px", color: C.textMut, fontSize: "12px" }}>val {b.val}</span>
                 <span style={{ color: C.text }}>bid {Math.round(b.bid)}</span>
               </div>
             ))}
@@ -2603,7 +2609,7 @@ function Lemons({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Market for Lemons" tag="Adverse Selection" tagColor="#E09050">
+      <SimHeader onBack={onBack} title="Market for Lemons" tag="Adverse Selection" tagColor={undefined}>
         You are a buyer. Forty sellers each hold something worth between 20 and 100 to you, and each knows their own quality while you do not. A seller will only trade if your price beats what the item is worth to them. Set one price for everyone and see who shows up.
       </SimHeader>
       <Goal>Buy above your cost. The trap is that the price you offer determines which sellers accept, and therefore what you are actually buying.</Goal>
@@ -2629,10 +2635,10 @@ function Lemons({ onBack }) {
           <div style={{ position: "relative", height: "42px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: "3px", marginBottom: "6px", overflow: "hidden" }}>
             <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${Math.min(100, last.offer / 0.65)}%`, background: C.amber + "18" }} />
             <div style={{ position: "absolute", left: `${Math.min(100, last.offer / 0.65)}%`, top: 0, bottom: 0, width: "2px", background: C.amber }} />
-            <div style={{ position: "absolute", left: "6px", top: "12px", fontSize: "10.5px", color: C.amber, fontFamily: F.body }}>accepted (lower quality)</div>
-            <div style={{ position: "absolute", right: "6px", top: "12px", fontSize: "10.5px", color: C.textMut, fontFamily: F.body }}>withdrew (higher quality)</div>
+            <div style={{ position: "absolute", left: "6px", top: "12px", fontSize: "11.5px", color: C.amber, fontFamily: F.body }}>accepted (lower quality)</div>
+            <div style={{ position: "absolute", right: "6px", top: "12px", fontSize: "11.5px", color: C.textMut, fontFamily: F.body }}>withdrew (higher quality)</div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: C.textFaint, fontFamily: F.mono, marginBottom: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: C.textFaint, fontFamily: F.mono, marginBottom: "16px" }}>
             <span>quality 20</span><span>quality 100</span>
           </div>
 
@@ -2658,10 +2664,10 @@ function Lemons({ onBack }) {
         <div style={{ marginBottom: "10px" }}>
           <Label>Attempts</Label>
           <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ background: C.surface }}>
                 {["#", "Price", "Verify", "Entered", "Avg Qual", "Surplus"].map(h =>
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>)}
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>)}
               </tr></thead>
               <tbody>
                 {rounds.map(x => (
@@ -2719,7 +2725,7 @@ function MoralHazard({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Moral Hazard" tag="Contract Design" tagColor="#E09050">
+      <SimHeader onBack={onBack} title="Moral Hazard" tag="Contract Design" tagColor={undefined}>
         You are hiring someone to run a business line. You cannot observe their effort or how much risk they take, only the result. You choose the contract. They respond to it rationally. Whatever they do next is something you designed.
       </SimHeader>
       <Goal>Design a contract that maximises what you keep after paying them. Effort and risk-taking both respond to how you pay.</Goal>
@@ -2830,7 +2836,7 @@ function Cascades({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Information Cascades" tag="Herding" tagColor={C.red}>
+      <SimHeader onBack={onBack} title="Information Cascades" tag="Herding" tagColor={undefined}>
         One of two options is correct. You get a private signal that is right 70% of the time. So did everyone ahead of you, but you can only see what they chose, not what they knew. Once two people lean the same way, everyone after them rationally stops using their own information.
       </SimHeader>
       <Goal>Pick the correct option. Decide how much weight to give your own signal against what the queue did.</Goal>
@@ -2845,9 +2851,9 @@ function Cascades({ onBack }) {
         <Label>What the people ahead of you chose</Label>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
           {round.priors.map((p, i) => (
-            <div key={i} style={{ width: "38px", height: "38px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F.mono, fontSize: "15px", fontWeight: 600, background: p === "A" ? C.steelMuted : C.amberMuted, border: `1px solid ${p === "A" ? C.steel : C.amber}50`, color: p === "A" ? C.steel : C.amber }}>{p}</div>
+            <div key={i} style={{ width: "38px", height: "38px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F.mono, fontSize: "16px", fontWeight: 600, background: p === "A" ? C.steelMuted : C.amberMuted, border: `1px solid ${p === "A" ? C.steel : C.amber}50`, color: p === "A" ? C.steel : C.amber }}>{p}</div>
           ))}
-          <div style={{ width: "38px", height: "38px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontFamily: F.body, border: `1.5px dashed ${C.borderStrong}`, color: C.textMut }}>YOU</div>
+          <div style={{ width: "38px", height: "38px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontFamily: F.body, border: `1.5px dashed ${C.borderStrong}`, color: C.textMut }}>YOU</div>
         </div>
 
         <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "16px" }}>
@@ -2938,7 +2944,7 @@ function ProspectTheory({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Prospect Theory" tag="Loss Aversion" tagColor="#D07070">
+      <SimHeader onBack={onBack} title="Prospect Theory" tag="Loss Aversion" tagColor={undefined}>
         Four decisions. Two pairs are mathematically identical and only differ in how they are worded. Answer quickly and honestly rather than carefully, because the effect being measured is the one that operates when you are not watching for it.
       </SimHeader>
       <Goal>Answer all four, then see which framing effects moved you. Most people are moved by at least one.</Goal>
@@ -2946,13 +2952,13 @@ function ProspectTheory({ onBack }) {
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Decision {i + 1} of {PT_ITEMS.length}</div>
-          <p style={{ fontSize: "14px", color: C.text, lineHeight: 1.6, margin: "0 0 18px" }}>{item.q}</p>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Decision {i + 1} of {PT_ITEMS.length}</div>
+          <p style={{ fontSize: "15px", color: C.text, lineHeight: 1.6, margin: "0 0 18px" }}>{item.q}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {[["a", item.a], ["b", item.b]].map(([k, txt]) => (
               <button key={k} onClick={() => pick(k)} style={{
                 textAlign: "left", padding: "14px 16px", background: C.bg, border: `1px solid ${C.borderStrong}`,
-                borderRadius: "3px", color: C.textSec, fontSize: "13px", fontFamily: F.body, cursor: "pointer",
+                borderRadius: "3px", color: C.textSec, fontSize: "14px", fontFamily: F.body, cursor: "pointer",
                 lineHeight: 1.5, transition: "all 0.12s",
               }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = C.amber; e.currentTarget.style.color = C.text; }}
@@ -2969,10 +2975,10 @@ function ProspectTheory({ onBack }) {
             {PT_ITEMS.map((it, n) => {
               const ans = answers[n];
               return (
-                <div key={it.id} style={{ display: "flex", gap: "10px", padding: "7px 0", borderBottom: n < 3 ? `1px solid ${C.border}` : "none", fontSize: "12.5px", alignItems: "baseline", flexWrap: "wrap" }}>
+                <div key={it.id} style={{ display: "flex", gap: "10px", padding: "7px 0", borderBottom: n < 3 ? `1px solid ${C.border}` : "none", fontSize: "13.5px", alignItems: "baseline", flexWrap: "wrap" }}>
                   <span style={{ fontFamily: F.mono, color: C.textMut, width: "18px" }}>{n + 1}</span>
                   <span style={{ color: ans.choice === "a" ? C.green : C.amber, fontFamily: F.mono, width: "80px" }}>{ans.choice === "a" ? "certain" : "gamble"}</span>
-                  <span style={{ color: C.textMut, fontSize: "11.5px", flex: 1, minWidth: "180px" }}>{it.note}</span>
+                  <span style={{ color: C.textMut, fontSize: "12.5px", flex: 1, minWidth: "180px" }}>{it.note}</span>
                 </div>
               );
             })}
@@ -3029,7 +3035,7 @@ function WarOfAttrition({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="War of Attrition" tag="Exit Timing" tagColor="#B080D0">
+      <SimHeader onBack={onBack} title="War of Attrition" tag="Exit Timing" tagColor={undefined}>
         You and a rival are both burning cash to win a market worth {prize}. Every round you stay in costs you money whether you win or not. The winner takes the prize minus everything spent. The loser takes nothing minus everything spent.
       </SimHeader>
       <Goal>Finish with a positive net. The prize is {prize}, so every round you stay reduces the maximum you can possibly win.</Goal>
@@ -3045,7 +3051,7 @@ function WarOfAttrition({ onBack }) {
             {[["shallow", "Shallow"], ["matched", "Matched"], ["deep", "Deep"]].map(([k, l]) =>
               <Pill key={k} active={rivalDepth === k} color={k === "deep" ? C.red : k === "shallow" ? C.green : C.amber} onClick={() => { setRivalDepth(k); reset(); }}>{l}</Pill>)}
           </div>
-          <p style={{ fontSize: "11.5px", color: C.textMut, margin: "6px 0 0", fontStyle: "italic" }}>You cannot see how deep they are. You only find out by spending.</p>
+          <p style={{ fontSize: "12.5px", color: C.textMut, margin: "6px 0 0", fontStyle: "italic" }}>You cannot see how deep they are. You only find out by spending.</p>
         </div>
       </div>
 
@@ -3057,7 +3063,7 @@ function WarOfAttrition({ onBack }) {
             <Stat label="Max Net If You Win" value={prize - spent} color={prize - spent > 0 ? C.green : C.red} />
           </div>
           {spent >= prize && (
-            <div style={{ background: C.redMuted, border: `1px solid ${C.red}30`, borderRadius: "2px", padding: "10px 14px", marginBottom: "16px", fontSize: "12.5px", color: C.textSec }}>
+            <div style={{ background: C.redMuted, border: `1px solid ${C.red}30`, borderRadius: "2px", padding: "10px 14px", marginBottom: "16px", fontSize: "13.5px", color: C.textSec }}>
               You have now spent more than the prize is worth. Winning from here still loses money.
             </div>
           )}
@@ -3125,7 +3131,7 @@ function HoldUp({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Hold-Up Problem" tag="Specific Investment" tagColor="#B080D0">
+      <SimHeader onBack={onBack} title="Hold-Up Problem" tag="Specific Investment" tagColor={undefined}>
         You can invest in tooling, integration or a facility that only has value inside one relationship. The investment more than doubles the joint value. Once it is sunk, your counterparty knows you cannot walk away, and reopens the terms.
       </SimHeader>
       <Goal>Invest enough to create value, and keep enough of it. Those two goals fight each other.</Goal>
@@ -3139,7 +3145,7 @@ function HoldUp({ onBack }) {
           {[["none", "Handshake (free)"], ["contract", "Long-term contract (−8)"], ["integrate", "Vertical integration (−30)"]].map(([k, l]) =>
             <Pill key={k} active={protection === k} color={k === "integrate" ? C.green : k === "contract" ? C.amber : C.textSec} onClick={() => { setProtection(k); setRes(null); }}>{l}</Pill>)}
         </div>
-        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "0 0 16px", fontStyle: "italic" }}>
+        <p style={{ fontSize: "12.5px", color: C.textMut, margin: "0 0 16px", fontStyle: "italic" }}>
           Protection costs money up front and limits how much they can reopen later.
         </p>
         <Btn onClick={run}>Commit the Capital</Btn>
@@ -3215,7 +3221,7 @@ function MechanismDesign({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Mechanism Design" tag="Rule Design" tagColor="#70B0C0">
+      <SimHeader onBack={onBack} title="Mechanism Design" tag="Rule Design" tagColor={undefined}>
         Eight salespeople. You choose what to pay them on. They will maximise whatever you measure, competently and without malice. This is inverse game theory: instead of predicting behaviour inside a fixed game, you design the game so that self-interest produces what you actually want.
       </SimHeader>
       <Goal>Maximise net value to the business, which is revenue minus the cost of gaming and churn.</Goal>
@@ -3227,7 +3233,7 @@ function MechanismDesign({ onBack }) {
           {Object.keys(METRICS).map(k =>
             <Pill key={k} active={metric === k} onClick={() => { setMetric(k); setRes(null); }}>{k[0].toUpperCase() + k.slice(1)}</Pill>)}
         </div>
-        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "0 0 16px", fontStyle: "italic" }}>{METRICS[metric]}</p>
+        <p style={{ fontSize: "12.5px", color: C.textMut, margin: "0 0 16px", fontStyle: "italic" }}>{METRICS[metric]}</p>
         <Label>Controls</Label>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
           <Pill active={cap} color={C.green} onClick={() => { setCap(!cap); setRes(null); }}>Cap on any single deal</Pill>
@@ -3302,7 +3308,7 @@ function RealOptions({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Real Options" tag="Flexibility Value" tagColor="#70B0C0">
+      <SimHeader onBack={onBack} title="Real Options" tag="Flexibility Value" tagColor={undefined}>
         A project costs {COST} and is expected to return about {BASE}, but the true value only becomes clear after you commit. Standard analysis compares investing now against never investing. That is not the choice you have. You can also wait, or stage the commitment and kill it at a gate.
       </SimHeader>
       <Goal>Maximise cumulative payoff over many attempts. The right answer changes as uncertainty rises.</Goal>
@@ -3397,7 +3403,7 @@ function Schelling({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Schelling Focal Points" tag="Coordination" tagColor="#70B0C0">
+      <SimHeader onBack={onBack} title="Schelling Focal Points" tag="Convention" tagColor={undefined}>
         Four coordination problems with no communication allowed. You win by matching what the other person independently chooses. There is no correct answer in any objective sense. There is only the answer everyone expects everyone else to give.
       </SimHeader>
       <Goal>Match the other party. Ask what they will expect you to pick, not what is best.</Goal>
@@ -3405,14 +3411,14 @@ function Schelling({ onBack }) {
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Problem {i + 1} of {SCHELLING.length}</div>
-          <p style={{ fontSize: "14px", color: C.text, lineHeight: 1.6, margin: "0 0 18px" }}>{item.q}</p>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Problem {i + 1} of {SCHELLING.length}</div>
+          <p style={{ fontSize: "15px", color: C.text, lineHeight: 1.6, margin: "0 0 18px" }}>{item.q}</p>
           {!picked ? (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {item.opts.map((o, n) => (
                 <button key={n} onClick={() => pick(n)} style={{
                   padding: "12px 18px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px",
-                  color: C.textSec, fontSize: "13px", fontFamily: F.body, cursor: "pointer", transition: "all 0.12s",
+                  color: C.textSec, fontSize: "14px", fontFamily: F.body, cursor: "pointer", transition: "all 0.12s",
                 }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = C.amber; e.currentTarget.style.color = C.text; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = C.borderStrong; e.currentTarget.style.color = C.textSec; }}>{o}</button>
@@ -3487,7 +3493,7 @@ function CheapTalk({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Cheap Talk" tag="Credibility" tagColor="#70B0C0">
+      <SimHeader onBack={onBack} title="Cheap Talk" tag="Credibility" tagColor={undefined}>
         Four statements. Each costs the speaker nothing to make and cannot be verified before you act on it. Your job is to decide which ones carry information. The test is whether the speaker's interests line up with yours.
       </SimHeader>
       <Goal>Judge each statement correctly. Ask what the speaker loses if they turn out to be wrong.</Goal>
@@ -3495,12 +3501,12 @@ function CheapTalk({ onBack }) {
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Statement {i + 1} of {TALK.length}</div>
-          <div style={{ fontSize: "12px", color: C.textMut, marginBottom: "8px" }}>{item.who}</div>
-          <p style={{ fontSize: "15px", color: C.text, lineHeight: 1.6, margin: "0 0 8px", fontStyle: "italic", paddingLeft: "14px", borderLeft: `2px solid ${C.borderStrong}` }}>{item.msg}</p>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Statement {i + 1} of {TALK.length}</div>
+          <div style={{ fontSize: "13px", color: C.textMut, marginBottom: "8px" }}>{item.who}</div>
+          <p style={{ fontSize: "16px", color: C.text, lineHeight: 1.6, margin: "0 0 8px", fontStyle: "italic", paddingLeft: "14px", borderLeft: `2px solid ${C.borderStrong}` }}>{item.msg}</p>
 
           <div style={{ marginTop: "18px", marginBottom: "18px" }}>
-            <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Interest alignment with you</div>
+            <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Interest alignment with you</div>
             <div style={{ height: "8px", background: C.bg, borderRadius: "4px", overflow: "hidden", maxWidth: "260px", border: `1px solid ${C.border}` }}>
               <div style={{ height: "100%", width: `${item.align * 100}%`, background: item.align > 0.6 ? C.green : item.align > 0.3 ? C.amber : C.red }} />
             </div>
@@ -3546,6 +3552,106 @@ function CheapTalk({ onBack }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// BOARD TEXTURE — ambient inlaid grid, bottom-right, mostly off-frame.
+// Sits behind everything, carries no information, and never competes with content.
+// ═══════════════════════════════════════════════════════════════════════════════
+function BoardTexture() {
+  const N = 8, S = 58, W = N * S;
+  const dark = [];
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++)
+      if ((r + c) % 2 === 0) dark.push(<rect key={`d${r}-${c}`} x={c * S} y={r * S} width={S} height={S} />);
+  const lines = [];
+  for (let i = 0; i <= N; i++) {
+    lines.push(<line key={`h${i}`} x1={0} y1={i * S} x2={W} y2={i * S} />);
+    lines.push(<line key={`v${i}`} x1={i * S} y1={0} x2={i * S} y2={W} />);
+  }
+  return (
+    <div aria-hidden="true" style={{
+      position: "fixed", right: "-9vw", bottom: "-10vh",
+      width: "min(464px, 66vw)", height: "min(464px, 66vw)",
+      pointerEvents: "none", userSelect: "none", zIndex: 0,
+    }}>
+      <svg viewBox={`0 0 ${W} ${W}`} width="100%" height="100%" style={{ transform: "rotate(-7deg)", display: "block" }}>
+        <defs>
+          {/* Fades toward the content so the grid dissolves before it reaches anything readable */}
+          <radialGradient id="sgxFade" cx="0.74" cy="0.8" r="0.82">
+            <stop offset="0" stopColor="#fff" stopOpacity="0.065" />
+            <stop offset="0.45" stopColor="#fff" stopOpacity="0.038" />
+            <stop offset="0.8" stopColor="#fff" stopOpacity="0.012" />
+            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+          </radialGradient>
+          <mask id="sgxMask"><rect width={W} height={W} fill="url(#sgxFade)" /></mask>
+        </defs>
+        <g mask="url(#sgxMask)">
+          <g fill={C.amber}>{dark}</g>
+          <g stroke={C.amber} strokeWidth="0.75" opacity="1">{lines}</g>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TERMS OF USE
+// ═══════════════════════════════════════════════════════════════════════════════
+function Terms({ onBack }) {
+  const S = ({ h, children }) => (
+    <div style={{ marginBottom: "26px" }}>
+      <div style={{ fontSize: "12.5px", textTransform: "uppercase", letterSpacing: "0.13em", color: C.text, fontWeight: 600, marginBottom: "9px" }}>{h}</div>
+      <div style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.7 }}>{children}</div>
+    </div>
+  );
+  return (
+    <div>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, padding: 0, marginBottom: "16px" }}>&larr; Back</button>
+      <h2 style={{ margin: "0 0 6px", fontSize: "24px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Terms of Use</h2>
+      <p style={{ fontSize: "12.5px", color: C.textMut, margin: "0 0 32px", fontFamily: F.mono }}>Last updated August 2026</p>
+
+      <S h="Ownership">
+        Everything on sagaxlab.com is the copyright of Julia Mei unless stated otherwise. That covers the written material,
+        the simulators, the diagrams and the underlying code. Sagax is used as an unregistered trade mark.
+      </S>
+
+      <S h="What you may do">
+        Read the site, play the simulators, and use what you learn in your own work and your own business. Link to any page.
+        Quote short passages with attribution and a link back. Use it in teaching, provided students are pointed here rather
+        than given copies.
+      </S>
+
+      <S h="What you may not do">
+        Reproduce, republish, mirror or redistribute this content in whole or in substantial part. Sell it, or include it in a
+        paid product or service. Remove or obscure attribution. Scrape or bulk-download the site by automated means. Use this
+        content to train, fine-tune or evaluate machine learning models.
+      </S>
+
+      <S h="Education only">
+        Sagax teaches decision-making models. Nothing here is investment, legal, tax or financial advice, and nothing here is a
+        recommendation to buy or sell anything. The simulators are simplified teaching tools rather than forecasts, and the
+        numbers in them are illustrative. Decisions you make are your own.
+      </S>
+
+      <S h="Accuracy">
+        The case studies summarise publicly reported events for teaching purposes. Sources are cited where they have been
+        verified. Errors are possible. If you find one, please say so and it will be corrected.
+      </S>
+
+      <S h="No warranty">
+        The site is provided as is. It may be unavailable, incomplete, or changed without notice.
+      </S>
+
+      <S h="Contact">
+        Permission requests, corrections and licensing enquiries: hello@sagaxlab.com
+      </S>
+
+      <S h="Governing law">
+        These terms are governed by the law of England and Wales.
+      </S>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // HERO — live mini-game
 // ═══════════════════════════════════════════════════════════════════════════════
 function HeroGame({ onGoDeeper }) {
@@ -3564,15 +3670,15 @@ function HeroGame({ onGoDeeper }) {
     <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "4px", padding: "24px", maxWidth: "400px" }}>
       {!move ? (
         <>
-          <div style={{ fontSize: "13px", color: C.textSec, marginBottom: "14px", lineHeight: 1.5 }}>
+          <div style={{ fontSize: "14px", color: C.textSec, marginBottom: "14px", lineHeight: 1.6 }}>
             You're pricing against a competitor. They're deciding at the same time.
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
-            <button onClick={() => play("C")} style={{ flex: 1, padding: "14px", background: C.greenMuted, border: `1.5px solid ${C.green}40`, borderRadius: "3px", color: C.green, fontSize: "14px", fontFamily: F.body, fontWeight: 500, cursor: "pointer", transition: "all 0.1s" }}
+            <button onClick={() => play("C")} style={{ flex: 1, padding: "14px", background: C.greenMuted, border: `1.5px solid ${C.green}40`, borderRadius: "3px", color: C.green, fontSize: "15px", fontFamily: F.body, fontWeight: 500, cursor: "pointer", transition: "all 0.1s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.green} onMouseLeave={e => e.currentTarget.style.borderColor = C.green + "40"}>
               Hold Price
             </button>
-            <button onClick={() => play("D")} style={{ flex: 1, padding: "14px", background: C.redMuted, border: `1.5px solid ${C.red}40`, borderRadius: "3px", color: C.red, fontSize: "14px", fontFamily: F.body, fontWeight: 500, cursor: "pointer", transition: "all 0.1s" }}
+            <button onClick={() => play("D")} style={{ flex: 1, padding: "14px", background: C.redMuted, border: `1.5px solid ${C.red}40`, borderRadius: "3px", color: C.red, fontSize: "15px", fontFamily: F.body, fontWeight: 500, cursor: "pointer", transition: "all 0.1s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.red} onMouseLeave={e => e.currentTarget.style.borderColor = C.red + "40"}>
               Undercut
             </button>
@@ -3582,27 +3688,27 @@ function HeroGame({ onGoDeeper }) {
         <>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
             <div>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "2px" }}>You</div>
-              <div style={{ fontSize: "16px", fontFamily: F.mono, color: move === "C" ? C.green : C.red, fontWeight: 600 }}>{FL[move]}</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "2px" }}>You</div>
+              <div style={{ fontSize: "17px", fontFamily: F.mono, color: move === "C" ? C.green : C.red, fontWeight: 600 }}>{FL[move]}</div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "2px" }}>Opponent</div>
-              <div style={{ fontSize: "16px", fontFamily: F.mono, color: opp === "C" ? C.green : C.red, fontWeight: 600 }}>{FL[opp]}</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "2px" }}>Opponent</div>
+              <div style={{ fontSize: "17px", fontFamily: F.mono, color: opp === "C" ? C.green : C.red, fontWeight: 600 }}>{FL[opp]}</div>
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "center", gap: "20px", padding: "10px 0 14px", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, marginBottom: "12px" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "10px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase" }}>Your payoff</div>
-              <div style={{ fontSize: "26px", fontFamily: F.mono, color: result[0] >= 3 ? C.green : result[0] === 0 ? C.red : C.amber, fontWeight: 600 }}>{result[0]}</div>
+              <div style={{ fontSize: "11px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase" }}>Your payoff</div>
+              <div style={{ fontSize: "28px", fontFamily: F.mono, color: result[0] >= 3 ? C.green : result[0] === 0 ? C.red : C.amber, fontWeight: 600 }}>{result[0]}</div>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "10px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase" }}>Their payoff</div>
-              <div style={{ fontSize: "26px", fontFamily: F.mono, color: result[1] >= 3 ? C.green : result[1] === 0 ? C.red : C.amber, fontWeight: 600 }}>{result[1]}</div>
+              <div style={{ fontSize: "11px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase" }}>Their payoff</div>
+              <div style={{ fontSize: "28px", fontFamily: F.mono, color: result[1] >= 3 ? C.green : result[1] === 0 ? C.red : C.amber, fontWeight: 600 }}>{result[1]}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={reset} style={{ flex: 1, padding: "8px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: "3px", color: C.textSec, fontSize: "12px", fontFamily: F.body, cursor: "pointer" }}>Again</button>
-            <button onClick={onGoDeeper} style={{ flex: 1, padding: "8px", background: C.amber, border: "none", borderRadius: "3px", color: "#111", fontSize: "12px", fontFamily: F.body, fontWeight: 500, cursor: "pointer" }}>Play 20 rounds →</button>
+            <button onClick={reset} style={{ flex: 1, padding: "8px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: "3px", color: C.textSec, fontSize: "13px", fontFamily: F.body, cursor: "pointer" }}>Again</button>
+            <button onClick={onGoDeeper} style={{ flex: 1, padding: "8px", background: C.amber, border: "none", borderRadius: "3px", color: "#111", fontSize: "13px", fontFamily: F.body, fontWeight: 500, cursor: "pointer" }}>Play 20 rounds →</button>
           </div>
         </>
       )}
@@ -3614,34 +3720,34 @@ function HeroGame({ onGoDeeper }) {
 // LIBRARY DATA
 // ═══════════════════════════════════════════════════════════════════════════════
 const SIMS = [
-  { id: "pd",        name: "Prisoner's Dilemma",   desc: "Two firms, twenty rounds, six opponent strategies. Cooperation and retaliation over a relationship that does not end.", finance: "Price wars · Cartel stability · Supplier relationships" },
-  { id: "nash",      name: "Nash Bargaining",      desc: "Split a shrinking surplus with adjustable outside options. Your walk-away position sets the outcome, not your argument.", finance: "Salary · Vendor contracts · JV terms" },
-  { id: "cournot",   name: "Cournot vs Bertrand",  desc: "Same industry, same costs, two competitive structures. In one, capacity destroys margin. In the other, differentiation creates it.", finance: "Oligopoly analysis · Capacity planning · Pricing strategy" },
-  { id: "entry",     name: "Entry Deterrence",     desc: "Commit capital to deter a rival. The threat only works if what you sank is visible and irreversible.", finance: "Moat analysis · Predatory pricing · Capacity investment" },
-  { id: "chicken",   name: "Chicken",              desc: "Two parties escalating. The winner is whoever can most credibly destroy their own ability to back down.", finance: "Hostile bids · Union talks · Litigation standoffs" },
+  { id: "pd", tag: "Repeated Games",        name: "Prisoner's Dilemma",   desc: "Two firms, twenty rounds, six opponent strategies. Cooperation and retaliation over a relationship that does not end.", finance: "Price wars · Cartel stability · Supplier relationships" },
+  { id: "nash", tag: "Negotiation",      name: "Nash Bargaining",      desc: "Split a shrinking surplus with adjustable outside options. Your walk-away position sets the outcome, not your argument.", finance: "Salary · Vendor contracts · JV terms" },
+  { id: "cournot", tag: "Industry Structure",   name: "Cournot vs Bertrand",  desc: "Same industry, same costs, two competitive structures. In one, capacity destroys margin. In the other, differentiation creates it.", finance: "Oligopoly analysis · Capacity planning · Pricing strategy" },
+  { id: "entry", tag: "Competitive Moats",     name: "Entry Deterrence",     desc: "Commit capital to deter a rival. The threat only works if what you sank is visible and irreversible.", finance: "Moat analysis · Predatory pricing · Capacity investment" },
+  { id: "chicken", tag: "Brinkmanship",   name: "Chicken",              desc: "Two parties escalating. The winner is whoever can most credibly destroy their own ability to back down.", finance: "Hostile bids · Union talks · Litigation standoffs" },
 
-  { id: "auction",   name: "Winner's Curse",       desc: "Bid on an asset of uncertain value. Winning is itself evidence that you were the most optimistic party in the room.", finance: "M&A · IPO allocation · Competitive tenders" },
-  { id: "vickrey",   name: "Vickrey Auction",      desc: "Same bidders, two rulebooks. Changing who pays what flips the optimal strategy from shading to honesty.", finance: "Ad auctions · Procurement · Internal capital allocation" },
+  { id: "auction", tag: "Winner's Curse",   name: "Sealed-Bid Auction",       desc: "Bid on an asset of uncertain value. Winning is itself evidence that you were the most optimistic party in the room.", finance: "M&A · IPO allocation · Competitive tenders" },
+  { id: "vickrey", tag: "Truthful Bidding",   name: "Vickrey Auction",      desc: "Same bidders, two rulebooks. Changing who pays what flips the optimal strategy from shading to honesty.", finance: "Ad auctions · Procurement · Internal capital allocation" },
 
-  { id: "signal",    name: "Spence Signaling",     desc: "Prove quality you cannot demonstrate directly. The signal works only while it stays too expensive to fake.", finance: "Credentials · Dividends · Buybacks · IPO underpricing" },
-  { id: "lemons",    name: "Market for Lemons",    desc: "Set one price for sellers who know more than you. Watch the good ones leave and the market unravel.", finance: "Insurance · Credit · Secondary private stakes" },
-  { id: "hazard",    name: "Moral Hazard",         desc: "Design a contract for someone whose effort you cannot see. Whatever they do next, you designed it.", finance: "Executive comp · Fund incentives · Franchising" },
+  { id: "signal", tag: "Costly Signals",    name: "Spence Signaling",     desc: "Prove quality you cannot demonstrate directly. The signal works only while it stays too expensive to fake.", finance: "Credentials · Dividends · Buybacks · IPO underpricing" },
+  { id: "lemons", tag: "Adverse Selection",    name: "Market for Lemons",    desc: "Set one price for sellers who know more than you. Watch the good ones leave and the market unravel.", finance: "Insurance · Credit · Secondary private stakes" },
+  { id: "hazard", tag: "Contract Design",    name: "Moral Hazard",         desc: "Design a contract for someone whose effort you cannot see. Whatever they do next, you designed it.", finance: "Executive comp · Fund incentives · Franchising" },
 
-  { id: "bank",      name: "Bank Run",             desc: "Rational individual withdrawals cascade into failure. Solvency is not enough when creditors cannot coordinate.", finance: "SVB · Repo markets · Confidence-sensitive funding" },
-  { id: "beauty",    name: "Beauty Contest",       desc: "Guess two-thirds of the average guess. You are not choosing what is best, you are choosing what others will choose.", finance: "Bubbles · Momentum · Market timing" },
-  { id: "cascade",   name: "Information Cascades", desc: "Decide after watching others decide. Once two people lean the same way, everyone stops using their own information.", finance: "Analyst herding · Follow-on rounds · Crowded trades" },
+  { id: "bank", tag: "Coordination Crisis",      name: "Bank Run",             desc: "Rational individual withdrawals cascade into failure. Solvency is not enough when creditors cannot coordinate.", finance: "SVB · Repo markets · Confidence-sensitive funding" },
+  { id: "beauty", tag: "Second-Order Thinking",    name: "Beauty Contest",       desc: "Guess two-thirds of the average guess. You are not choosing what is best, you are choosing what others will choose.", finance: "Bubbles · Momentum · Market timing" },
+  { id: "cascade", tag: "Herding",   name: "Information Cascades", desc: "Decide after watching others decide. Once two people lean the same way, everyone stops using their own information.", finance: "Analyst herding · Follow-on rounds · Crowded trades" },
 
-  { id: "prospect",  name: "Prospect Theory",      desc: "Four decisions. Two pairs are mathematically identical and worded differently. Find out which framings move you.", finance: "Disposition effect · Pricing anchors · Project escalation" },
-  { id: "ultimatum", name: "Ultimatum Game",       desc: "Propose a split. Rejections that standard theory calls irrational will cost you profitable deals.", finance: "Fee negotiation · Compensation · Scarcity pricing" },
+  { id: "prospect", tag: "Loss Aversion",  name: "Prospect Theory",      desc: "Four decisions. Two pairs are mathematically identical and worded differently. Find out which framings move you.", finance: "Disposition effect · Pricing anchors · Project escalation" },
+  { id: "ultimatum", tag: "Fairness Constraint", name: "Ultimatum Game",       desc: "Propose a split. Rejections that standard theory calls irrational will cost you profitable deals.", finance: "Fee negotiation · Compensation · Scarcity pricing" },
 
-  { id: "stag",      name: "Stag Hunt",            desc: "The joint opportunity pays far more and needs both of you. Nobody wants to defect. The only barrier is trust.", finance: "Syndicated lending · Standard-setting · Consortium R&D" },
-  { id: "attrition", name: "War of Attrition",     desc: "Both sides burn cash waiting for the other to quit. The contest consumes the prize while you fight for it.", finance: "Price wars · Patent litigation · Subsidised growth" },
-  { id: "holdup",    name: "Hold-Up Problem",      desc: "Invest in something that only has value inside one relationship, then watch the terms reopen.", finance: "Vertical integration · Supplier lock-in · Control rights" },
+  { id: "stag", tag: "Trust",      name: "Stag Hunt",            desc: "The joint opportunity pays far more and needs both of you. Nobody wants to defect. The only barrier is trust.", finance: "Syndicated lending · Standard-setting · Consortium R&D" },
+  { id: "attrition", tag: "Exit Timing", name: "War of Attrition",     desc: "Both sides burn cash waiting for the other to quit. The contest consumes the prize while you fight for it.", finance: "Price wars · Patent litigation · Subsidised growth" },
+  { id: "holdup", tag: "Specific Investment",    name: "Hold-Up Problem",      desc: "Invest in something that only has value inside one relationship, then watch the terms reopen.", finance: "Vertical integration · Supplier lock-in · Control rights" },
 
-  { id: "mechanism", name: "Mechanism Design",     desc: "Choose what to pay your team on. They will maximise exactly what you measure, competently and without malice.", finance: "Comp structures · Budgeting · Auction format choice" },
-  { id: "realopt",   name: "Real Options",         desc: "Invest now, wait, or stage it. Standard analysis compares acting now against never acting, which is not your actual choice.", finance: "Stage-gate R&D · VC staging · Earn-outs" },
-  { id: "schelling", name: "Schelling Focal Points", desc: "Coordinate without communicating. The winning answer is the obvious one, not the best one.", finance: "Benchmarks · Contract defaults · Round-number anchoring" },
-  { id: "cheaptalk", name: "Cheap Talk",           desc: "Four statements that cost the speaker nothing. Decide which carry information and which are noise.", finance: "Guidance · Price targets · Letters of intent" },
+  { id: "mechanism", tag: "Rule Design", name: "Mechanism Design",     desc: "Choose what to pay your team on. They will maximise exactly what you measure, competently and without malice.", finance: "Comp structures · Budgeting · Auction format choice" },
+  { id: "realopt", tag: "Flexibility Value",   name: "Real Options",         desc: "Invest now, wait, or stage it. Standard analysis compares acting now against never acting, which is not your actual choice.", finance: "Stage-gate R&D · VC staging · Earn-outs" },
+  { id: "schelling", tag: "Convention", name: "Schelling Focal Points", desc: "Coordinate without communicating. The winning answer is the obvious one, not the best one.", finance: "Benchmarks · Contract defaults · Round-number anchoring" },
+  { id: "cheaptalk", tag: "Credibility", name: "Cheap Talk",           desc: "Four statements that cost the speaker nothing. Decide which carry information and which are noise.", finance: "Guidance · Price targets · Letters of intent" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -3683,16 +3789,16 @@ function Home({ onNav }) {
       {/* ── Hero ── */}
       <div style={{ marginBottom: "56px" }}>
         <div style={{ maxWidth: "540px", marginBottom: "18px" }}>
-          <h1 style={{ fontSize: "34px", fontFamily: F.display, fontWeight: 400, color: C.text, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+          <h1 style={{ fontSize: "36px", fontFamily: F.display, fontWeight: 400, color: C.text, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
             Sagax
           </h1>
-          <p style={{ fontSize: "13px", color: C.amber, fontFamily: F.body, letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 20px", fontWeight: 500 }}>
+          <p style={{ fontSize: "14px", color: C.amber, fontFamily: F.body, letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 20px", fontWeight: 500 }}>
             Applied Game Theory for Finance and Negotiation
           </p>
-          <p style={{ fontSize: "15px", color: C.textSec, lineHeight: 1.7, margin: "0 0 8px", maxWidth: "440px" }}>
+          <p style={{ fontSize: "16px", color: C.textSec, lineHeight: 1.7, margin: "0 0 8px", maxWidth: "440px" }}>
             Interactive simulators for strategic interactions in financial markets: auctions, negotiations, competitive dynamics, coordination failures. Each one uses a real finance scenario and teaches through play.
           </p>
-          <p style={{ fontSize: "13px", color: C.textMut, lineHeight: 1.6, margin: "14px 0 0", maxWidth: "440px" }}>
+          <p style={{ fontSize: "14px", color: C.textMut, lineHeight: 1.6, margin: "14px 0 0", maxWidth: "440px" }}>
             Make a move. ↓
           </p>
         </div>
@@ -3704,10 +3810,10 @@ function Home({ onNav }) {
         const items = SIMS.filter(s => MODELS[s.id] && MODELS[s.id].cat === ck);
         if (!items.length) return null;
         return (
-          <div key={ck} style={{ marginBottom: "34px" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "12px", marginBottom: "10px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: cat.color, fontWeight: 600 }}>{cat.label}</span>
-              <span style={{ fontSize: "11.5px", color: C.textFaint }}>{cat.blurb}</span>
+          <div key={ck} style={{ marginBottom: "40px", paddingTop: "24px", borderTop: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "14px", marginBottom: "16px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "12.5px", textTransform: "uppercase", letterSpacing: "0.14em", color: C.text, fontWeight: 600 }}>{cat.label}</span>
+              <span style={{ fontSize: "13px", color: C.textMut }}>{cat.blurb}</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(268px, 1fr))", gap: "10px" }}>
               {items.map(sim => (
@@ -3716,12 +3822,13 @@ function Home({ onNav }) {
                   onMouseEnter={e => { e.currentTarget.style.background = C.surfaceHover; e.currentTarget.style.borderColor = C.borderStrong; }}
                   onMouseLeave={e => { e.currentTarget.style.background = C.surface; e.currentTarget.style.borderColor = C.border; }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", flexWrap: "wrap" }}>
-                    <span style={{ fontFamily: F.mono, fontSize: "10.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
+                    <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
+                    <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
                     {sim.id === "pd" && <Tag color={C.amber}>Start here</Tag>}
                   </div>
-                  <h3 style={{ fontSize: "15px", fontFamily: F.body, fontWeight: 500, color: C.text, margin: "0 0 7px" }}>{sim.name} &rarr;</h3>
-                  <p style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.55, margin: "0 0 8px" }}>{sim.desc}</p>
-                  <div style={{ fontSize: "11px", color: C.textMut, fontStyle: "italic" }}>{sim.finance}</div>
+                  <h3 style={{ fontSize: "16px", fontFamily: F.body, fontWeight: 500, color: C.text, margin: "0 0 7px" }}>{sim.name} &rarr;</h3>
+                  <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65, margin: "0 0 8px" }}>{sim.desc}</p>
+                  <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic" }}>{sim.finance}</div>
                 </div>
               ))}
             </div>
@@ -3740,8 +3847,8 @@ function Home({ onNav }) {
             ["Brief debrief", "After each game, one paragraph explains the result. Theory follows experience."],
           ].map(([t, d]) => (
             <div key={t}>
-              <div style={{ fontSize: "13px", color: C.text, fontWeight: 500, marginBottom: "5px" }}>{t}</div>
-              <div style={{ fontSize: "12px", color: C.textMut, lineHeight: 1.55 }}>{d}</div>
+              <div style={{ fontSize: "14px", color: C.text, fontWeight: 500, marginBottom: "5px" }}>{t}</div>
+              <div style={{ fontSize: "13px", color: C.textMut, lineHeight: 1.65 }}>{d}</div>
             </div>
           ))}
         </div>
@@ -3751,19 +3858,19 @@ function Home({ onNav }) {
       <div style={{ marginBottom: "40px", padding: "24px", background: C.amberMuted, border: `1px solid ${C.amber}25`, borderRadius: "3px" }}>
         {!subscribed ? (
           <>
-            <div style={{ fontSize: "15px", color: C.text, fontWeight: 500, marginBottom: "4px" }}>New simulator every month</div>
-            <p style={{ fontSize: "13px", color: C.textSec, margin: "0 0 12px", lineHeight: 1.5 }}>
+            <div style={{ fontSize: "16px", color: C.text, fontWeight: 500, marginBottom: "4px" }}>New simulator every month</div>
+            <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 12px", lineHeight: 1.6 }}>
               One email when a new simulator drops. Game theory applied to finance.
             </p>
             <div style={{ display: "flex", gap: "8px", maxWidth: "380px" }}>
               <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }} onKeyDown={e => e.key === "Enter" && handleSubscribe()} placeholder="you@example.com"
-                style={{ flex: 1, padding: "9px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.body, fontSize: "13px", outline: "none" }} />
+                style={{ flex: 1, padding: "9px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.body, fontSize: "14px", outline: "none" }} />
               <Btn onClick={handleSubscribe} disabled={loading || !email.includes("@")}>Subscribe</Btn>
             </div>
-            {error && <p style={{ fontSize: "12px", color: C.red, margin: "8px 0 0", lineHeight: 1.5 }}>{error}</p>}
+            {error && <p style={{ fontSize: "13px", color: C.red, margin: "8px 0 0", lineHeight: 1.6 }}>{error}</p>}
           </>
         ) : (
-          <div style={{ fontSize: "14px", color: C.amber }}>✓ You're in. First email when Nash Bargaining ships.</div>
+          <div style={{ fontSize: "15px", color: C.amber }}>✓ You're in. First email when Nash Bargaining ships.</div>
         )}
       </div>
     </div>
@@ -3797,24 +3904,26 @@ export default function Sagax() {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const sim = SIMS.find(s => s.id === page);
-    document.title = sim
-      ? `${sim.name} · Sagax`
-      : "Sagax — Applied Game Theory for Finance and Negotiation";
+    document.title = sim ? `${sim.name} · Sagax`
+      : page === "terms" ? "Terms of Use · Sagax"
+      : "Sagax · Applied Game Theory for Finance and Negotiation";
   }, [page]);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body }}>
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body, position: "relative", overflowX: "hidden" }}>
+      <BoardTexture />
+      <div style={{ position: "relative", zIndex: 1 }}>
       {/* ── Nav ── */}
       <nav style={{ maxWidth: "880px", margin: "0 auto", padding: "20px 24px", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
         <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-          <span style={{ fontSize: "18px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sagax</span>
-          <span style={{ fontSize: "10px", color: C.textMut, marginLeft: "8px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.body }}>
+          <span style={{ fontSize: "19px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sagax</span>
+          <span style={{ fontSize: "11px", color: C.textMut, marginLeft: "8px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.body }}>
             /ˈsa.gaks/
           </span>
         </button>
         <div style={{ display: "flex", gap: "16px" }}>
           {page !== "home" && (
-            <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "12px", fontFamily: F.body, letterSpacing: "0.04em" }}>Library</button>
+            <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, letterSpacing: "0.04em" }}>Library</button>
           )}
         </div>
       </nav>
@@ -3844,15 +3953,21 @@ export default function Sagax() {
         {page === "realopt" && <RealOptions onBack={() => setPage("home")} />}
         {page === "schelling" && <Schelling onBack={() => setPage("home")} />}
         {page === "cheaptalk" && <CheapTalk onBack={() => setPage("home")} />}
+        {page === "terms" && <Terms onBack={() => setPage("home")} />}
       </main>
 
       {/* ── Footer ── */}
-      <footer style={{ borderTop: `1px solid ${C.border}`, maxWidth: "880px", margin: "0 auto", padding: "16px 24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-          <span style={{ fontSize: "11px", color: C.textFaint }}>Sagax · Applied game theory for finance and negotiation · For education only</span>
-          <span style={{ fontSize: "11px", color: C.textFaint }}>Latin: keen, shrewd, perceptive</span>
+      <footer style={{ borderTop: `1px solid ${C.border}`, maxWidth: "880px", margin: "0 auto", padding: "14px 24px 22px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "6px 14px" }}>
+          <span style={{ fontSize: "10.5px", color: C.textFaint, lineHeight: 1.6 }}>
+            &copy; 2026 Julia Mei. All rights reserved. For education only, and not investment advice.
+          </span>
+          <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.body, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+            Terms of Use
+          </button>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
