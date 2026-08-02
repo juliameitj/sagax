@@ -344,6 +344,928 @@ function SealedBidAuction({ onBack }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SHARED — simulator header
+// ═══════════════════════════════════════════════════════════════════════════════
+const SimHeader = ({ onBack, title, tag, tagColor, children }) => (
+  <>
+    <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "12px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
+      <h2 style={{ margin: 0, fontSize: "20px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>{title}</h2>
+      <Tag color={tagColor}>{tag}</Tag>
+    </div>
+    <p style={{ color: C.textSec, fontSize: "13.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px" }}>{children}</p>
+  </>
+);
+
+const Insight = ({ tone = "neutral", title, children }) => {
+  const map = { good: [C.greenMuted, C.green], bad: [C.redMuted, C.red], neutral: [C.amberMuted, C.amber] };
+  const [bg, bd] = map[tone];
+  return (
+    <div style={{ background: bg, border: `1px solid ${bd}30`, borderRadius: "3px", padding: "14px 18px", marginBottom: "18px" }}>
+      {title && <div style={{ fontSize: "14px", color: C.text, fontWeight: 500, marginBottom: "6px" }}>{title}</div>}
+      <div style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.65 }}>{children}</div>
+    </div>
+  );
+};
+
+const Slider = ({ label, value, onChange, min, max, step = 1, suffix = "", hint }) => (
+  <div style={{ marginBottom: "14px" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
+      <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: "14px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{value}{suffix}</span>
+    </div>
+    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))}
+      style={{ width: "100%", maxWidth: "300px", accentColor: C.amber, cursor: "pointer" }} />
+    {hint && <div style={{ fontSize: "11px", color: C.textMut, fontStyle: "italic", marginTop: "3px" }}>{hint}</div>}
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NASH BARGAINING
+// ═══════════════════════════════════════════════════════════════════════════════
+function NashBargaining({ onBack }) {
+  const [yourBatna, setYourBatna] = useState(20);
+  const [theirBatna, setTheirBatna] = useState(20);
+  const [patience, setPatience] = useState(0.8);
+  const [offer, setOffer] = useState("");
+  const [log, setLog] = useState([]);
+  const [status, setStatus] = useState("playing"); // playing | deal | breakdown
+  const [final, setFinal] = useState(null);
+  const [countering, setCountering] = useState(false);
+  const MAX_ROUNDS = 6;
+
+  const round = log.filter(e => e.by === "you").length + 1;
+  const pie = Math.round(100 * Math.pow(patience, log.length));
+  const surplus = Math.max(0, 100 - yourBatna - theirBatna);
+  const nbs = Math.round(yourBatna + surplus / 2);
+  const rubinstein = Math.round(yourBatna + surplus / (1 + patience));
+
+  // What the AI needs to accept: its BATNA plus what it expects from countering
+  const aiThreshold = () => {
+    const remainingPie = 100 * Math.pow(patience, log.length);
+    const s = Math.max(0, remainingPie - yourBatna - theirBatna);
+    return theirBatna + (patience * s) / (1 + patience);
+  };
+
+  const reset = () => { setLog([]); setStatus("playing"); setFinal(null); setOffer(""); setCountering(false); };
+
+  const propose = () => {
+    const keep = parseFloat(offer);
+    if (isNaN(keep) || keep < 0 || keep > pie) return;
+    setCountering(false);
+    const give = pie - keep;
+    const thresh = aiThreshold();
+
+    if (give >= thresh) {
+      setLog(l => [...l, { r: round, by: "you", keep, give, result: "accepted" }]);
+      setFinal({ you: keep, them: give, rounds: round });
+      setStatus("deal");
+      return;
+    }
+
+    // AI rejects and counters
+    const nextPie = 100 * Math.pow(patience, log.length + 1);
+    const s = Math.max(0, nextPie - yourBatna - theirBatna);
+    const aiKeeps = Math.round(theirBatna + s / (1 + patience));
+    const aiGives = Math.round(nextPie - aiKeeps);
+
+    const newLog = [
+      ...log,
+      { r: round, by: "you", keep, give, result: "rejected" },
+      { r: round, by: "them", keep: aiGives, give: aiKeeps, result: "counter" },
+    ];
+
+    if (newLog.filter(e => e.by === "you").length >= MAX_ROUNDS) {
+      setLog(newLog);
+      setFinal({ you: yourBatna, them: theirBatna, rounds: MAX_ROUNDS, broke: true });
+      setStatus("breakdown");
+    } else {
+      setLog(newLog);
+      setOffer("");
+    }
+  };
+
+  const acceptCounter = () => {
+    const last = log[log.length - 1];
+    setFinal({ you: last.keep, them: last.give, rounds: round, tookCounter: true });
+    setStatus("deal");
+  };
+
+  const awaitingResponse = log.length > 0 && log[log.length - 1].by === "them" && status === "playing" && !countering;
+
+  return (
+    <div>
+      <SimHeader onBack={onBack} title="Nash Bargaining" tag="Negotiation" tagColor={C.green}>
+        You and a counterparty split 100 points. Each round you fail to agree, the total shrinks by the discount factor. If nobody agrees within {MAX_ROUNDS} rounds, you each fall back to your outside option (BATNA).
+      </SimHeader>
+
+      <div style={{ display: "flex", gap: "28px", flexWrap: "wrap", marginBottom: "18px" }}>
+        <div style={{ minWidth: "220px" }}>
+          <Slider label="Your BATNA" value={yourBatna} onChange={v => { setYourBatna(v); reset(); }} min={0} max={45} hint="What you get if talks collapse." />
+          <Slider label="Their BATNA" value={theirBatna} onChange={v => { setTheirBatna(v); reset(); }} min={0} max={45} hint="Their fallback if talks collapse." />
+          <Slider label="Patience" value={patience} onChange={v => { setPatience(v); reset(); }} min={0.5} max={0.95} step={0.05} hint="How slowly the pie shrinks each round." />
+        </div>
+        <div style={{ flex: 1, minWidth: "220px" }}>
+          <Label>Benchmarks</Label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "10px 14px" }}>
+              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut }}>Nash Solution</div>
+              <div style={{ fontSize: "18px", fontFamily: F.mono, color: C.textSec, fontWeight: 600 }}>{nbs}</div>
+              <div style={{ fontSize: "11px", color: C.textMut, fontStyle: "italic" }}>Split the surplus evenly above both BATNAs.</div>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "10px 14px" }}>
+              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut }}>Rubinstein (first mover)</div>
+              <div style={{ fontSize: "18px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{rubinstein}</div>
+              <div style={{ fontSize: "11px", color: C.textMut, fontStyle: "italic" }}>Moving first is worth more when patience is low.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {status === "playing" && !awaitingResponse && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Pie This Round</div>
+              <div style={{ fontSize: "34px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{pie}</div>
+              <div style={{ fontSize: "11px", color: C.textMut, marginTop: "2px" }}>Round {round} of {MAX_ROUNDS}</div>
+            </div>
+            <div style={{ flex: 1, minWidth: "180px" }}>
+              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>You Keep</div>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <input type="number" value={offer} onChange={e => setOffer(e.target.value)} onKeyDown={e => e.key === "Enter" && propose()} placeholder="0"
+                  style={{ width: "110px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "16px", outline: "none" }} />
+                <span style={{ fontSize: "12px", color: C.textMut, fontFamily: F.mono }}>
+                  they get {offer && !isNaN(parseFloat(offer)) ? Math.max(0, pie - parseFloat(offer)) : "—"}
+                </span>
+                <Btn onClick={propose} disabled={!offer || isNaN(parseFloat(offer))}>Offer</Btn>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {awaitingResponse && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <Label>They Rejected and Countered</Label>
+          <div style={{ display: "flex", gap: "18px", flexWrap: "wrap", alignItems: "center" }}>
+            <Stat label="You Would Get" value={log[log.length - 1].keep} color={C.amber} />
+            <Stat label="They Keep" value={log[log.length - 1].give} color={C.textSec} />
+            <div style={{ display: "flex", gap: "8px" }}>
+              <Btn onClick={acceptCounter} color={C.green}>Accept</Btn>
+              <Btn onClick={() => { setOffer(""); setCountering(true); }} outline>Counter</Btn>
+            </div>
+          </div>
+          <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "10px", fontStyle: "italic" }}>
+            Rejecting shrinks the pie again. Delay is costly for both sides.
+          </div>
+        </div>
+      )}
+
+      {status !== "playing" && final && (
+        <Insight tone={status === "deal" ? (final.you >= nbs ? "good" : "neutral") : "bad"}
+          title={status === "deal" ? `Deal at round ${final.rounds}. You take ${final.you}.` : "Talks collapsed."}>
+          {status === "breakdown" &&
+            `Neither side conceded within ${MAX_ROUNDS} rounds, so you both fell back to your BATNAs: ${yourBatna} for you, ${theirBatna} for them. The ${surplus} points of surplus went unclaimed. In real negotiations, this is the deal that dies over a gap smaller than the value of doing the deal at all.`}
+          {status === "deal" && final.you >= rubinstein &&
+            `You captured ${final.you}, at or above the Rubinstein prediction of ${rubinstein}. Moving first is worth real money when the other side is impatient. Each round of delay costs them ${Math.round((1 - patience) * 100)}% of the remaining pie, which weakens their ability to hold out.`}
+          {status === "deal" && final.you < rubinstein && final.you >= yourBatna &&
+            `You settled for ${final.you}, below the Rubinstein prediction of ${rubinstein}. Your BATNA of ${yourBatna} sets the floor on what you should ever accept. Everything above that floor is negotiable, and how it splits depends on who can afford to wait longer.`}
+          {status === "deal" && final.you < yourBatna &&
+            `You accepted ${final.you}, which is below your BATNA of ${yourBatna}. Walking away would have paid more. The first rule of negotiation is knowing the number beneath which no deal beats a deal.`}
+        </Insight>
+      )}
+
+      <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
+        <Btn onClick={reset} outline>Reset</Btn>
+      </div>
+
+      {log.length > 0 && (
+        <div>
+          <Label>Offer History</Label>
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+              <thead><tr style={{ background: C.surface }}>
+                {["Rnd", "By", "You", "Them", "Result"].map(h => (
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {log.map((e, i) => (
+                  <tr key={i}>
+                    <td style={{ padding: "5px 10px", color: C.textMut }}>{e.r}</td>
+                    <td style={{ padding: "5px 10px", color: e.by === "you" ? C.steel : C.textSec }}>{e.by === "you" ? "You" : "Them"}</td>
+                    <td style={{ padding: "5px 10px", color: C.text }}>{e.keep}</td>
+                    <td style={{ padding: "5px 10px", color: C.textSec }}>{e.give}</td>
+                    <td style={{ padding: "5px 10px", color: e.result === "accepted" ? C.green : e.result === "rejected" ? C.red : C.textMut }}>{e.result}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BANK RUN
+// ═══════════════════════════════════════════════════════════════════════════════
+function BankRun({ onBack }) {
+  const [n, setN] = useState(10);
+  const [insurance, setInsurance] = useState("none"); // none | partial | full
+  const [climate, setClimate] = useState("nervous"); // calm | nervous | panicked
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  const INS = { none: 0, partial: 50, full: 100 };
+  const CLIMATE_P = { calm: 0.15, nervous: 0.4, panicked: 0.7 };
+  const failThreshold = Math.ceil(n * 0.4);
+
+  const run = (myMove) => {
+    const p = CLIMATE_P[climate];
+    // Insurance calms other depositors too
+    const adj = insurance === "full" ? p * 0.35 : insurance === "partial" ? p * 0.7 : p;
+    const others = Array.from({ length: n - 1 }, () => Math.random() < adj);
+    const otherWithdrawals = others.filter(Boolean).length;
+    const total = otherWithdrawals + (myMove === "withdraw" ? 1 : 0);
+    const failed = total > failThreshold;
+
+    let payoff;
+    if (myMove === "wait") payoff = failed ? INS[insurance] : 120;
+    else payoff = failed ? (total <= failThreshold + 2 ? 100 : Math.max(INS[insurance], 60)) : 100;
+
+    const r = { myMove, others, otherWithdrawals, total, failed, payoff, n, failThreshold };
+    setResult(r);
+    setHistory(h => [...h, { r: h.length + 1, myMove, total, failed, payoff }]);
+  };
+
+  const reset = () => { setResult(null); setHistory([]); };
+  const avg = history.length ? Math.round(history.reduce((s, h) => s + h.payoff, 0) / history.length) : 0;
+  const failRate = history.length ? history.filter(h => h.failed).length : 0;
+
+  return (
+    <div>
+      <SimHeader onBack={onBack} title="Bank Run" tag="Coordination Crisis" tagColor={C.red}>
+        You are one of {n} depositors. The bank has lent out most of its deposits, so it can only pay {failThreshold} people on demand. Wait and the bank pays interest. Withdraw and you get your money back with no interest. If more than {failThreshold} people withdraw, the bank fails and late withdrawers lose most of their deposit.
+      </SimHeader>
+
+      <div style={{ display: "flex", gap: "28px", flexWrap: "wrap", marginBottom: "18px" }}>
+        <div>
+          <Label>Depositors</Label>
+          <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
+            {[6, 10, 20].map(v => <Pill key={v} active={n === v} onClick={() => { setN(v); reset(); }}>{v}</Pill>)}
+          </div>
+          <Label>Deposit Insurance</Label>
+          <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
+            {[["none", "None"], ["partial", "50%"], ["full", "100%"]].map(([k, l]) =>
+              <Pill key={k} active={insurance === k} color={C.green} onClick={() => { setInsurance(k); reset(); }}>{l}</Pill>)}
+          </div>
+          <Label>Market Climate</Label>
+          <div style={{ display: "flex", gap: "6px" }}>
+            {[["calm", "Calm"], ["nervous", "Nervous"], ["panicked", "Panicked"]].map(([k, l]) =>
+              <Pill key={k} active={climate === k} color={C.red} onClick={() => { setClimate(k); reset(); }}>{l}</Pill>)}
+          </div>
+        </div>
+        <div style={{ flex: 1, minWidth: "200px" }}>
+          <Label>Payoff Structure</Label>
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden", display: "inline-block" }}>
+            <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+              <thead><tr>
+                <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.body, fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Your move</th>
+                <th style={{ padding: "7px 14px", background: C.surface, color: C.green, fontSize: "11px", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Bank holds</th>
+                <th style={{ padding: "7px 14px", background: C.surface, color: C.red, fontSize: "11px", fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>Bank fails</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: "7px 14px", color: C.green, fontSize: "11px", borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>Wait</td>
+                  <td style={{ padding: "8px 14px", textAlign: "center", background: C.greenMuted, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>120</td>
+                  <td style={{ padding: "8px 14px", textAlign: "center", background: C.redMuted, borderBottom: `1px solid ${C.border}` }}>{INS[insurance]}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "7px 14px", color: C.red, fontSize: "11px", borderRight: `1px solid ${C.border}` }}>Withdraw</td>
+                  <td style={{ padding: "8px 14px", textAlign: "center", borderRight: `1px solid ${C.border}` }}>100</td>
+                  <td style={{ padding: "8px 14px", textAlign: "center" }}>~{Math.max(INS[insurance], 60)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {!result && (
+        <div style={{ display: "flex", gap: "8px", marginBottom: "18px", flexWrap: "wrap" }}>
+          <Btn onClick={() => run("wait")} color={C.green}>Wait</Btn>
+          <Btn onClick={() => run("withdraw")} color={C.red} textColor="#fff">Withdraw</Btn>
+        </div>
+      )}
+
+      {result && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <div style={{ display: "flex", gap: "16px", marginBottom: "18px", flexWrap: "wrap" }}>
+            <Stat label="Withdrawals" value={`${result.total}/${result.n}`} color={result.failed ? C.red : C.green} />
+            <Stat label="Bank" value={result.failed ? "Failed" : "Held"} color={result.failed ? C.red : C.green} />
+            <Stat label="Your Payoff" value={result.payoff} color={result.payoff >= 100 ? C.green : C.red} />
+          </div>
+
+          <Label>Depositors</Label>
+          <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
+            <div style={{
+              width: "34px", height: "34px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center",
+              background: result.myMove === "withdraw" ? C.redMuted : C.greenMuted,
+              border: `1.5px solid ${result.myMove === "withdraw" ? C.red : C.green}`,
+              fontSize: "9px", fontFamily: F.body, color: result.myMove === "withdraw" ? C.red : C.green, fontWeight: 600,
+            }}>YOU</div>
+            {result.others.map((w, i) => (
+              <div key={i} style={{
+                width: "34px", height: "34px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center",
+                background: w ? C.redMuted : C.greenMuted,
+                border: `1px solid ${w ? C.red : C.green}40`,
+                fontSize: "13px", color: w ? C.red : C.green, fontFamily: F.mono,
+              }}>{w ? "↓" : "•"}</div>
+            ))}
+          </div>
+          <div style={{ fontSize: "11px", color: C.textMut, marginBottom: "16px", fontFamily: F.body }}>
+            ↓ withdrew · • waited · Bank fails above {result.failThreshold} withdrawals
+          </div>
+
+          <Insight tone={result.failed ? "bad" : "good"}>
+            {result.failed && result.myMove === "wait" &&
+              `The bank failed and you waited. You received ${result.payoff}. Nothing about the bank's loan book changed today. It failed because ${result.total} people believed it would fail. That belief was self-fulfilling, and being right about the fundamentals did not protect you.`}
+            {result.failed && result.myMove === "withdraw" &&
+              `The bank failed and you got out with ${result.payoff}. Withdrawing was individually rational. It was also part of what caused the failure. Every depositor faced the same logic, which is exactly why Diamond and Dybvig showed that bank runs are an equilibrium, not an accident.`}
+            {!result.failed && result.myMove === "wait" &&
+              `The bank held and you earned ${result.payoff}, the best available outcome. Only ${result.total} depositors withdrew, below the ${result.failThreshold} threshold. Coordination held this time. ${insurance === "none" ? "With no deposit insurance, that outcome depends entirely on collective nerve." : "Deposit insurance made everyone calmer, which made the run less likely, which is the point of it."}`}
+            {!result.failed && result.myMove === "withdraw" &&
+              `The bank held and you took ${result.payoff}. You gave up the 120 you would have earned by waiting. Withdrawing is cheap insurance when you are wrong about others and expensive when everyone is wrong together.`}
+          </Insight>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Btn onClick={() => setResult(null)}>Run Again →</Btn>
+            <Btn onClick={reset} outline>Reset</Btn>
+          </div>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div>
+          <Label>Session · {history.length} runs</Label>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Stat label="Avg Payoff" value={avg} color={avg >= 100 ? C.green : C.red} />
+            <Stat label="Bank Failures" value={`${failRate}/${history.length}`} color={failRate > 0 ? C.red : C.green} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BEAUTY CONTEST
+// ═══════════════════════════════════════════════════════════════════════════════
+function BeautyContest({ onBack }) {
+  const [n, setN] = useState(10);
+  const [guess, setGuess] = useState("");
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  const LEVEL_BASE = [50, 33.3, 22.2, 14.8, 9.9];
+
+  const submit = () => {
+    const g = parseFloat(guess);
+    if (isNaN(g) || g < 0 || g > 100) return;
+
+    // AI reasoning depth deepens as rounds accumulate
+    const shift = Math.min(2, Math.floor(history.length / 2));
+    const ai = Array.from({ length: n - 1 }, (_, i) => {
+      const roll = Math.random();
+      let lvl = roll < 0.15 ? 0 : roll < 0.45 ? 1 : roll < 0.75 ? 2 : roll < 0.92 ? 3 : 4;
+      lvl = Math.min(4, lvl + shift);
+      const base = lvl === 0 ? Math.random() * 100 : LEVEL_BASE[lvl];
+      const noise = (Math.random() - 0.5) * 8;
+      return { name: `P${i + 1}`, guess: Math.max(0, Math.min(100, Math.round((base + noise) * 10) / 10)), lvl };
+    });
+
+    const all = [{ name: "You", guess: g, lvl: null, you: true }, ...ai];
+    const mean = all.reduce((s, p) => s + p.guess, 0) / all.length;
+    const target = Math.round((mean * 2 / 3) * 10) / 10;
+    const sorted = [...all].sort((a, b) => Math.abs(a.guess - target) - Math.abs(b.guess - target));
+    const winner = sorted[0];
+
+    setResult({ all, mean: Math.round(mean * 10) / 10, target, winner, yourGuess: g, yourDist: Math.round(Math.abs(g - target) * 10) / 10 });
+    setHistory(h => [...h, { r: h.length + 1, guess: g, target, won: winner.you === true }]);
+  };
+
+  const next = () => { setGuess(""); setResult(null); };
+  const reset = () => { setGuess(""); setResult(null); setHistory([]); };
+  const wins = history.filter(h => h.won).length;
+
+  return (
+    <div>
+      <SimHeader onBack={onBack} title="Beauty Contest" tag="Second-Order Thinking" tagColor="#B080D0">
+        Pick a number between 0 and 100. The winner is whoever comes closest to two-thirds of the average guess across all {n} players. Keynes used this to describe markets: you are not picking the best asset, you are picking what everyone else will pick.
+      </SimHeader>
+
+      <div style={{ marginBottom: "18px" }}>
+        <Label>Players</Label>
+        <div style={{ display: "flex", gap: "6px" }}>
+          {[5, 10, 20].map(v => <Pill key={v} active={n === v} onClick={() => { setN(v); reset(); }}>{v}</Pill>)}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: "18px" }}>
+        <Label>Reasoning Ladder</Label>
+        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+          {[
+            ["Level 0", "Guesses randomly. Average 50."],
+            ["Level 1", "Assumes others are random. Guesses 33."],
+            ["Level 2", "Assumes others are level 1. Guesses 22."],
+            ["Level 3", "Guesses 15."],
+            ["Nash", "Everyone reasons infinitely. Guesses 0."],
+          ].map(([l, d], i) => (
+            <div key={l} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "8px 12px", flex: "1 1 130px" }}>
+              <div style={{ fontSize: "11px", color: i === 4 ? C.amber : C.textSec, fontWeight: 500, marginBottom: "2px" }}>{l}</div>
+              <div style={{ fontSize: "10.5px", color: C.textMut, lineHeight: 1.4 }}>{d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {!result && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <Label>Your Guess (0–100)</Label>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <input type="number" value={guess} onChange={e => setGuess(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} placeholder="0–100"
+              style={{ width: "130px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "16px", outline: "none" }} />
+            <Btn onClick={submit} disabled={!guess || isNaN(parseFloat(guess))}>Submit</Btn>
+          </div>
+          {history.length > 0 && (
+            <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "10px", fontStyle: "italic" }}>
+              Last round the target was {history[history.length - 1].target}. The other players saw it too.
+            </div>
+          )}
+        </div>
+      )}
+
+      {result && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <div style={{ display: "flex", gap: "16px", marginBottom: "18px", flexWrap: "wrap" }}>
+            <Stat label="Average" value={result.mean} />
+            <Stat label="Target (⅔)" value={result.target} color={C.amber} />
+            <Stat label="Your Guess" value={result.yourGuess} color={result.winner.you ? C.green : C.textSec} />
+            <Stat label="Off By" value={result.yourDist} color={result.winner.you ? C.green : C.red} />
+          </div>
+
+          <Label>Guess Distribution</Label>
+          <div style={{ position: "relative", height: "70px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: "3px", marginBottom: "6px" }}>
+            {result.all.map((p, i) => (
+              <div key={i} style={{
+                position: "absolute", left: `${p.guess}%`, top: p.you ? "8px" : "34px", transform: "translateX(-50%)",
+                fontSize: p.you ? "11px" : "10px", fontFamily: F.mono, color: p.you ? C.steel : C.textMut,
+                fontWeight: p.you ? 600 : 400, whiteSpace: "nowrap",
+              }}>{p.you ? "▼ YOU" : "•"}</div>
+            ))}
+            <div style={{ position: "absolute", left: `${result.target}%`, top: 0, bottom: 0, width: "2px", background: C.amber }} />
+            <div style={{ position: "absolute", left: `${result.target}%`, bottom: "-1px", transform: "translateX(-50%)", fontSize: "9px", color: C.amber, fontFamily: F.mono, background: C.surface, padding: "0 3px" }}>
+              {result.target}
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: C.textFaint, fontFamily: F.mono, marginBottom: "16px" }}>
+            <span>0</span><span>50</span><span>100</span>
+          </div>
+
+          <Insight tone={result.winner.you ? "good" : "neutral"} title={result.winner.you ? "You won." : `${result.winner.name} won with ${result.winner.guess}.`}>
+            {result.yourGuess > 40 &&
+              `You guessed ${result.yourGuess}, well above the target of ${result.target}. Guessing near 50 assumes everyone else picks randomly. The moment you assume others are also thinking, your guess should drop to about 33, then 22, and so on. Each layer of reasoning about other people's reasoning pulls the answer down.`}
+            {result.yourGuess <= 40 && result.yourGuess > 15 &&
+              `You guessed ${result.yourGuess} against a target of ${result.target}. You reasoned one or two levels deep, which is where most real players land. The Nash equilibrium here is 0, but nobody guesses 0 in round one because winning requires predicting actual behavior rather than ideal behavior.`}
+            {result.yourGuess <= 15 &&
+              `You guessed ${result.yourGuess}, close to the Nash equilibrium of 0. Playing the equilibrium is correct only if everyone else does too. Against real players who stop at level 1 or 2, guessing 0 loses. Markets punish being early in exactly the same way.`}
+          </Insight>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Btn onClick={next}>Next Round →</Btn>
+            <Btn onClick={reset} outline>Reset</Btn>
+          </div>
+        </div>
+      )}
+
+      {history.length > 1 && (
+        <div>
+          <Label>Target Convergence · {history.length} rounds</Label>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "80px", padding: "10px 12px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", marginBottom: "10px" }}>
+            {history.map(h => (
+              <div key={h.r} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+                <div style={{ width: "100%", maxWidth: "26px", height: `${Math.max(3, (h.target / 50) * 55)}px`, background: C.amber + "70", borderRadius: "2px" }} />
+                <span style={{ fontSize: "9px", color: C.textMut, fontFamily: F.mono }}>{h.target}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Stat label="Wins" value={`${wins}/${history.length}`} color={wins > 0 ? C.green : C.textSec} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// JOB MARKET SIGNALING
+// ═══════════════════════════════════════════════════════════════════════════════
+function JobMarketSignaling({ onBack }) {
+  const [costRatio, setCostRatio] = useState(2.5);
+  const [threshold, setThreshold] = useState(6);
+  const [education, setEducation] = useState(0);
+  const [myType, setMyType] = useState(() => (Math.random() < 0.5 ? "high" : "low"));
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  const WAGE_HI = 100, WAGE_LO = 50, COST_HI = 4;
+  const costLo = COST_HI * costRatio;
+  const myCost = myType === "high" ? COST_HI : costLo;
+
+  // Separation requires: low type will not pay to reach the threshold
+  const lowBreakeven = (WAGE_HI - WAGE_LO) / costLo;
+  const highBreakeven = (WAGE_HI - WAGE_LO) / COST_HI;
+  const separates = threshold > lowBreakeven && threshold <= highBreakeven;
+
+  const submit = () => {
+    const wage = education >= threshold ? WAGE_HI : WAGE_LO;
+    const cost = education * myCost;
+    const net = wage - cost;
+    const trueValue = myType === "high" ? WAGE_HI : WAGE_LO;
+    setResult({ type: myType, education, wage, cost, net, trueValue, correct: wage === trueValue });
+    setHistory(h => [...h, { r: h.length + 1, type: myType, education, wage, net }]);
+  };
+
+  const next = () => {
+    setMyType(Math.random() < 0.5 ? "high" : "low");
+    setEducation(0);
+    setResult(null);
+  };
+  const reset = () => { setHistory([]); next(); };
+  const totalNet = history.reduce((s, h) => s + h.net, 0);
+
+  return (
+    <div>
+      <SimHeader onBack={onBack} title="Job Market Signaling" tag="Information" tagColor="#E09050">
+        You are a worker with private knowledge of your own ability. Education costs you money and adds nothing to your productivity. Employers cannot see your ability, only your education, and they pay {WAGE_HI} above the threshold and {WAGE_LO} below it. The question is whether education can separate the two types when it teaches nobody anything.
+      </SimHeader>
+
+      <div style={{ display: "flex", gap: "28px", flexWrap: "wrap", marginBottom: "18px" }}>
+        <div style={{ minWidth: "230px" }}>
+          <Slider label="Low-type cost multiple" value={costRatio} onChange={v => { setCostRatio(v); setResult(null); }} min={1} max={5} step={0.25} suffix="×"
+            hint={`Low ability pays ${(COST_HI * costRatio).toFixed(1)} per year vs ${COST_HI} for high ability.`} />
+          <Slider label="Employer threshold" value={threshold} onChange={v => { setThreshold(v); setResult(null); }} min={0} max={12} step={0.5}
+            hint="Years of education required for the high wage." />
+        </div>
+        <div style={{ flex: 1, minWidth: "230px" }}>
+          <Label>Equilibrium Check</Label>
+          <div style={{ background: separates ? C.greenMuted : C.redMuted, border: `1px solid ${separates ? C.green : C.red}30`, borderRadius: "3px", padding: "12px 16px" }}>
+            <div style={{ fontSize: "13px", color: separates ? C.green : C.red, fontWeight: 500, marginBottom: "5px" }}>
+              {separates ? "Separating equilibrium" : threshold <= lowBreakeven ? "Pooling equilibrium" : "Nobody signals"}
+            </div>
+            <div style={{ fontSize: "11.5px", color: C.textSec, lineHeight: 1.55, fontFamily: F.mono }}>
+              Low type mimics below {lowBreakeven.toFixed(1)} yrs<br />
+              High type signals below {highBreakeven.toFixed(1)} yrs<br />
+              Threshold set at {threshold} yrs
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {!result && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+            <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>Your Type</span>
+            <Tag color={myType === "high" ? C.green : C.red}>{myType === "high" ? "High Ability" : "Low Ability"}</Tag>
+            <span style={{ fontSize: "11.5px", color: C.textMut, fontFamily: F.mono }}>education costs you {myCost.toFixed(1)}/yr</span>
+          </div>
+          <Slider label="Years of education" value={education} onChange={setEducation} min={0} max={12} step={0.5}
+            hint={`Total cost: ${(education * myCost).toFixed(1)} · Wage you would be offered: ${education >= threshold ? WAGE_HI : WAGE_LO}`} />
+          <Btn onClick={submit}>Enter the Job Market</Btn>
+        </div>
+      )}
+
+      {result && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <div style={{ display: "flex", gap: "16px", marginBottom: "18px", flexWrap: "wrap" }}>
+            <Stat label="Education" value={result.education} sub=" yrs" />
+            <Stat label="Wage Offered" value={result.wage} color={result.wage === WAGE_HI ? C.green : C.textSec} />
+            <Stat label="Education Cost" value={`−${result.cost.toFixed(0)}`} color={C.red} />
+            <Stat label="Net Payoff" value={result.net.toFixed(0)} color={result.net > 50 ? C.green : result.net < 50 ? C.red : C.textSec} />
+          </div>
+
+          <Insight tone={result.net >= 50 ? "good" : "bad"}>
+            {result.type === "high" && result.wage === WAGE_HI &&
+              `You signalled successfully. ${result.education} years cost you ${result.cost.toFixed(0)} and bought you a wage of ${WAGE_HI}, netting ${result.net.toFixed(0)}. The education taught you nothing. Its entire value came from being too expensive for a low-ability worker to imitate. That is Spence's result: a costly signal works when the cost differs by type.`}
+            {result.type === "high" && result.wage === WAGE_LO &&
+              `You have high ability and the employer paid you ${WAGE_LO}. Ability the market cannot observe is ability the market will not pay for. Reaching the ${threshold}-year threshold would have cost ${(threshold * myCost).toFixed(0)} and returned ${WAGE_HI}, a net of ${(WAGE_HI - threshold * myCost).toFixed(0)}.`}
+            {result.type === "low" && result.wage === WAGE_HI &&
+              `You have low ability and got the high wage anyway. You paid ${result.cost.toFixed(0)} to clear a threshold of ${threshold} years, netting ${result.net.toFixed(0)}. The signal failed to separate because the threshold sits below your break-even point of ${lowBreakeven.toFixed(1)} years. When mimicry is affordable, the signal carries no information and the market pools.`}
+            {result.type === "low" && result.wage === WAGE_LO &&
+              `You have low ability and took the low wage, netting ${result.net.toFixed(0)}. Not signalling was correct: reaching ${threshold} years would have cost you ${(threshold * myCost).toFixed(0)} to gain only ${WAGE_HI - WAGE_LO}. The threshold is doing its job. It is high enough to be unaffordable to you and affordable to a high type.`}
+          </Insight>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Btn onClick={next}>New Worker →</Btn>
+            <Btn onClick={reset} outline>Reset</Btn>
+          </div>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div>
+          <Label>History · {history.length} workers</Label>
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden", marginBottom: "10px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+              <thead><tr style={{ background: C.surface }}>
+                {["#", "Type", "Educ", "Wage", "Net"].map(h => (
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {history.map(h => (
+                  <tr key={h.r}>
+                    <td style={{ padding: "5px 10px", color: C.textMut }}>{h.r}</td>
+                    <td style={{ padding: "5px 10px", color: h.type === "high" ? C.green : C.red }}>{h.type}</td>
+                    <td style={{ padding: "5px 10px", color: C.textSec }}>{h.education}</td>
+                    <td style={{ padding: "5px 10px", color: h.wage === WAGE_HI ? C.green : C.textSec }}>{h.wage}</td>
+                    <td style={{ padding: "5px 10px", color: h.net >= 50 ? C.green : C.red }}>{h.net.toFixed(0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Stat label="Total Net" value={totalNet.toFixed(0)} color={totalNet > 0 ? C.green : C.red} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENTRY DETERRENCE
+// ═══════════════════════════════════════════════════════════════════════════════
+function EntryDeterrence({ onBack }) {
+  const [entrantStrength, setEntrantStrength] = useState("weak"); // weak | strong
+  const [invested, setInvested] = useState(null);
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  const MONOPOLY = 100, DUOPOLY = 40, WARRED = 20, INVEST_COST = 30;
+  const ENTRANT_WAR = 10;
+  const entryCost = entrantStrength === "weak" ? 35 : 5;
+
+  const entrantEnters = (capacity) => {
+    const profit = capacity === "high" ? ENTRANT_WAR - entryCost : DUOPOLY - entryCost;
+    return profit > 0;
+  };
+
+  const choose = (capacity) => {
+    const enters = entrantEnters(capacity);
+    const investCost = capacity === "high" ? INVEST_COST : 0;
+    let gross;
+    if (!enters) gross = MONOPOLY;
+    else gross = capacity === "high" ? WARRED : DUOPOLY;
+    const payoff = gross - investCost;
+
+    const altCapacity = capacity === "high" ? "low" : "high";
+    const altEnters = entrantEnters(altCapacity);
+    const altGross = !altEnters ? MONOPOLY : altCapacity === "high" ? WARRED : DUOPOLY;
+    const altPayoff = altGross - (altCapacity === "high" ? INVEST_COST : 0);
+
+    setInvested(capacity);
+    setResult({ capacity, enters, payoff, gross, investCost, altCapacity, altPayoff, deterred: capacity === "high" && !enters });
+    setHistory(h => [...h, { r: h.length + 1, capacity, enters, payoff, strength: entrantStrength }]);
+  };
+
+  const next = () => { setInvested(null); setResult(null); };
+  const reset = () => { setHistory([]); next(); };
+  const total = history.reduce((s, h) => s + h.payoff, 0);
+
+  const Branch = ({ cap, label }) => {
+    const enters = entrantEnters(cap);
+    const ic = cap === "high" ? INVEST_COST : 0;
+    const g = !enters ? MONOPOLY : cap === "high" ? WARRED : DUOPOLY;
+    return (
+      <div style={{ flex: 1, minWidth: "180px", background: C.surface, border: `1px solid ${invested === cap ? C.amber : C.border}`, borderRadius: "3px", padding: "14px" }}>
+        <div style={{ fontSize: "12px", color: C.text, fontWeight: 500, marginBottom: "8px" }}>{label}</div>
+        <div style={{ fontSize: "11px", color: C.textMut, fontFamily: F.mono, lineHeight: 1.7 }}>
+          Investment cost: −{ic}<br />
+          Entrant would: <span style={{ color: enters ? C.red : C.green }}>{enters ? "enter" : "stay out"}</span><br />
+          Your gross: {g}<br />
+          <span style={{ color: C.text }}>Net: {g - ic}</span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      <SimHeader onBack={onBack} title="Entry Deterrence" tag="Competitive Moats" tagColor="#70B0C0">
+        You are the incumbent in a monopoly worth {MONOPOLY}. A potential entrant is watching. You can invest {INVEST_COST} in excess capacity, which is only worth building if it convinces them to stay out. They observe your choice before deciding. A threat only works when carrying it out is in your interest.
+      </SimHeader>
+
+      <div style={{ marginBottom: "18px" }}>
+        <Label>Entrant Type</Label>
+        <div style={{ display: "flex", gap: "6px" }}>
+          {[["weak", "Weak (entry costs 35)"], ["strong", "Strong (entry costs 5)"]].map(([k, l]) =>
+            <Pill key={k} active={entrantStrength === k} color={k === "strong" ? C.red : C.green} onClick={() => { setEntrantStrength(k); reset(); }}>{l}</Pill>)}
+        </div>
+        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "6px 0 0", fontStyle: "italic" }}>
+          A strong entrant has low costs and can survive a price war. A weak one cannot.
+        </p>
+      </div>
+
+      <Label>Payoff Tree</Label>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "18px" }}>
+        <Branch cap="low" label="Stay lean (no investment)" />
+        <Branch cap="high" label={`Build excess capacity (−${INVEST_COST})`} />
+      </div>
+
+      {!result && (
+        <div style={{ display: "flex", gap: "8px", marginBottom: "18px", flexWrap: "wrap" }}>
+          <Btn onClick={() => choose("low")} outline>Stay Lean</Btn>
+          <Btn onClick={() => choose("high")}>Build Capacity</Btn>
+        </div>
+      )}
+
+      {result && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <div style={{ display: "flex", gap: "16px", marginBottom: "18px", flexWrap: "wrap" }}>
+            <Stat label="Your Choice" value={result.capacity === "high" ? "Capacity" : "Lean"} color={C.amber} />
+            <Stat label="Entrant" value={result.enters ? "Entered" : "Stayed Out"} color={result.enters ? C.red : C.green} />
+            <Stat label="Your Payoff" value={result.payoff} color={result.payoff >= result.altPayoff ? C.green : C.red} />
+            <Stat label="Other Branch" value={result.altPayoff} color={C.textSec} />
+          </div>
+
+          <Insight tone={result.payoff >= result.altPayoff ? "good" : "bad"}
+            title={result.deterred ? "Entry deterred." : result.enters ? "They entered anyway." : "Nobody wanted in."}>
+            {result.deterred &&
+              `The capacity investment worked. Building cost you ${INVEST_COST}, and it changed what a price war would look like badly enough that a weak entrant walked away. You kept the monopoly and netted ${result.payoff}, against ${result.altPayoff} if you had stayed lean. This is the textbook case for a credible commitment: the spending is only rational because it is irreversible and visible.`}
+            {result.enters && result.capacity === "high" &&
+              `You spent ${INVEST_COST} and they entered regardless, netting you ${result.payoff}. A strong entrant earns ${ENTRANT_WAR - entryCost} even in a price war, so the threat was never frightening. Staying lean would have paid ${result.altPayoff}. Commitment only deters when the other side actually loses money by ignoring it.`}
+            {result.enters && result.capacity === "low" &&
+              `You stayed lean and they entered, splitting the market for ${result.payoff} each. ${entrantStrength === "weak" ? `Against a weak entrant, capacity would have paid ${result.altPayoff}. You left the moat unbuilt.` : `Against this entrant, capacity would have paid ${result.altPayoff}, so staying lean was correct. Some moats cannot be bought.`}`}
+            {!result.enters && result.capacity === "low" &&
+              `They stayed out without you spending anything, so you kept the full ${MONOPOLY}. When entry is unprofitable on its own terms, paying to deter it destroys value. The investment is a cost you only take on when the counterfactual is worse.`}
+          </Insight>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Btn onClick={next}>Play Again →</Btn>
+            <Btn onClick={reset} outline>Reset</Btn>
+          </div>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div>
+          <Label>Session · {history.length} plays</Label>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Stat label="Total Payoff" value={total} color={total > 0 ? C.green : C.red} />
+            <Stat label="Avg" value={Math.round(total / history.length)} />
+            <Stat label="Deterred" value={history.filter(h => !h.enters).length} color={C.green} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ULTIMATUM GAME
+// ═══════════════════════════════════════════════════════════════════════════════
+function UltimatumGame({ onBack }) {
+  const [responder, setResponder] = useState("typical"); // rational | typical | proud
+  const [offer, setOffer] = useState(50);
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  const PROFILES = {
+    rational: { label: "Homo economicus", mean: 1, sd: 0, desc: "Accepts anything above zero. The game-theoretic prediction." },
+    typical: { label: "Typical", mean: 30, sd: 9, desc: "Matches experimental data. Most people reject offers below about 30." },
+    proud: { label: "Proud", mean: 45, sd: 6, desc: "Rejects anything that reads as an insult, even at real cost." },
+  };
+
+  const draw = () => {
+    const p = PROFILES[responder];
+    if (p.sd === 0) return p.mean;
+    const u1 = Math.random(), u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return Math.max(0, Math.min(60, p.mean + z * p.sd));
+  };
+
+  const submit = () => {
+    const threshold = draw();
+    const accepted = offer >= threshold;
+    const you = accepted ? 100 - offer : 0;
+    const them = accepted ? offer : 0;
+    setResult({ offer, threshold: Math.round(threshold * 10) / 10, accepted, you, them });
+    setHistory(h => [...h, { r: h.length + 1, offer, accepted, you }]);
+  };
+
+  const next = () => setResult(null);
+  const reset = () => { setHistory([]); setResult(null); };
+  const total = history.reduce((s, h) => s + h.you, 0);
+  const rejects = history.filter(h => !h.accepted).length;
+  const avgTake = history.length ? Math.round(total / history.length) : 0;
+
+  return (
+    <div>
+      <SimHeader onBack={onBack} title="Ultimatum Game" tag="Behavioral Anomalies" tagColor="#D07070">
+        You have 100 points to divide. Offer the responder any amount. If they accept, you both keep your shares. If they reject, you both get nothing. Standard theory says offer 1 and they should take it. Twenty years of experiments say otherwise.
+      </SimHeader>
+
+      <div style={{ marginBottom: "18px" }}>
+        <Label>Responder Profile</Label>
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          {Object.entries(PROFILES).map(([k, p]) =>
+            <Pill key={k} active={responder === k} color={k === "rational" ? C.steel : k === "proud" ? C.red : C.amber}
+              onClick={() => { setResponder(k); reset(); }}>{p.label}</Pill>)}
+        </div>
+        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "6px 0 0", fontStyle: "italic" }}>{PROFILES[responder].desc}</p>
+      </div>
+
+      {!result && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <Slider label="You offer them" value={offer} onChange={setOffer} min={0} max={100}
+            hint={`You would keep ${100 - offer}.`} />
+          <div style={{ display: "flex", height: "30px", borderRadius: "3px", overflow: "hidden", border: `1px solid ${C.border}`, marginBottom: "16px", maxWidth: "300px" }}>
+            <div style={{ width: `${100 - offer}%`, background: C.amberMuted, borderRight: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontFamily: F.mono, color: C.amber }}>
+              {100 - offer > 12 ? `you ${100 - offer}` : ""}
+            </div>
+            <div style={{ width: `${offer}%`, background: C.steelMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontFamily: F.mono, color: C.steel }}>
+              {offer > 12 ? `them ${offer}` : ""}
+            </div>
+          </div>
+          <Btn onClick={submit}>Make the Offer</Btn>
+        </div>
+      )}
+
+      {result && (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
+          <div style={{ display: "flex", gap: "16px", marginBottom: "18px", flexWrap: "wrap" }}>
+            <Stat label="You Offered" value={result.offer} color={C.steel} />
+            <Stat label="Their Threshold" value={result.threshold} color={C.textSec} />
+            <Stat label="Outcome" value={result.accepted ? "Accepted" : "Rejected"} color={result.accepted ? C.green : C.red} />
+            <Stat label="You Keep" value={result.you} color={result.you > 0 ? C.green : C.red} />
+          </div>
+
+          <Insight tone={result.accepted ? "good" : "bad"}>
+            {!result.accepted &&
+              `Rejected. They walked away from ${result.offer} points to leave you with nothing, because their threshold was ${result.threshold}. Standard theory calls this irrational: ${result.offer} beats 0. Experiments across dozens of countries find the same pattern, which tells you that fairness enters the payoff function directly. In deal terms, an offer that reads as contemptuous can kill a transaction that was profitable for both sides.`}
+            {result.accepted && result.offer < 25 &&
+              `Accepted at ${result.offer}, and you kept ${result.you}. You got away with an aggressive split this time. Run it enough times and the rejection rate on offers this low will eat the gains. The expected value of a lowball offer is lower than it looks because the downside is total.`}
+            {result.accepted && result.offer >= 25 && result.offer <= 45 &&
+              `Accepted at ${result.offer}, and you kept ${result.you}. This is the zone where most real proposers land, and for good reason: it is high enough to clear typical fairness thresholds and low enough to keep most of the surplus. Note that theory says you left ${result.offer - 1} points on the table. Theory is wrong about how often that offer gets taken.`}
+            {result.accepted && result.offer > 45 &&
+              `Accepted at ${result.offer}, and you kept ${result.you}. An even split almost never gets rejected, but you paid for that certainty. The interesting question is what you were buying: with a one-shot anonymous counterparty, the insurance was probably overpriced.`}
+          </Insight>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Btn onClick={next}>Next Offer →</Btn>
+            <Btn onClick={reset} outline>Reset</Btn>
+          </div>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div>
+          <Label>Session · {history.length} offers</Label>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "12px" }}>
+            <Stat label="Total Kept" value={total} color={total > 0 ? C.green : C.red} />
+            <Stat label="Avg per Offer" value={avgTake} />
+            <Stat label="Rejections" value={`${rejects}/${history.length}`} color={rejects > 0 ? C.red : C.green} />
+          </div>
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12px" }}>
+              <thead><tr style={{ background: C.surface }}>
+                {["#", "Offered", "Result", "You Kept"].map(h => (
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {history.map(h => (
+                  <tr key={h.r}>
+                    <td style={{ padding: "5px 10px", color: C.textMut }}>{h.r}</td>
+                    <td style={{ padding: "5px 10px", color: C.steel }}>{h.offer}</td>
+                    <td style={{ padding: "5px 10px", color: h.accepted ? C.green : C.red }}>{h.accepted ? "accepted" : "rejected"}</td>
+                    <td style={{ padding: "5px 10px", color: h.you > 0 ? C.green : C.red }}>{h.you}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // HERO — live mini-game
 // ═══════════════════════════════════════════════════════════════════════════════
 function HeroGame({ onGoDeeper }) {
@@ -414,12 +1336,12 @@ function HeroGame({ onGoDeeper }) {
 const SIMS = [
   { id: "pd", name: "Prisoner's Dilemma", cat: "Repeated Games", catColor: C.steel, status: "live", desc: "Two firms, twenty rounds, six opponent strategies. See how cooperation and retaliation play out over repeated moves.", finance: "Competitive pricing · Supplier relationships · Cartel stability" },
   { id: "auction", name: "Sealed-Bid Auction", cat: "Winner's Curse", catColor: C.amber, status: "live", desc: "Bid on an asset with uncertain value against AI opponents. Learn why the highest bidder overpays and how to adjust.", finance: "IPO allocation · M&A bidding · Oil lease auctions" },
-  { id: "nash", name: "Nash Bargaining", cat: "Negotiation", catColor: C.green, status: "soon", desc: "Split the surplus with adjustable BATNAs, patience, and outside options. See how each parameter shifts the negotiated outcome.", finance: "Salary negotiation · Deal structuring · Vendor contracts" },
-  { id: "bank", name: "Bank Run", cat: "Coordination Crisis", catColor: C.red, status: "soon", desc: "N depositors choose simultaneously: wait or withdraw. Rational individual action cascades into systemic failure.", finance: "SVB · Northern Rock · Money market fund redemptions" },
-  { id: "beauty", name: "Beauty Contest", cat: "Second-Order Thinking", catColor: "#B080D0", status: "soon", desc: "Guess ⅔ of the average guess. See how strategic reasoning layers converge toward zero and why markets overshoot.", finance: "Speculative bubbles · Momentum · Market timing" },
-  { id: "signal", name: "Job Market Signaling", cat: "Information", catColor: "#E09050", status: "soon", desc: "Education as a signal of ability, separate from productivity. Adjust costs and see separating vs. pooling equilibria.", finance: "CFA/MBA credential value · IPO underpricing · Guidance credibility" },
-  { id: "entry", name: "Entry Deterrence", cat: "Competitive Moats", catColor: "#70B0C0", status: "soon", desc: "An incumbent signals capacity to deter entry. See when bluffs work and when commitment is required.", finance: "Moat analysis · Predatory pricing · Capacity investment" },
-  { id: "ultimatum", name: "Ultimatum Game", cat: "Behavioral Anomalies", catColor: "#D07070", status: "soon", desc: "Propose a split. See how rejections that look irrational affect deal-making.", finance: "Final-offer arbitration · Fee negotiation · Fairness norms" },
+  { id: "nash", name: "Nash Bargaining", cat: "Negotiation", catColor: C.green, status: "live", desc: "Split the surplus with adjustable BATNAs, patience, and outside options. See how each parameter shifts the negotiated outcome.", finance: "Salary negotiation · Deal structuring · Vendor contracts" },
+  { id: "bank", name: "Bank Run", cat: "Coordination Crisis", catColor: C.red, status: "live", desc: "N depositors choose simultaneously: wait or withdraw. Rational individual action cascades into systemic failure.", finance: "SVB · Northern Rock · Money market fund redemptions" },
+  { id: "beauty", name: "Beauty Contest", cat: "Second-Order Thinking", catColor: "#B080D0", status: "live", desc: "Guess ⅔ of the average guess. See how strategic reasoning layers converge toward zero and why markets overshoot.", finance: "Speculative bubbles · Momentum · Market timing" },
+  { id: "signal", name: "Job Market Signaling", cat: "Information", catColor: "#E09050", status: "live", desc: "Education as a signal of ability, separate from productivity. Adjust costs and see separating vs. pooling equilibria.", finance: "CFA/MBA credential value · IPO underpricing · Guidance credibility" },
+  { id: "entry", name: "Entry Deterrence", cat: "Competitive Moats", catColor: "#70B0C0", status: "live", desc: "An incumbent signals capacity to deter entry. See when bluffs work and when commitment is required.", finance: "Moat analysis · Predatory pricing · Capacity investment" },
+  { id: "ultimatum", name: "Ultimatum Game", cat: "Behavioral Anomalies", catColor: "#D07070", status: "live", desc: "Propose a split. See how rejections that look irrational affect deal-making.", finance: "Final-offer arbitration · Fee negotiation · Fairness norms" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -572,6 +1494,12 @@ export default function Sagax() {
         {page === "home" && <Home onNav={setPage} />}
         {page === "pd" && <PrisonersDilemma onBack={() => setPage("home")} />}
         {page === "auction" && <SealedBidAuction onBack={() => setPage("home")} />}
+        {page === "nash" && <NashBargaining onBack={() => setPage("home")} />}
+        {page === "bank" && <BankRun onBack={() => setPage("home")} />}
+        {page === "beauty" && <BeautyContest onBack={() => setPage("home")} />}
+        {page === "signal" && <JobMarketSignaling onBack={() => setPage("home")} />}
+        {page === "entry" && <EntryDeterrence onBack={() => setPage("home")} />}
+        {page === "ultimatum" && <UltimatumGame onBack={() => setPage("home")} />}
       </main>
 
       {/* ── Footer ── */}
