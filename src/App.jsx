@@ -529,7 +529,7 @@ export default function Sagax() {
         <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
           <span style={{ fontSize: "18px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sagax</span>
           <span style={{ fontSize: "10px", color: C.textMut, marginLeft: "8px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.body }}>
-            /ˈsa.ɡaks/
+            /ˈsa.gaks/
           </span>
         </button>
         <div style={{ display: "flex", gap: "16px" }}>
