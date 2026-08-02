@@ -179,7 +179,7 @@ function PrisonersDilemma({ onBack }) {
 
       {/* Payoff matrix */}
       <div style={{ marginBottom: "20px" }}>
-        <Label>Payoff Matrix (you, opponent){lastCell ? " — highlighted cell is the last round" : ""}</Label>
+        <Label>Payoff Matrix (you, opponent){lastCell ? " · highlighted cell is the last round" : ""}</Label>
         <div style={{ display: "inline-block", border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
           <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12.5px" }}>
             <thead><tr>
@@ -219,6 +219,7 @@ function PrisonersDilemma({ onBack }) {
       </div>
 
       <Goal>Finish all {ROUNDS} rounds with more points than your opponent.</Goal>
+      <ModelDiagram id="pd" />
 
       {/* Controls */}
       <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "16px", flexWrap: "wrap" }}>
@@ -341,6 +342,7 @@ function SealedBidAuction({ onBack }) {
       </p>
 
       <Goal>Buy the asset for less than it turns out to be worth, and keep your cumulative P&amp;L positive across rounds.</Goal>
+      <ModelDiagram id="auction" />
 
       <div style={{ marginBottom: "18px" }}>
         <Label>Competitors</Label>
@@ -467,6 +469,29 @@ const Slider = ({ label, value, onChange, min, max, step = 1, suffix = "", hint 
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ROUTING — real URLs via the History API, no router dependency
+// ═══════════════════════════════════════════════════════════════════════════════
+const SLUGS = {
+  pd: "prisoners-dilemma", nash: "nash-bargaining", cournot: "cournot-bertrand",
+  entry: "entry-deterrence", chicken: "chicken", auction: "winners-curse",
+  vickrey: "vickrey-auction", signal: "spence-signaling", lemons: "market-for-lemons",
+  hazard: "moral-hazard", bank: "bank-run", beauty: "beauty-contest",
+  cascade: "information-cascades", prospect: "prospect-theory", ultimatum: "ultimatum-game",
+  stag: "stag-hunt", attrition: "war-of-attrition", holdup: "hold-up-problem",
+  mechanism: "mechanism-design", realopt: "real-options", schelling: "focal-points",
+  cheaptalk: "cheap-talk",
+};
+const SLUG_TO_ID = Object.fromEntries(Object.entries(SLUGS).map(([k, v]) => [v, k]));
+
+function pathToPage(p) {
+  const s = (p || "/").replace(/^\/+|\/+$/g, "");
+  return s === "" ? "home" : (SLUG_TO_ID[s] || "home");
+}
+function pageToPath(page) {
+  return page === "home" ? "/" : "/" + SLUGS[page];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // MODEL LIBRARY — business framing and case studies for all 22 models
 // `own` is the diagnostic pitch: where this shows up in the reader's own business.
 // `cases` cite only sources that have been verified; `url` is omitted otherwise.
@@ -485,29 +510,29 @@ const CATS = {
 const MODELS = {
   pd: {
     n: 1, cat: "strategic", sim: true,
-    own: "You are in a repeated game with every supplier, every anchor client, and every competitor in your market. The only question is whether they know it. A procurement team that squeezes a supplier for three points this quarter has traded a permanent relationship for a temporary margin, and the supplier prices that risk into every future quote. The variable that decides whether cooperation holds is not goodwill. It is the discount rate each side applies to the future.",
-    key: "Cooperation survives on the shadow of the future. When the horizon shortens — a CEO nearing exit, a firm nearing distress, a contract nearing its final year — it collapses on schedule.",
+    own: "You are in a repeated game with every supplier, every anchor client, and every competitor in your market. The only question is whether they know it. A procurement team that squeezes a supplier for three points this quarter has traded a permanent relationship for a temporary margin, and the supplier prices that risk into every future quote. What decides whether cooperation holds is the discount rate each side applies to the future. Goodwill has very little to do with it.",
+    key: "Cooperation survives on the shadow of the future. When the horizon shortens, it collapses on schedule. A CEO nearing exit. A firm nearing distress. A contract in its final year.",
     diag: "Which of my counterparties believes this relationship has an endpoint, and what is that belief already costing me?",
     cases: [
-      { t: "OPEC production quotas", y: "ongoing", b: "Quota discipline is a cooperative equilibrium in a repeated game. It holds while members value future revenue over present volume, and breaks whenever a member's horizon shortens through fiscal stress or sanctions. The cartel does not fail because members stop being rational. It fails because the discount rate moves." },
+      { t: "OPEC production quotas", y: "ongoing", b: "Quota discipline is a cooperative equilibrium in a repeated game. It holds while members value future revenue over present volume, and breaks whenever a member's horizon shortens through fiscal stress or sanctions. Members stay rational throughout. The cartel breaks when the discount rate moves." },
       { t: "US airline capacity discipline", y: "2010s", b: "After consolidation reduced the industry to four major carriers, capacity growth stayed restrained for years and margins recovered. Fewer players means each one is more visible, retaliation is faster, and the shadow of the future is longer. Same industry, same economics, different equilibrium." },
     ],
   },
 
   nash: {
     n: 2, cat: "strategic", sim: true,
-    own: "Every renewal, every raise, every vendor contract and every term sheet is this game. Most operators spend their preparation time building arguments. Arguments move almost nothing. What moves the split is what happens to each side if the talk fails. If your largest customer is 40% of revenue and you are 3% of their spend, you can be entirely right about the value you deliver and still lose the negotiation, because the model does not price who is right.",
+    own: "Every renewal, every raise, every vendor contract and every term sheet is this game. Most people spend their prep time building arguments. Arguments move almost nothing. What moves the split is what happens to each side if the talk fails. If your largest customer is 40% of revenue and you are 3% of their spend, you can be entirely right about the value you deliver and still lose the negotiation, because the model does not price who is right.",
     key: "Your ask is close to irrelevant. Your walk-away option is close to everything. Building an alternative is a higher-return activity than sharpening a pitch.",
     diag: "For my three largest counterparties, what actually happens to me on the day the relationship ends? If I cannot answer in numbers, I am negotiating blind.",
     cases: [
-      { t: "Customer concentration in supplier contracts", y: "general", b: "Suppliers with a single dominant buyer routinely accept terms far below the value they create. The gap is not a failure of negotiation skill. It is an accurate reflection of asymmetric outside options, which is why diversification of the customer base raises realised prices without any change in the sales approach." },
+      { t: "Customer concentration in supplier contracts", y: "general", b: "Suppliers with a single dominant buyer routinely accept terms far below the value they create. The gap measures how different the two walk-away options are rather than how well anyone negotiated, which is why diversification of the customer base raises realised prices without any change in the sales approach." },
       { t: "Competing offers in compensation", y: "general", b: "The reliable mechanism for a material pay increase is a credible external offer, not a performance argument. This is Nash bargaining working exactly as specified: the surplus moves toward whoever can most credibly walk." },
     ],
   },
 
   cournot: {
     n: 3, cat: "strategic", sim: true,
-    own: "Before you decide whether to add a production line, cut price, or invest in differentiation, you need to know which game your industry is actually playing. If you compete on capacity in a commodity, adding a line lowers the market price for everyone including you. If you compete on price in a differentiated category, even modest differentiation restores pricing power. Most strategic errors are not errors of execution. They are the right move played in the wrong industry structure.",
+    own: "Before you decide whether to add a production line, cut price, or invest in differentiation, you need to know which game your industry is actually playing. If you compete on capacity in a commodity, adding a line lowers the market price for everyone including you. If you compete on price in a differentiated category, even modest differentiation restores pricing power. Most strategic errors are the right move played in the wrong industry structure.",
     key: "In quantity competition, capacity destroys industry margin. In price competition, differentiation creates it. Diagnose which one you are in before choosing a lever.",
     diag: "When my nearest competitor adds capacity, does my price fall? If yes, I am in a Cournot world and my capacity decisions are pricing decisions.",
     cases: [
@@ -522,7 +547,7 @@ const MODELS = {
     key: "Deterrence requires costly, observable, irreversible commitment. A bluff that gets called is worse than no bluff, because it publishes your weakness.",
     diag: "If a well-funded competitor entered my main market next quarter, what have I already sunk that would make fighting them rational rather than merely satisfying?",
     cases: [
-      { t: "Persistent low-margin operation as a deterrent", y: "general", b: "A firm that operates at structurally thin margins for years signals an unusually long payback tolerance. Potential entrants must assume the incumbent will not blink, because the incumbent has already demonstrated it for a decade. The signal is credible precisely because it has been expensive." },
+      { t: "Persistent low-margin operation as a deterrent", y: "general", b: "A firm that runs on thin margins for years signals an unusually long payback tolerance. Potential entrants must assume the incumbent will not blink, because the incumbent has already demonstrated it for a decade. The signal is credible because it has been expensive for a long time." },
       { t: "Defensive patent portfolios", y: "general", b: "Large defensive portfolios often generate little licensing revenue, which looks like waste until you read them as entry deterrence. The portfolio raises the legal cost of entry, and the money already spent filing it is the sunk commitment that makes the threat credible." },
     ],
   },
@@ -533,14 +558,14 @@ const MODELS = {
     key: "Rationality requires that someone yields. The advantage goes to whoever can most credibly appear unable to yield, which makes removing your own options a strategy rather than a mistake.",
     diag: "In my current standoff, who has more room to quietly climb down? That party will, and both sides already know it.",
     cases: [
-      { t: "Poison pills and takeover defence", y: "general", b: "A shareholder rights plan is a commitment device. It removes the board's ability to accept a hostile bid cheaply, and that removal is the point. The defence works by making capitulation structurally expensive rather than merely undesirable." },
-      { t: "Public positions in negotiation", y: "general", b: "Parties who state a red line publicly are deliberately raising their own cost of retreat. The statement is not communication. It is the destruction of an option, performed in front of witnesses so that the other side must price it." },
+      { t: "Poison pills and takeover defence", y: "general", b: "A shareholder rights plan is a commitment device. It removes the board's ability to accept a hostile bid cheaply, and that removal is the point. The defence works by making it expensive to give in, rather than just unappealing." },
+      { t: "Public positions in negotiation", y: "general", b: "Parties who state a red line publicly are deliberately raising their own cost of retreat. The statement destroys an option in front of witnesses, so the other side has to price it." },
     ],
   },
 
   auction: {
     n: 6, cat: "auctions", sim: true,
-    own: "Any competitive process where the asset's value is uncertain and roughly the same for everyone puts you here: acquiring a company, bidding for a contract, competing for a scarce hire. Your valuation is not wrong on average. It is wrong conditional on winning, because you only win when your estimate sits at the top of the distribution. That conditioning is the whole problem, and it gets worse as the field grows. Most acquirers never make the adjustment because it feels like bidding to lose.",
+    own: "Any competitive process where the asset's value is uncertain and roughly the same for everyone puts you here: acquiring a company, bidding for a contract, competing for a scarce hire. Your valuation is fine on average. It is wrong on the occasions you win, because you only win when your estimate sits at the top of the range. That is the problem, and it gets worse as the field grows. Most acquirers never make the adjustment because it feels like bidding to lose.",
     key: "This is structural, not a bias. Even fully rational bidders must shade downward, and the correct discount increases with the number of competitors.",
     diag: "In our last competitive process, did we adjust our number for the fact that winning would itself be evidence we were the most optimistic party in the room?",
     cases: [
@@ -551,7 +576,7 @@ const MODELS = {
 
   vickrey: {
     n: 7, cat: "auctions", sim: true,
-    own: "If you run any allocation process — procurement, internal capital budgeting, dividing a bonus pool, assigning territories — you are choosing an auction format whether you realise it or not, and the format you choose determines whether people tell you the truth. Under first-price rules, everyone shades and you receive strategic numbers. Under second-price rules, truthful reporting becomes the dominant strategy and the numbers you receive are usable.",
+    own: "If you run any allocation process, you are choosing an auction format. Procurement, capital budgeting, splitting a bonus pool, assigning territories whether you realise it or not, and the format you choose determines whether people tell you the truth. Under first-price rules, everyone shades and you receive strategic numbers. Under second-price rules, truthful reporting becomes the dominant strategy and the numbers you receive are usable.",
     key: "The format of the game changes behaviour more reliably than instruction does. If participants are gaming you, redesign the rules before blaming the people.",
     diag: "Does my budgeting process reward division heads for accurate forecasts, or for inflated ones that survive the haircut I am known to apply?",
     cases: [
@@ -562,7 +587,7 @@ const MODELS = {
 
   signal: {
     n: 8, cat: "info", sim: true,
-    own: "You cannot prove quality directly, so you spend money to prove it indirectly, and so does everyone selling to you. Your certifications, your office, your client list, your audit, your buyback, your dividend. Each works only while it stays expensive for a weaker firm to imitate. The moment a signal becomes cheap enough for anyone to send, it stops carrying information and you are paying for something that no longer separates you from anyone.",
+    own: "You cannot prove quality directly, so you spend money to prove it indirectly, and so does everyone selling to you. Your certifications, your office, your client list, your audit, your buyback, your dividend. Each one works only while it stays too expensive for a weaker firm to copy. The moment a signal becomes cheap enough for anyone to send, it stops carrying information and you are paying for something that no longer separates you from anyone.",
     key: "A signal works only if it is differentially costly. When a credential gets easy to obtain, its value collapses and a costlier one replaces it.",
     diag: "Which of my quality signals could a materially worse competitor buy this year for the same price I paid? Those have already stopped working.",
     cases: [
@@ -573,8 +598,8 @@ const MODELS = {
 
   lemons: {
     n: 9, cat: "info", sim: true,
-    own: "If your buyers cannot tell your quality apart from your worst competitor's, you are priced at the average of the category and your best work is subsidising someone else's worst. This is why good firms exit undifferentiated markets: not because they cannot compete, but because they cannot get paid. The entire industry of warranties, ratings, audits, guarantees and diligence exists to solve exactly this, and every one of them is a mechanism for closing the information gap.",
-    key: "Information asymmetry does not merely cause inefficiency. It can unravel the market entirely, and the high-quality participants leave first.",
+    own: "If your buyers cannot tell your quality apart from your worst competitor's, you are priced at the average of the category and your best work is subsidising someone else's worst. This is why good firms leave undifferentiated markets. They can compete. They just cannot get paid for it. The entire industry of warranties, ratings, audits, guarantees and diligence exists to solve exactly this, and every one of them exists to close the information gap.",
+    key: "Information asymmetry can unravel a market completely, and the high-quality participants leave first.",
     diag: "What can a buyer verify about my quality before purchase? If the honest answer is nothing, I am being priced as the average of my category.",
     cases: [
       { t: "Insurance adverse selection", y: "general", b: "When healthy individuals face pools priced at average risk, they exit, which raises the average risk, which raises the price, which drives out the next healthiest tier. Underwriting, risk classification and mandates all exist to interrupt this spiral." },
@@ -584,12 +609,12 @@ const MODELS = {
 
   hazard: {
     n: 10, cat: "info", sim: true,
-    own: "Anyone acting on your behalf whose effort you cannot fully observe is running this game on you: sales staff, fund managers, contractors, franchisees, executives. The failure mode is not dishonesty. It is that you built a contract where they hold the upside and you hold the downside, and they responded rationally. Every compensation scheme you have ever written is an answer to this problem, whether or not you were thinking about it when you wrote it.",
+    own: "Anyone acting on your behalf whose effort you cannot fully observe is running this game on you: sales staff, fund managers, contractors, franchisees, executives. The failure mode is a contract where they hold the upside and you hold the downside. They responded to it rationally. Every compensation scheme you have ever written is an answer to this problem, whether or not you were thinking about it when you wrote it.",
     key: "Moral hazard is a contract design problem. Clawbacks, deferral, co-investment and monitoring all work by forcing the agent to hold some of the downside.",
     diag: "For each person acting on my behalf: if this goes badly, what do they personally lose? If the answer is nothing, I have written an option and given it away.",
     cases: [
       { t: "Wells Fargo cross-selling", y: "2016–2020", b: "Sales quotas tied to product counts, without a control holding staff accountable for account legitimacy, produced millions of unauthorised accounts. Around 5,300 employees were dismissed and the bank paid a $185m regulatory penalty in 2016, later followed by a $3bn settlement. The incentive did precisely what it was designed to do.", s: "NPR", u: "https://www.npr.org/sections/thetwo-way/2016/09/08/493130449/wells-fargo-to-pay-around-190-million-over-fake-accounts-that-sparked-bonuses" },
-      { t: "Convex compensation and risk-taking", y: "general", b: "Performance fees without clawbacks create asymmetric payoffs: the manager captures upside and the investor absorbs downside. Increased risk-taking follows, not from malice but from correctly reading the contract that was offered." },
+      { t: "Convex compensation and risk-taking", y: "general", b: "Performance fees without clawbacks split the outcomes unevenly. The manager keeps the upside and the investor takes the downside. Increased risk-taking follows, not from malice but from correctly reading the contract that was offered." },
     ],
   },
 
@@ -600,14 +625,14 @@ const MODELS = {
     diag: "Who can withdraw from me fastest, do they talk to each other, and how many of them moving at once would break me?",
     cases: [
       { t: "Silicon Valley Bank", y: "2023", b: "After announcing a $1.8bn securities loss and a capital raise, depositors attempted to withdraw roughly $42bn in a single day, close to a quarter of total deposits. The customer base was concentrated, highly networked and overwhelmingly uninsured, which compressed a classic run into hours.", s: "Federal Reserve OIG", u: "https://oig.federalreserve.gov/reports/board-material-loss-review-silicon-valley-bank-sep2023.pdf" },
-      { t: "Deposit insurance as a coordination fix", y: "general", b: "Insurance works by removing the incentive to move first, which removes the need to guess what others will do. The intervention does not improve the loan book. It changes the game from a coordination trap into one with a single obvious action.", s: "FDIC", u: "https://www.fdic.gov/news/speeches/2023/spmar2723.html" },
+      { t: "Deposit insurance as a coordination fix", y: "general", b: "Insurance works by removing the incentive to move first, which removes the need to guess what others will do. The loan book is untouched. What changes is that nobody has to guess what anyone else will do.", s: "FDIC", u: "https://www.fdic.gov/news/speeches/2023/spmar2723.html" },
     ],
   },
 
   beauty: {
     n: 12, cat: "coord", sim: true,
     own: "Pricing, hiring, positioning and timing are all partly beauty contests. You are not choosing what is best. You are choosing what your market will treat as best, and your competitors are doing the same calculation about you. Any analysis that models fundamentals without modelling what other participants believe about those fundamentals has left out the variable that actually moves the outcome.",
-    key: "Reflexivity is not a distortion of markets. It is the permanent structure of any market with heterogeneous participants and uncertain fundamentals.",
+    key: "Reflexivity is how any market works when participants differ and fundamentals are uncertain. It is permanent, not a distortion.",
     diag: "Am I positioning for what customers value, or for what customers believe other customers value? In most categories the second one prices the first.",
     cases: [
       { t: "Momentum and crowded trades", y: "general", b: "Momentum persists because participants buy what they expect others to buy. The strategy requires no view on fundamental value at all, only a view about the next layer of belief, which is the beauty contest running as a business model." },
@@ -617,8 +642,8 @@ const MODELS = {
 
   cascade: {
     n: 13, cat: "coord", sim: true,
-    own: "Your industry's consensus may be built on two early opinions and a long queue of people who deferred. When your peers, your board or your analysts all agree, you need to know whether that agreement represents independent judgements converging or a chain of people copying whoever moved first. The two look identical from the outside and are worth completely different amounts. A cascade also means your own private information never enters the pool, so the group is confident and uninformed at the same time.",
-    key: "Cascades are informationally fragile. One credible contrarian signal can shatter a consensus that took years to build, because the consensus was never load-bearing.",
+    own: "Your industry's consensus may be built on two early opinions and a long queue of people who deferred. When your peers, your board or your analysts all agree, you need to know whether that agreement represents independent judgements converging or a chain of people copying whoever moved first. From the outside those two look the same and are worth very different amounts. A cascade also means your own private information never enters the pool, so the group ends up confident and badly informed at once.",
+    key: "Cascades break easily. One credible contrarian signal can shatter a consensus that took years to build, because the consensus was never holding much weight.",
     diag: "When my industry agrees on something, how many people actually ran the analysis, and how many are standing behind whoever ran it first?",
     cases: [
       { t: "Analyst rating clustering", y: "general", b: "Once several analysts publish the same view, later analysts face career risk from deviating and informational pressure to conform. Coverage converges without new evidence entering, which is why unexpected disclosures can reverse a whole cohort at once." },
@@ -628,8 +653,8 @@ const MODELS = {
 
   prospect: {
     n: 14, cat: "behave", sim: true,
-    own: "Your customers, your staff and you evaluate every outcome against a reference point rather than in absolute terms, and losses weigh roughly twice as much as equivalent gains. This decides how you price, how you frame a concession, how you report performance, and whether you will hold a failing project too long. The most expensive version in business is the one you run on yourself: risk-seeking in the domain of losses is what keeps doomed projects funded.",
-    key: "The reference point is the operating variable. The same outcome framed as avoiding a loss rather than forgoing a gain produces different decisions from the same person.",
+    own: "Your customers, your staff and you evaluate every outcome against a reference point rather than in absolute terms, and losses weigh roughly twice as much as equivalent gains. It decides how you price, how you frame a concession, how you report performance, and how long you hold a failing project. The most expensive version in business is the one you run on yourself: people take bigger risks when they are already losing, which is what keeps doomed projects funded.",
+    key: "The reference point is what moves people. Frame the same outcome as avoiding a loss instead of forgoing a gain and you get a different decision from the same person.",
     diag: "Which of my current commitments am I continuing because stopping would realise a loss rather than because continuing has positive expected value?",
     cases: [
       { t: "The disposition effect", y: "general", b: "Investors sell winners early and hold losers too long. Gains are evaluated in the risk-averse domain and losses in the risk-seeking domain, so the same person applies two different risk appetites within one portfolio without noticing." },
@@ -639,7 +664,7 @@ const MODELS = {
 
   ultimatum: {
     n: 15, cat: "behave", sim: true,
-    own: "You will lose deals that were profitable for both sides because the split felt insulting. This is not sentimentality and it does not disappear with sophisticated counterparties. Fee structures, revenue shares, partner splits, redundancy terms and supplier pricing during scarcity all carry a fairness constraint that binds independently of the arithmetic. Businesses built on the assumption that people accept rational but unfair terms consistently underestimate resistance.",
+    own: "You will lose deals that were profitable for both sides because the split felt insulting. This is not sentimentality and it does not go away with sophisticated counterparties. Fee structures, revenue shares, partner splits, redundancy terms and supplier pricing during scarcity all carry a fairness constraint that binds independently of the arithmetic. Any plan that assumes people will accept terms that are rational and unfair will underestimate the pushback.",
     key: "Fairness is a binding constraint, not a soft one. People punish perceived unfairness at real personal cost, and they do it reliably enough to plan around.",
     diag: "Would my counterparty describe our split as fair to a peer? If not, I am carrying rejection risk that does not appear anywhere in my model.",
     cases: [
@@ -650,7 +675,7 @@ const MODELS = {
 
   stag: {
     n: 16, cat: "commit", sim: true,
-    own: "The most valuable projects in your business need someone else to commit alongside you: a co-investor, a channel partner, an industry standard, a joint bid. These fail far more often from uncertainty than from betrayal. Nobody in a stag hunt wants to defect. They just cannot afford to be the only one who showed up. If your partnerships keep dying at the commitment stage, the problem is probably confidence rather than incentives, and those need completely different fixes.",
+    own: "The most valuable projects in your business need someone else to commit alongside you: a co-investor, a channel partner, an industry standard, a joint bid. These die far more often from uncertainty than from betrayal. Nobody in a stag hunt wants to defect. They just cannot afford to be the only one who showed up. If your partnerships keep dying at the commitment stage, the problem is probably confidence rather than incentives, and those need completely different fixes.",
     key: "This is the trust game, and it is distinct from the prisoner's dilemma. There is no temptation to defect. The only barrier is uncertainty about the other side.",
     diag: "Is this partner failing to commit because the deal is bad for them, or because they cannot tell whether I will commit? Those need opposite responses.",
     cases: [
@@ -661,8 +686,8 @@ const MODELS = {
 
   attrition: {
     n: 17, cat: "commit", sim: true,
-    own: "Price wars, litigation, and subsidised customer acquisition all have this structure, and the arithmetic is unforgiving. In a symmetric contest the expected value to both sides is roughly zero, because the fight consumes the prize. The rational move is usually to concede early, and almost nobody does, because by the time the maths is obvious you have sunk enough that quitting feels like admitting the earlier spending was wasted. Recognising the structure before you are deep in it is the entire advantage.",
-    key: "In a symmetric war of attrition the contest dissipates the value of the prize. Sunk costs do not justify continuing, but they reliably make exit feel impossible.",
+    own: "Price wars, litigation and subsidised customer acquisition all work this way, and the maths is brutal. In an even fight the expected value to both sides is roughly zero, because the fight eats the prize. Conceding early is usually right and almost nobody does it, because by the time the numbers are obvious you have spent enough that stopping feels like admitting the earlier spending was wasted. Spotting the structure before you are deep in it is the whole advantage.",
+    key: "In an even war of attrition the fight consumes the prize. Sunk costs justify nothing. They reliably make exit feel impossible anyway.",
     diag: "If I entered this fight today knowing only what it will cost from here, would I enter? If not, the money already spent is not a reason to continue.",
     cases: [
       { t: "Subsidised growth races", y: "2010s", b: "Ride-hailing and delivery platforms subsidised below cost for years in winner-take-most markets, each waiting for competitors to exhaust funding. The accumulated subsidy across all participants exceeded the value of the market position that was eventually won." },
@@ -672,7 +697,7 @@ const MODELS = {
 
   holdup: {
     n: 18, cat: "commit", sim: true,
-    own: "The moment you invest in something that only has value inside one relationship — tooling for a single client, integration with one platform, a facility next to one buyer — the other side can reopen the terms and you cannot credibly leave. Worse, the anticipation of this stops efficient investment before it happens. This is the real reason firms integrate vertically, and it explains why control rights are frequently worth more than price terms.",
+    own: "The moment you invest in something that only has value inside one relationship, the other side can reopen the terms and you cannot credibly leave. Tooling for one client. Integration with one platform. A facility next to one buyer. Worse, the anticipation of this stops efficient investment before it happens. This is the real reason firms integrate vertically, and it explains why control rights are frequently worth more than price terms.",
     key: "Incomplete contracts cannot cover every contingency. Where they fail, the party with the more specific investment bears the risk, which is why control rights outrank price.",
     diag: "What have I built that is worth far less outside this one relationship, and what stops the counterparty from repricing me once they notice?",
     cases: [
@@ -683,40 +708,40 @@ const MODELS = {
 
   mechanism: {
     n: 19, cat: "meta", sim: true,
-    own: "If people in your organisation are behaving in ways you dislike, the mechanism is the first suspect and the people are the last. Commission structures, bonus schemes, budget processes, promotion criteria and KPIs are all games you designed, and participants are playing them correctly. Exhortation, culture initiatives and monitoring are attempts to fix by force what the incentive is producing by design, which is why they rarely hold.",
+    own: "If people in your organisation are behaving in ways you dislike, the mechanism is the first suspect and the people are the last. Commission structures, bonus schemes, budget processes, promotion criteria and KPIs are all games you designed, and participants are playing them correctly. Pep talks, culture programmes and monitoring try to force a different result out of an incentive that was built to produce this one. That is why they rarely hold.",
     key: "Inverse game theory: rather than analysing behaviour in a given game, design the game so that self-interested behaviour produces the outcome you want.",
     diag: "What is my compensation structure literally paying for, as opposed to what I intend it to reward? Where those differ, the structure wins.",
     cases: [
-      { t: "Cross-selling quotas", y: "2016–2020", b: "A metric that rewarded product count without a countervailing control on legitimacy produced exactly the behaviour it paid for. Subsequent analysis focused on the design of the incentive rather than the ethics of individual staff, because the pattern was too widespread to be individual.", s: "Harvard Law School Forum on Corporate Governance", u: "https://corpgov.law.harvard.edu/2019/02/06/the-wells-fargo-cross-selling-scandal-2/" },
+      { t: "Cross-selling quotas", y: "2016–2020", b: "A metric that rewarded product count with no check on whether the accounts were real produced exactly the behaviour it paid for. Subsequent analysis focused on the design of the incentive rather than the ethics of individual staff, because the pattern was too widespread to be individual.", s: "Harvard Law School Forum on Corporate Governance", u: "https://corpgov.law.harvard.edu/2019/02/06/the-wells-fargo-cross-selling-scandal-2/" },
       { t: "Internal capital allocation", y: "general", b: "Division heads inflate projections when they expect a standard haircut, and the haircut exists because projections are inflated. Both sides are responding correctly to a mechanism that rewards distortion. Fixing it requires changing the rule, not the forecasts." },
     ],
   },
 
   realopt: {
     n: 20, cat: "meta", sim: true,
-    own: "Standard investment analysis compares acting now against never acting, which is not the choice you actually face. You can almost always wait, stage the commitment, or buy the right to decide later. That right has value, and the value rises with uncertainty. If you have ever rejected a high-variance project on net present value, you probably undervalued it, because the model you used has no way to price the option to stop.",
+    own: "Standard investment analysis compares acting now against never acting. That is rarely the choice you face. You can almost always wait, stage the commitment, or buy the right to decide later. That right has value, and the value rises with uncertainty. If you have ever rejected a high-variance project on net present value, you probably undervalued it, because the model you used has no way to price the option to stop.",
     key: "DCF systematically undervalues flexibility under uncertainty. The question shifts from whether the value is positive to what the option is worth and what information would change the decision.",
     diag: "Can I buy the right to decide this later instead of deciding now? What would that right cost, and what would it be worth once the uncertainty resolves?",
     cases: [
-      { t: "Staged venture funding", y: "general", b: "Each round is an option exercise conditioned on information revealed since the last one. The staging is not an artefact of caution. It is the mechanism that makes investing under extreme uncertainty rational at all." },
+      { t: "Staged venture funding", y: "general", b: "Each round is an option exercise conditioned on information revealed since the last one. The staging is what makes investing under extreme uncertainty rational at all." },
       { t: "Land and resource options", y: "general", b: "Developers acquire options on land rather than buying outright, preserving flexibility while conditions resolve. The option premium is the price of not having to be right today." },
     ],
   },
 
   schelling: {
     n: 21, cat: "meta", sim: true,
-    own: "A large share of what looks like deliberate design in your industry is historical accident that persisted because everyone expected everyone else to keep following it. Payment terms, notice periods, pricing tiers, contract defaults, fiscal calendars. Recognising these as focal points rather than optima does two things: it stops you assuming current convention is efficient, and it shows you that setting a convention is available as a strategy.",
+    own: "A large share of what looks like deliberate design in your industry is historical accident that persisted because everyone expected everyone else to keep following it. Payment terms, notice periods, pricing tiers, contract defaults, fiscal calendars. Seeing these as habits rather than good answers does two things: it stops you assuming the current convention is any good, and it shows you that setting one is something you can do on purpose.",
     key: "Focal points have power from mutual expectation rather than from merit. Nothing about them needs to be optimal for them to be extremely stable.",
     diag: "Which conventions in my industry does everyone follow without being able to explain why? Each one is either an opportunity to deviate or an opportunity to set the next one.",
     cases: [
       { t: "Benchmark rate persistence", y: "general", b: "A reference rate embedded in enough contracts becomes self-reinforcing regardless of whether it is the best available measure, because coordinated switching is costly even when unilateral switching is cheap. Replacing one requires deliberate coordination, not merely a better alternative." },
-      { t: "Round-number anchoring", y: "general", b: "Offers cluster at salient round numbers because those numbers are mutually obvious, not because they are more accurate. Deliberately pricing off the focal point can shift the whole negotiation range." },
+      { t: "Round-number anchoring", y: "general", b: "Offers cluster at round numbers because those numbers are obvious to both sides. Accuracy has nothing to do with it. Deliberately pricing off the focal point can shift the whole negotiation range." },
     ],
   },
 
   cheaptalk: {
     n: 22, cat: "meta", sim: true,
-    own: "Most of what you are told in business costs the speaker nothing and cannot be verified in advance. Guidance, projections, pipeline reports, letters of intent, and any assurance that a deal will close. Credibility is not a function of confidence or seniority. It is a function of whether the speaker's interests align with yours, and the test is short: would they say the same thing if the opposite were true?",
+    own: "Most of what you get told in business costs the speaker nothing and cannot be checked before you act. Guidance, projections, pipeline reports, letters of intent, and any assurance that a deal will close. Credibility depends on whether the speaker's interests line up with yours. Confidence and seniority tell you nothing. The test is short: would they say the same thing if the opposite were true?",
     key: "Costless, unverifiable communication is only credible where interests partially align. Where they diverge, a rational listener discounts the message to nothing.",
     diag: "For the last three assurances I acted on: what did the speaker lose if they were wrong? If nothing, I treated cheap talk as information.",
     cases: [
@@ -827,6 +852,7 @@ function NashBargaining({ onBack }) {
       </SimHeader>
 
       <Goal>Agree a split that beats your BATNA. Aim to take more than half of the surplus above both outside options.</Goal>
+      <ModelDiagram id="nash" />
 
       <div style={{ display: "flex", gap: "28px", flexWrap: "wrap", marginBottom: "18px" }}>
         <div style={{ minWidth: "220px" }}>
@@ -865,7 +891,7 @@ function NashBargaining({ onBack }) {
                 <input type="number" value={offer} onChange={e => setOffer(e.target.value)} onKeyDown={e => e.key === "Enter" && propose()} placeholder="0"
                   style={{ width: "110px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "16px", outline: "none" }} />
                 <span style={{ fontSize: "12px", color: C.textMut, fontFamily: F.mono }}>
-                  they get {offer && !isNaN(parseFloat(offer)) ? Math.max(0, pie - parseFloat(offer)) : "—"}
+                  they get {offer && !isNaN(parseFloat(offer)) ? Math.max(0, pie - parseFloat(offer)) : "-"}
                 </span>
                 <Btn onClick={propose} disabled={!offer || isNaN(parseFloat(offer))}>Offer</Btn>
               </div>
@@ -991,6 +1017,7 @@ function BankRun({ onBack }) {
       </SimHeader>
 
       <Goal>Walk away with the highest payoff. Waiting pays the most, but only if enough other people also wait.</Goal>
+      <ModelDiagram id="bank" />
 
       <div style={{ display: "flex", gap: "28px", flexWrap: "wrap", marginBottom: "18px" }}>
         <div>
@@ -1075,7 +1102,7 @@ function BankRun({ onBack }) {
             {result.failed && result.myMove === "wait" &&
               `The bank failed and you waited. You received ${result.payoff}. Nothing about the bank's loan book changed today. It failed because ${result.total} people believed it would fail. That belief was self-fulfilling, and being right about the fundamentals did not protect you.`}
             {result.failed && result.myMove === "withdraw" &&
-              `The bank failed and you got out with ${result.payoff}. Withdrawing was individually rational. It was also part of what caused the failure. Every depositor faced the same logic, which is exactly why Diamond and Dybvig showed that bank runs are an equilibrium, not an accident.`}
+              `The bank failed and you got out with ${result.payoff}. Withdrawing was individually rational. It was also part of what caused the failure. Every depositor faced the same logic, which is why Diamond and Dybvig treated bank runs as an equilibrium rather than an accident.`}
             {!result.failed && result.myMove === "wait" &&
               `The bank held and you earned ${result.payoff}, the best available outcome. Only ${result.total} depositors withdrew, below the ${result.failThreshold} threshold. Coordination held this time. ${insurance === "none" ? "With no deposit insurance, that outcome depends entirely on collective nerve." : "Deposit insurance made everyone calmer, which made the run less likely, which is the point of it."}`}
             {!result.failed && result.myMove === "withdraw" &&
@@ -1157,6 +1184,7 @@ function BeautyContest({ onBack }) {
       </SimHeader>
 
       <Goal>Land closer to two-thirds of the average than anyone else. You are guessing at other people's guesses.</Goal>
+      <ModelDiagram id="beauty" />
 
       <div style={{ marginBottom: "18px" }}>
         <Label>Players</Label>
@@ -1314,6 +1342,7 @@ function JobMarketSignaling({ onBack }) {
       </SimHeader>
 
       <Goal>Maximise your net payoff: the wage you are offered, minus everything your education cost you.</Goal>
+      <ModelDiagram id="signal" />
 
       <div style={{ display: "flex", gap: "28px", flexWrap: "wrap", marginBottom: "18px" }}>
         <div style={{ minWidth: "230px" }}>
@@ -1479,6 +1508,7 @@ function EntryDeterrence({ onBack }) {
       </SimHeader>
 
       <Goal>Pick the branch that leaves you with the higher payoff. The tree below shows both outcomes before you commit.</Goal>
+      <ModelDiagram id="entry" />
 
       <div style={{ marginBottom: "18px" }}>
         <Label>Entrant Type</Label>
@@ -1599,6 +1629,7 @@ function UltimatumGame({ onBack }) {
       </SimHeader>
 
       <Goal>Keep as much of the 100 as you can without getting rejected. A rejection pays you nothing.</Goal>
+      <ModelDiagram id="ultimatum" />
 
       <div style={{ marginBottom: "18px" }}>
         <Label>Responder Profile</Label>
@@ -1749,6 +1780,425 @@ function ModelBrief({ id }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// DIAGRAMS — one schematic per model. Plain, structural, readable in three seconds.
+// ═══════════════════════════════════════════════════════════════════════════════
+const DG = { w: 600, mono: F.mono, body: F.body };
+
+function Diagram({ children, h = 190, caption }) {
+  return (
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "18px 20px 14px", marginBottom: "18px" }}>
+      <svg viewBox={`0 0 ${DG.w} ${h}`} style={{ width: "100%", maxWidth: `${DG.w}px`, display: "block", margin: "0 auto" }}>
+        {children}
+      </svg>
+      {caption && <div style={{ fontSize: "11.5px", color: C.textMut, textAlign: "center", marginTop: "10px", lineHeight: 1.5, fontFamily: F.body }}>{caption}</div>}
+    </div>
+  );
+}
+
+// Shared: a labelled 2×2 payoff grid
+function Grid2x2({ rowL, colL, cells, hi = [], x = 150, y = 32, cw = 130, ch = 46 }) {
+  const pos = [[0, 0], [1, 0], [0, 1], [1, 1]];
+  return (
+    <g>
+      <text x={x - 12} y={y - 12} textAnchor="end" fontSize="9" fill={C.textMut} fontFamily={DG.body} letterSpacing="1">YOU \ THEM</text>
+      {colL.map((l, i) => (
+        <text key={"c" + i} x={x + cw * i + cw / 2} y={y - 12} textAnchor="middle" fontSize="10.5" fill={i === 0 ? C.green : C.red} fontFamily={DG.body} fontWeight="500">{l}</text>
+      ))}
+      {rowL.map((l, i) => (
+        <text key={"r" + i} x={x - 12} y={y + ch * i + ch / 2 + 4} textAnchor="end" fontSize="10.5" fill={i === 0 ? C.green : C.red} fontFamily={DG.body} fontWeight="500">{l}</text>
+      ))}
+      {pos.map(([cx, cy], i) => {
+        const on = hi.includes(i);
+        return (
+          <g key={i}>
+            <rect x={x + cw * cx} y={y + ch * cy} width={cw} height={ch}
+              fill={on ? C.amber + "28" : C.bg} stroke={on ? C.amber : C.border} strokeWidth={on ? 1.6 : 1} />
+            <text x={x + cw * cx + cw / 2} y={y + ch * cy + ch / 2 + 5} textAnchor="middle"
+              fontSize="14" fill={on ? C.text : C.textSec} fontFamily={DG.mono} fontWeight={on ? 600 : 400}>{cells[i]}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+const AX = (x1, y1, x2, y2) => <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={C.borderStrong} strokeWidth="1" />;
+const TX = (x, y, t, c = C.textMut, s = 10, a = "middle", f = DG.body) =>
+  <text x={x} y={y} textAnchor={a} fontSize={s} fill={c} fontFamily={f}>{t}</text>;
+
+function ModelDiagram({ id }) {
+  switch (id) {
+
+    case "pd": return (
+      <Diagram h={200} caption="Both of you do better at 3,3. Each of you individually does better by stepping away from it. That is the trap.">
+        <Grid2x2 rowL={["Hold", "Undercut"]} colL={["Hold", "Undercut"]} cells={["3, 3", "0, 5", "5, 0", "1, 1"]} hi={[3]} />
+        <path d="M 280 55 L 320 55" stroke={C.red} strokeWidth="1.5" markerEnd="url(#ar)" />
+        <path d="M 215 78 L 215 110" stroke={C.red} strokeWidth="1.5" markerEnd="url(#ar)" />
+        <defs><marker id="ar" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={C.red} /></marker></defs>
+        {TX(300, 165, "Each arrow is one side chasing +2. Follow both and you land on 1,1.", C.textFaint, 10)}
+      </Diagram>
+    );
+
+    case "nash": return (
+      <Diagram h={160} caption="Only the middle band is negotiable. The two floors set themselves before anyone speaks.">
+        <rect x={50} y={50} width={110} height={40} fill={C.steelMuted} stroke={C.steel} strokeWidth="1" />
+        <rect x={160} y={50} width={230} height={40} fill={C.amberMuted} stroke={C.amber} strokeWidth="1.4" />
+        <rect x={390} y={50} width={110} height={40} fill={C.redMuted} stroke={C.red} strokeWidth="1" />
+        {TX(105, 75, "YOUR BATNA", C.steel, 10)}
+        {TX(275, 68, "SURPLUS", C.amber, 11)}
+        {TX(275, 82, "the only thing in play", C.textMut, 9)}
+        {TX(445, 75, "THEIR BATNA", C.red, 10)}
+        <line x1={275} y1={44} x2={275} y2={100} stroke={C.text} strokeWidth="1.5" strokeDasharray="3 3" />
+        {TX(275, 118, "Nash split: half the surplus each", C.text, 10)}
+        {TX(275, 136, "Raise your floor and the whole band moves with it.", C.textFaint, 10)}
+      </Diagram>
+    );
+
+    case "cournot": return (
+      <Diagram h={200} caption="Left: every unit you add lowers the price on all of them. Right: with no differentiation, two firms are enough to reach cost.">
+        {TX(150, 20, "COURNOT · quantity", C.steel, 10.5)}
+        {AX(60, 150, 250, 150)}{AX(60, 40, 60, 150)}
+        {[[80, 40], [120, 62], [160, 88], [200, 118]].map(([x, h], i) =>
+          <rect key={i} x={x} y={150 - h} width={26} height={h} fill={C.steel + "45"} />)}
+        <path d="M 80 55 L 226 128" stroke={C.red} strokeWidth="2" />
+        {TX(232, 138, "price", C.red, 9, "start")}
+        {TX(155, 168, "output added →", C.textFaint, 9.5)}
+        <line x1={300} y1={25} x2={300} y2={175} stroke={C.border} strokeWidth="1" />
+        {TX(450, 20, "BERTRAND · price", C.amber, 10.5)}
+        {AX(360, 150, 550, 150)}{AX(360, 40, 360, 150)}
+        <path d="M 375 50 L 420 92 L 465 118 L 510 132 L 535 136" stroke={C.red} strokeWidth="2" fill="none" />
+        <line x1={360} y1={140} x2={550} y2={140} stroke={C.textMut} strokeWidth="1" strokeDasharray="3 3" />
+        {TX(556, 143, "cost", C.textMut, 9, "end")}
+        <path d="M 375 50 L 420 70 L 465 78 L 510 82 L 535 83" stroke={C.green} strokeWidth="2" fill="none" strokeDasharray="4 3" />
+        {TX(500, 62, "differentiated", C.green, 9)}
+        {TX(455, 168, "rounds of undercutting →", C.textFaint, 9.5)}
+      </Diagram>
+    );
+
+    case "entry": return (
+      <Diagram h={200} caption="Read it backwards. The entrant decides last, so your only lever is changing what they will find when they get there.">
+        <circle cx={60} cy={100} r={5} fill={C.amber} />
+        {TX(60, 82, "YOU", C.amber, 10)}
+        <path d="M 66 96 L 175 55" stroke={C.borderStrong} strokeWidth="1.3" />
+        <path d="M 66 104 L 175 145" stroke={C.borderStrong} strokeWidth="1.3" />
+        {TX(120, 62, "stay lean", C.textMut, 9.5)}
+        {TX(122, 143, "build capacity", C.textMut, 9.5)}
+        {[[55, "them"], [145, "them"]].map(([cy], i) =>
+          <circle key={i} cx={180} cy={cy} r={4.5} fill={C.steel} />)}
+        <path d="M 186 51 L 300 32" stroke={C.borderStrong} strokeWidth="1.1" />
+        <path d="M 186 59 L 300 78" stroke={C.borderStrong} strokeWidth="1.1" />
+        <path d="M 186 141 L 300 122" stroke={C.borderStrong} strokeWidth="1.1" />
+        <path d="M 186 149 L 300 168" stroke={C.borderStrong} strokeWidth="1.1" />
+        {[["enter", 250, 26], ["stay out", 252, 90], ["enter", 250, 116], ["stay out", 252, 180]].map(([t, x, y], i) =>
+          <text key={i} x={x} y={y} textAnchor="middle" fontSize="9" fill={C.textFaint} fontFamily={DG.body}>{t}</text>)}
+        {[[32, "40", C.textSec], [78, "100", C.textSec], [122, "−10", C.red], [168, "70", C.green]].map(([y, v, c], i) =>
+          <text key={i} x={318} y={y + 4} fontSize="13" fill={c} fontFamily={DG.mono} fontWeight="600">{v}</text>)}
+        <rect x={352} y={155} width={192} height={30} fill={C.greenMuted} stroke={C.green + "50"} />
+        {TX(448, 174, "only reachable if entry is unprofitable", C.green, 9.5)}
+      </Diagram>
+    );
+
+    case "chicken": return (
+      <Diagram h={200} caption="Two stable outcomes, and in both of them someone yielded. The advantage goes to whoever cannot.">
+        <Grid2x2 rowL={["Back down", "Hold firm"]} colL={["Back down", "Hold firm"]} cells={["0, 0", "−2, 6", "6, −2", "−10, −10"]} hi={[1, 2]} />
+        {TX(300, 155, "The two amber cells are the equilibria. Neither is the fair one.", C.amber, 10)}
+        {TX(300, 174, "Bottom right is what happens when both sides commit.", C.red, 10)}
+      </Diagram>
+    );
+
+    case "auction": return (
+      <Diagram h={190} caption="Everyone's estimate is honest. You only win from the right tail, which is where the overestimates live.">
+        {AX(50, 140, 550, 140)}
+        <path d="M 70 140 Q 200 140 245 60 Q 290 20 300 20 Q 310 20 355 60 Q 400 140 530 140" fill={C.steel + "22"} stroke={C.steel} strokeWidth="1.5" />
+        <path d="M 395 140 Q 430 105 470 130 Q 500 138 530 140 L 395 140 Z" fill={C.red + "40"} />
+        <line x1={300} y1={20} x2={300} y2={155} stroke={C.text} strokeWidth="1.5" strokeDasharray="4 3" />
+        {TX(300, 172, "TRUE VALUE", C.text, 10)}
+        <line x1={395} y1={95} x2={395} y2={155} stroke={C.red} strokeWidth="1.2" />
+        {TX(468, 172, "you win here", C.red, 10)}
+        {TX(160, 172, "you lose here", C.textFaint, 10)}
+        {TX(300, 45, "everyone's estimates", C.textMut, 9.5)}
+      </Diagram>
+    );
+
+    case "vickrey": return (
+      <Diagram h={190} caption="Change who pays what and honesty becomes the winning move. Same bidders, same asset.">
+        {TX(150, 20, "FIRST-PRICE", C.red, 10.5)}
+        {TX(450, 20, "SECOND-PRICE", C.green, 10.5)}
+        <line x1={300} y1={14} x2={300} y2={178} stroke={C.border} strokeWidth="1" />
+        {[0, 1, 2, 3].map(i => {
+          const v = 150 - i * 24, y = 46 + i * 30;
+          return (
+            <g key={i}>
+              <rect x={55} y={y} width={v * 0.78} height={13} fill={C.red + "40"} />
+              <rect x={55} y={y} width={v * 0.78 * 0.75} height={13} fill={C.red} />
+              <rect x={355} y={y} width={v * 0.78} height={13} fill={C.green} />
+            </g>
+          );
+        })}
+        {TX(60, 168, "solid = bid · faded = value withheld", C.textFaint, 9, "start")}
+        {TX(360, 168, "bid equals value", C.green, 9, "start")}
+      </Diagram>
+    );
+
+    case "signal": return (
+      <Diagram h={200} caption="The gap between the two slopes is the whole mechanism. Narrow it and the signal stops meaning anything.">
+        {AX(60, 160, 550, 160)}{AX(60, 25, 60, 160)}
+        <path d="M 60 160 L 520 55" stroke={C.red} strokeWidth="2" />
+        <path d="M 60 160 L 520 118" stroke={C.green} strokeWidth="2" />
+        {TX(530, 55, "low type", C.red, 9.5, "start")}
+        {TX(530, 121, "high type", C.green, 9.5, "start")}
+        <line x1={60} y1={92} x2={550} y2={92} stroke={C.amber} strokeWidth="1.4" strokeDasharray="4 3" />
+        {TX(66, 86, "value of the high wage", C.amber, 9.5, "start")}
+        <rect x={222} y={25} width={128} height={135} fill={C.greenMuted} />
+        <line x1={222} y1={25} x2={222} y2={160} stroke={C.green} strokeWidth="1" strokeDasharray="2 2" />
+        <line x1={350} y1={25} x2={350} y2={160} stroke={C.green} strokeWidth="1" strokeDasharray="2 2" />
+        {TX(286, 42, "SEPARATING BAND", C.green, 9.5)}
+        {TX(286, 178, "too cheap: low types copy", C.textFaint, 9)}
+        {TX(300, 192, "years of education →", C.textFaint, 9.5)}
+      </Diagram>
+    );
+
+    case "lemons": return (
+      <Diagram h={190} caption="Your price picks your sellers. Lower it and the good ones leave, which lowers what the pool is worth, which lowers the price.">
+        {AX(55, 120, 545, 120)}
+        <rect x={55} y={52} width={235} height={68} fill={C.amber + "28"} stroke={C.amber} strokeWidth="1.2" />
+        <rect x={290} y={52} width={255} height={68} fill="none" stroke={C.border} strokeWidth="1" strokeDasharray="4 3" />
+        {TX(172, 82, "ACCEPT YOUR PRICE", C.amber, 10)}
+        {TX(172, 98, "worth less than you paid", C.textMut, 9)}
+        {TX(418, 82, "WITHDRAW", C.textMut, 10)}
+        {TX(418, 98, "the inventory you wanted", C.textFaint, 9)}
+        {TX(60, 138, "low quality", C.textFaint, 9.5, "start")}
+        {TX(540, 138, "high quality", C.textFaint, 9.5, "end")}
+        <path d="M 290 42 L 215 42" stroke={C.red} strokeWidth="1.6" markerEnd="url(#ar2)" />
+        <defs><marker id="ar2" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={C.red} /></marker></defs>
+        {TX(300, 32, "each round of repricing pushes this line left", C.red, 9.5, "start")}
+        {TX(300, 168, "Verification is the only thing that stops the slide.", C.textMut, 10)}
+      </Diagram>
+    );
+
+    case "hazard": return (
+      <Diagram h={195} caption="Their line has a floor. Yours does not. That gap is the risk you are paying them to take.">
+        {AX(60, 100, 545, 100)}{AX(300, 25, 300, 170)}
+        <path d="M 70 100 L 300 100 L 520 38" stroke={C.green} strokeWidth="2.4" />
+        <path d="M 70 62 L 300 100 L 520 132" stroke={C.steel} strokeWidth="2" strokeDasharray="5 3" />
+        {TX(526, 36, "agent", C.green, 9.5, "start")}
+        {TX(526, 135, "you", C.steel, 9.5, "start")}
+        {TX(160, 118, "flat: they lose nothing", C.green, 9.5)}
+        {TX(160, 50, "you absorb it", C.steel, 9.5)}
+        {TX(300, 186, "← outcome goes badly            outcome goes well →", C.textFaint, 9.5)}
+        <rect x={62} y={92} width={236} height={16} fill={C.red + "20"} />
+      </Diagram>
+    );
+
+    case "bank": return (
+      <Diagram h={185} caption="Nothing about the bank changes as you move along this line. Only the number of people who moved first.">
+        {AX(55, 135, 545, 135)}{AX(55, 30, 55, 135)}
+        <path d="M 55 48 L 300 48 L 300 118 L 545 118" stroke={C.green} strokeWidth="2.5" fill="none" />
+        <line x1={300} y1={22} x2={300} y2={148} stroke={C.red} strokeWidth="1.5" strokeDasharray="4 3" />
+        {TX(300, 16, "FAILURE THRESHOLD", C.red, 10)}
+        {TX(175, 40, "you waited: 120", C.green, 10)}
+        {TX(422, 110, "you waited: 0", C.red, 10)}
+        <path d="M 296 60 L 296 106" stroke={C.red} strokeWidth="2.5" />
+        {TX(255, 88, "cliff", C.red, 10, "end")}
+        {TX(300, 168, "depositors withdrawing →", C.textFaint, 9.5)}
+      </Diagram>
+    );
+
+    case "beauty": return (
+      <Diagram h={185} caption="Each rung is one more layer of thinking about what everyone else is thinking. Nobody climbs all of them.">
+        {[["50", "guess randomly", 0], ["33", "assume others are random", 1], ["22", "assume others did that", 2], ["15", "and so on", 3], ["0", "Nash equilibrium", 4]].map(([v, l, i]) => {
+          const y = 26 + i * 32;
+          return (
+            <g key={i}>
+              <rect x={150 - i * 22} y={y} width={110} height={22} fill={i === 4 ? C.amberMuted : C.steelMuted} stroke={i === 4 ? C.amber : C.steel + "60"} />
+              <text x={205 - i * 22} y={y + 15} textAnchor="middle" fontSize="12" fill={i === 4 ? C.amber : C.steel} fontFamily={DG.mono} fontWeight="600">{v}</text>
+              <text x={290} y={y + 15} fontSize="10" fill={C.textMut} fontFamily={DG.body}>{l}</text>
+            </g>
+          );
+        })}
+        {TX(300, 176, "Most real players stop at the second or third rung. Winning means stopping where they stop.", C.textFaint, 9.5)}
+      </Diagram>
+    );
+
+    case "cascade": return (
+      <Diagram h={175} caption="After the second person, private information stops entering the pool. The queue grows and the evidence does not.">
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
+          const x = 58 + i * 62, own = i < 2;
+          return (
+            <g key={i}>
+              <circle cx={x} cy={62} r={19} fill={own ? C.steelMuted : C.bg} stroke={own ? C.steel : C.borderStrong} strokeWidth={own ? 1.6 : 1} />
+              <text x={x} y={67} textAnchor="middle" fontSize="13" fill={own ? C.steel : C.textMut} fontFamily={DG.mono} fontWeight="600">A</text>
+              {i > 0 && <path d={`M ${x - 43} 62 L ${x - 22} 62`} stroke={C.textFaint} strokeWidth="1" />}
+            </g>
+          );
+        })}
+        <rect x={38} y={96} width={122} height={20} fill={C.steelMuted} />
+        {TX(99, 110, "used own signal", C.steel, 9.5)}
+        <rect x={168} y={96} width={382} height={20} fill={C.red + "18"} />
+        {TX(359, 110, "copied the queue · own signal never used", C.red, 9.5)}
+        {TX(300, 150, "The consensus looks unanimous. It contains two opinions.", C.textMut, 10)}
+      </Diagram>
+    );
+
+    case "prospect": return (
+      <Diagram h={200} caption="The curve is steeper below the line than above it. The same amount hurts about twice as much as it pleases.">
+        {AX(60, 100, 545, 100)}{AX(300, 22, 300, 180)}
+        <path d="M 300 100 Q 400 62 520 46" stroke={C.green} strokeWidth="2.4" fill="none" />
+        <path d="M 300 100 Q 230 158 90 176" stroke={C.red} strokeWidth="2.4" fill="none" />
+        <circle cx={300} cy={100} r={4} fill={C.amber} />
+        {TX(300, 90, "reference point", C.amber, 9.5)}
+        {TX(470, 38, "gains feel smaller", C.green, 9.5)}
+        {TX(150, 190, "losses feel bigger", C.red, 9.5)}
+        <line x1={410} y1={100} x2={410} y2={72} stroke={C.green} strokeWidth="1" strokeDasharray="2 2" />
+        <line x1={190} y1={100} x2={190} y2={166} stroke={C.red} strokeWidth="1" strokeDasharray="2 2" />
+        {TX(424, 88, "+£100", C.green, 9, "start", DG.mono)}
+        {TX(176, 136, "−£100", C.red, 9, "end", DG.mono)}
+      </Diagram>
+    );
+
+    case "ultimatum": return (
+      <Diagram h={185} caption="Theory says the line should sit flat at the top from the very first pound. It does not.">
+        {AX(60, 140, 545, 140)}{AX(60, 28, 60, 140)}
+        <path d="M 60 138 L 130 136 L 200 124 L 270 82 L 340 46 L 420 34 L 545 31" stroke={C.amber} strokeWidth="2.4" fill="none" />
+        <line x1={60} y1={31} x2={545} y2={31} stroke={C.steel} strokeWidth="1.4" strokeDasharray="4 3" />
+        {TX(468, 24, "what theory predicts", C.steel, 9.5)}
+        {TX(215, 70, "what people do", C.amber, 9.5)}
+        <line x1={270} y1={82} x2={270} y2={148} stroke={C.textMut} strokeWidth="1" strokeDasharray="2 2" />
+        {TX(270, 162, "≈30", C.textMut, 9.5, "middle", DG.mono)}
+        {TX(60, 160, "you offer 0", C.textFaint, 9.5, "start")}
+        {TX(545, 160, "you offer 50", C.textFaint, 9.5, "end")}
+        {TX(30, 34, "accepted", C.textFaint, 9, "start")}
+      </Diagram>
+    );
+
+    case "stag": return (
+      <Diagram h={200} caption="Two stable outcomes and no temptation to cheat in either. The only thing between you and 8,8 is doubt.">
+        <Grid2x2 rowL={["Commit", "Go alone"]} colL={["Commit", "Go alone"]} cells={["8, 8", "0, 3", "3, 0", "3, 3"]} hi={[0, 3]} />
+        {TX(215, 155, "best outcome", C.green, 10)}
+        {TX(215, 170, "needs trust", C.textMut, 9.5)}
+        {TX(410, 155, "safe outcome", C.amber, 10)}
+        {TX(410, 170, "needs nothing", C.textMut, 9.5)}
+      </Diagram>
+    );
+
+    case "attrition": return (
+      <Diagram h={190} caption="Past the crossing point, winning still loses money. Both of you keep going anyway.">
+        {AX(60, 150, 545, 150)}{AX(60, 25, 60, 150)}
+        <line x1={60} y1={70} x2={545} y2={70} stroke={C.amber} strokeWidth="1.6" strokeDasharray="5 3" />
+        {TX(66, 62, "value of the prize", C.amber, 9.5, "start")}
+        <path d="M 60 150 L 460 32" stroke={C.red} strokeWidth="2.2" />
+        <path d="M 60 150 L 440 40" stroke={C.steel} strokeWidth="2" strokeDasharray="4 3" />
+        {TX(470, 30, "your spend", C.red, 9.5, "start")}
+        {TX(452, 52, "theirs", C.steel, 9.5, "start")}
+        <circle cx={330} cy={70} r={5} fill={C.red} />
+        <line x1={330} y1={70} x2={330} y2={158} stroke={C.red} strokeWidth="1" strokeDasharray="2 2" />
+        {TX(330, 172, "everything after here is pure loss", C.red, 9.5)}
+      </Diagram>
+    );
+
+    case "holdup": return (
+      <Diagram h={175} caption="You commit first. They renegotiate second. Nothing about the order can be changed after the money is spent.">
+        {[["1 · You invest", C.steel, 45], ["2 · Value is created", C.green, 225], ["3 · They reopen terms", C.red, 405]].map(([t, c, x], i) => (
+          <g key={i}>
+            <rect x={x} y={45} width={150} height={52} fill={c + "18"} stroke={c} strokeWidth="1.3" />
+            <text x={x + 75} y={68} textAnchor="middle" fontSize="10.5" fill={c} fontFamily={DG.body} fontWeight="500">{t}</text>
+            <text x={x + 75} y={85} textAnchor="middle" fontSize="9.5" fill={C.textMut} fontFamily={DG.body}>
+              {i === 0 ? "sunk, no outside value" : i === 1 ? "worth more than you paid" : "you cannot walk away"}
+            </text>
+            {i < 2 && <path d={`M ${x + 155} 71 L ${x + 172} 71`} stroke={C.borderStrong} strokeWidth="1.4" />}
+          </g>
+        ))}
+        <path d="M 480 105 L 480 130 L 120 130 L 120 105" stroke={C.red} strokeWidth="1.2" fill="none" strokeDasharray="4 3" />
+        {TX(300, 148, "the leverage runs backwards along this line", C.red, 9.5)}
+      </Diagram>
+    );
+
+    case "mechanism": return (
+      <Diagram h={195} caption="Pick the left box and you get the right box. Every time, without anyone deciding to behave badly.">
+        {[["Units sold", "inflate the count", C.red], ["Revenue booked", "discount to close", C.amber], ["Net retention", "keep customers happy", C.green]].map(([m, b, c], i) => {
+          const y = 30 + i * 52;
+          return (
+            <g key={i}>
+              <rect x={55} y={y} width={175} height={38} fill={C.bg} stroke={C.borderStrong} />
+              <text x={142} y={y + 24} textAnchor="middle" fontSize="11" fill={C.text} fontFamily={DG.body}>{m}</text>
+              <path d={`M 236 ${y + 19} L 288 ${y + 19}`} stroke={c} strokeWidth="1.5" markerEnd={`url(#m${i})`} />
+              <defs><marker id={`m${i}`} markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={c} /></marker></defs>
+              <rect x={295} y={y} width={220} height={38} fill={c + "18"} stroke={c + "60"} />
+              <text x={405} y={y + 24} textAnchor="middle" fontSize="11" fill={c} fontFamily={DG.body}>{b}</text>
+            </g>
+          );
+        })}
+        {TX(142, 14, "WHAT YOU PAY FOR", C.textMut, 9.5)}
+        {TX(405, 14, "WHAT YOU GET", C.textMut, 9.5)}
+      </Diagram>
+    );
+
+    case "realopt": return (
+      <Diagram h={190} caption="Same upside either way. The difference is entirely in how far the bad branch is allowed to fall.">
+        {TX(150, 18, "COMMIT NOW", C.red, 10.5)}
+        {TX(450, 18, "STAGE IT", C.green, 10.5)}
+        <line x1={300} y1={12} x2={300} y2={175} stroke={C.border} strokeWidth="1" />
+        <circle cx={70} cy={90} r={4.5} fill={C.amber} />
+        <path d="M 76 86 L 210 48" stroke={C.green} strokeWidth="1.6" />
+        <path d="M 76 94 L 210 148" stroke={C.red} strokeWidth="1.6" />
+        {TX(232, 52, "+60", C.green, 13, "start", DG.mono)}
+        {TX(232, 152, "−80", C.red, 13, "start", DG.mono)}
+        <circle cx={370} cy={90} r={4.5} fill={C.amber} />
+        <path d="M 376 86 L 500 48" stroke={C.green} strokeWidth="1.6" />
+        <path d="M 376 94 L 452 118" stroke={C.red} strokeWidth="1.6" />
+        <line x1={452} y1={104} x2={452} y2={134} stroke={C.amber} strokeWidth="2" />
+        {TX(452, 148, "gate", C.amber, 9.5)}
+        {TX(522, 52, "+55", C.green, 13, "start", DG.mono)}
+        {TX(470, 116, "−35", C.amber, 13, "start", DG.mono)}
+        {TX(150, 180, "no way to stop", C.textFaint, 9.5)}
+        {TX(450, 180, "the option to stop is the value", C.textFaint, 9.5)}
+      </Diagram>
+    );
+
+    case "schelling": return (
+      <Diagram h={175} caption="Nothing makes the amber point better. It wins because both of you knew the other would look there.">
+        {AX(55, 118, 545, 118)}
+        {[[130, 3], [215, 2], [300, 34], [385, 3], [470, 2]].map(([x, n], i) => (
+          <g key={i}>
+            {Array.from({ length: Math.min(n, 12) }, (_, j) => (
+              <circle key={j} cx={x + (j % 4) * 9 - 13} cy={106 - Math.floor(j / 4) * 11} r={3.6}
+                fill={i === 2 ? C.amber : C.textFaint} />
+            ))}
+            <line x1={x} y1={114} x2={x} y2={122} stroke={C.borderStrong} strokeWidth="1" />
+            <text x={x} y={138} textAnchor="middle" fontSize="10" fill={i === 2 ? C.amber : C.textMut} fontFamily={DG.body}>
+              {["option", "option", "the obvious one", "option", "option"][i]}
+            </text>
+          </g>
+        ))}
+        {TX(300, 28, "everyone independently picks the same thing", C.amber, 10)}
+        {TX(300, 162, "Set the convention and you set where everyone looks.", C.textMut, 10)}
+      </Diagram>
+    );
+
+    case "cheaptalk": return (
+      <Diagram h={175} caption="The statement carries no information of its own. Its weight comes entirely from where the speaker sits on this line.">
+        <defs><linearGradient id="ct" x1="0" x2="1"><stop offset="0" stopColor={C.red} /><stop offset="0.5" stopColor={C.amber} /><stop offset="1" stopColor={C.green} /></linearGradient></defs>
+        <rect x={60} y={62} width={480} height={22} fill="url(#ct)" opacity="0.32" />
+        <rect x={60} y={62} width={480} height={22} fill="none" stroke={C.border} />
+        {TX(60, 104, "interests oppose yours", C.red, 10, "start")}
+        {TX(540, 104, "interests match yours", C.green, 10, "end")}
+        {TX(120, 44, "discount to zero", C.red, 10)}
+        {TX(480, 44, "worth acting on", C.green, 10)}
+        {[[112, "broker", C.red], [225, "founder", C.amber], [470, "6-year supplier", C.green]].map(([x, l, c], i) => (
+          <g key={i}>
+            <line x1={x} y1={58} x2={x} y2={88} stroke={c} strokeWidth="1.6" />
+            <text x={x} y={130} textAnchor="middle" fontSize="9.5" fill={c} fontFamily={DG.body}>{l}</text>
+          </g>
+        ))}
+        {TX(300, 158, "Would they say the same thing if the opposite were true?", C.text, 10.5)}
+      </Diagram>
+    );
+
+    default: return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // GENERIC 2×2 MATRIX GAME — powers Chicken and Stag Hunt
 // ═══════════════════════════════════════════════════════════════════════════════
 function MatrixGame({ onBack, id, title, tag, tagColor, blurb, goal, la, lb, pay, help, oppLogic, oppLabel, debrief, tryThis }) {
@@ -1776,8 +2226,9 @@ function MatrixGame({ onBack, id, title, tag, tagColor, blurb, goal, la, lb, pay
     <div>
       <SimHeader onBack={onBack} title={title} tag={tag} tagColor={tagColor}>{blurb}</SimHeader>
       <Goal>{goal}</Goal>
+      <ModelDiagram id={id} />
 
-      <Label>Payoff Matrix (you, them){cellKey ? " — highlighted cell is the last round" : ""}</Label>
+      <Label>Payoff Matrix (you, them){cellKey ? " · highlighted cell is the last round" : ""}</Label>
       <div style={{ display: "inline-block", border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden", marginBottom: "18px" }}>
         <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12.5px" }}>
           <thead><tr>
@@ -1846,7 +2297,7 @@ function Chicken({ onBack }) {
     debrief={(l) => l.p === "D" && l.o === "D"
       ? "Neither of you moved and you both took the worst outcome on the board. This is the result rational players are trying to avoid, and it happens anyway because backing down is only correct if the other side does not. Hostile bids, strike negotiations and litigation standoffs all end here more often than either side planned."
       : l.p === "D" && l.o === "C"
-      ? "You held and they yielded. Notice what actually won it: not being right, but being read as unwilling to move. This is why negotiators appoint counsel with no discretion and why boards adopt defences they cannot quietly reverse. Removing your own flexibility is the strategy."
+      ? "You held and they yielded. Notice what won it: being read as unwilling to move. This is why negotiators appoint counsel with no discretion and why boards adopt defences they cannot quietly reverse. Removing your own flexibility is the strategy."
       : l.p === "C" && l.o === "D"
       ? "You backed down and they took the prize. Yielding was individually correct given what they did, which is exactly the problem. If your counterparty knows you will always calculate that way, they never have to yield."
       : "You both backed down. Nothing was gained or lost. In practice this is what most standoffs should resolve to, and the reason they do not is that each side keeps believing the other will move first."}
@@ -1878,7 +2329,7 @@ function StagHunt({ onBack }) {
       ? "You committed and they did not. This is the fear that keeps the joint outcome from happening, and it is worth being precise about what went wrong. They did not betray you for gain. They took the safe option because they were not sure about you."
       : l.p === "D" && l.o === "C"
       ? "You took the safe option while they committed. You got 3 instead of 8, and so did they. Nobody defected for advantage here. The joint outcome was simply left on the table because one side would not go first."
-      : `Both took the safe option: 3 each, against the 8 available. ${h.length > 2 ? "You have now done this repeatedly. The failure mode is not selfishness, it is that neither side will move first." : "This is the risk-dominant equilibrium. It is safe, and it is poor."}`}
+      : `Both took the safe option: 3 each, against the 8 available. ${h.length > 2 ? "You have now done this repeatedly. The failure mode is that neither side will move first." : "This is the risk-dominant equilibrium. It is safe, and it is poor."}`}
     tryThis={[
       "Commit five times in a row regardless of what they do. Watch the partner's commit rate climb.",
       "Compare the total you earn from sustained commitment against always taking the safe option.",
@@ -1929,6 +2380,7 @@ function CournotBertrand({ onBack }) {
         Two firms, identical costs of {MC} per unit. In Cournot you both choose how much to produce and the market sets the price. In Bertrand you both choose a price and customers buy the cheaper one. Same industry, same costs, radically different outcomes.
       </SimHeader>
       <Goal>Maximise your profit, then switch modes and notice that the winning move reverses.</Goal>
+      <ModelDiagram id="cournot" />
 
       <Label>Competition type</Label>
       <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
@@ -1981,7 +2433,7 @@ function CournotBertrand({ onBack }) {
             {res.mode === "bertrand" && res.diff < 0.3 &&
               `With near-identical products, price is the only thing customers can compare, and your share swings violently on small price differences. This is the Bertrand trap: two firms are enough to push price toward marginal cost of ${MC}. No amount of capacity discipline fixes it, because capacity is not the binding constraint. Differentiation is the only lever.`}
             {res.mode === "bertrand" && res.diff >= 0.3 &&
-              `At ${Math.round(res.diff * 100)}% differentiation, you held ${res.share}% of the market at a price of ${res.price}, well above your cost of ${MC}. Differentiation is doing the work here, not price discipline. Every point of genuine product distinctiveness buys you room to price above the competitive floor.`}
+              `At ${Math.round(res.diff * 100)}% differentiation, you held ${res.share}% of the market at a price of ${res.price}, well above your cost of ${MC}. Differentiation is what earned that, rather than price discipline. Every point of genuine product distinctiveness buys you room to price above the competitive floor.`}
           </Insight>
 
           <TryThis items={[
@@ -2034,6 +2486,7 @@ function VickreyAuction({ onBack }) {
         Same asset, same bidders, two different rulebooks. Under first-price rules the winner pays their own bid. Under second-price rules the winner pays the runner-up's bid. That single change flips the optimal strategy from shading to honesty.
       </SimHeader>
       <Goal>Win the asset for less than it is worth to you. Your private valuation is shown before you bid.</Goal>
+      <ModelDiagram id="vickrey" />
 
       <Label>Auction format</Label>
       <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
@@ -2089,7 +2542,7 @@ function VickreyAuction({ onBack }) {
             {res.format === "second" && Math.abs(res.bid - res.myVal) <= 2 &&
               `You bid your true value and ${res.won ? `won, paying only the runner-up's ${res.pays} for something worth ${res.myVal} to you` : "lost, which cost you nothing"}. Under second-price rules this is the dominant strategy: bidding high cannot make you overpay, because you never pay your own bid, and bidding low only costs you auctions you would have profited from.`}
             {res.format === "second" && res.bid < res.myVal - 2 &&
-              `You shaded to ${res.bid} against a true value of ${res.myVal}. Under second-price rules shading is pure loss. It cannot reduce what you pay, since you pay the runner-up's bid regardless. It can only cost you auctions you would have won profitably. The format has removed the reason to be strategic.`}
+              `You shaded to ${res.bid} against a true value of ${res.myVal}. Under second-price rules shading is pure loss. It cannot reduce what you pay, since you pay the runner-up's bid regardless. All it does is cost you auctions you would have won at a profit. The format has taken away the reason to be clever.`}
             {res.format === "second" && res.bid > res.myVal + 2 &&
               `You bid ${res.bid} above your value of ${res.myVal}. That is the one genuine risk in a second-price auction: if the runner-up bids between your value and your bid, you win at a price above what the asset is worth to you.`}
             {res.format === "first" && res.bid >= res.myVal - 2 &&
@@ -2154,6 +2607,7 @@ function Lemons({ onBack }) {
         You are a buyer. Forty sellers each hold something worth between 20 and 100 to you, and each knows their own quality while you do not. A seller will only trade if your price beats what the item is worth to them. Set one price for everyone and see who shows up.
       </SimHeader>
       <Goal>Buy above your cost. The trap is that the price you offer determines which sellers accept, and therefore what you are actually buying.</Goal>
+      <ModelDiagram id="lemons" />
 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
         <Slider label="Your offer price" value={offer} onChange={setOffer} min={10} max={100} hint="Every seller sees the same number." />
@@ -2184,7 +2638,7 @@ function Lemons({ onBack }) {
 
           <Insight tone={last.surplus > 0 ? "good" : "bad"}>
             {last.verify === 0 && last.surplus <= 0 &&
-              `You offered ${last.offer} and attracted ${last.entered} sellers whose average quality was ${last.effectiveQ}. You lost money on every trade. This is the unravelling: your price attracted precisely the sellers whose goods were worth less than your price, and the ones holding genuinely good inventory withdrew because you were not paying enough. Raising the price does not fix it, because a higher price attracts a higher-quality pool but you also pay more for it.`}
+              `You offered ${last.offer} and attracted ${last.entered} sellers whose average quality was ${last.effectiveQ}. You lost money on every trade. This is the market unravelling. Your price attracted the sellers whose goods were worth less than your price, and the ones holding genuinely good inventory withdrew because you were not paying enough. Raising the price does not fix it, because a higher price attracts a higher-quality pool but you also pay more for it.`}
             {last.verify === 0 && last.surplus > 0 &&
               `You cleared ${last.surplus} per unit at a price of ${last.offer}. You found a workable price without any information, which is possible but fragile. Notice that the good sellers still withdrew: the ${last.pool - last.entered} who refused were holding the best inventory in the market, and no price you can profitably offer will bring them in.`}
             {last.verify > 0 &&
@@ -2269,6 +2723,7 @@ function MoralHazard({ onBack }) {
         You are hiring someone to run a business line. You cannot observe their effort or how much risk they take, only the result. You choose the contract. They respond to it rationally. Whatever they do next is something you designed.
       </SimHeader>
       <Goal>Design a contract that maximises what you keep after paying them. Effort and risk-taking both respond to how you pay.</Goal>
+      <ModelDiagram id="hazard" />
 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
         <Slider label="Base salary" value={salary} onChange={setSalary} min={0} max={100} hint="Guaranteed regardless of outcome." />
@@ -2293,9 +2748,9 @@ function MoralHazard({ onBack }) {
 
           <Insight tone={res.principalNet > 0 ? "good" : "bad"}>
             {res.bonus > 35 && !res.clawback && !res.defer &&
-              `You handed over ${res.bonus}% of the upside with no clawback and no deferral. They took ${res.riskAppetite}% risk, which is exactly correct behaviour given the contract: they keep the gains and you absorb the losses. You wrote them a call option and charged nothing for it. The failure here is not their judgement. It is the contract.`}
+              `You handed over ${res.bonus}% of the upside with no clawback and no deferral. They took ${res.riskAppetite}% risk, which is exactly correct behaviour given the contract: they keep the gains and you absorb the losses. You wrote them a call option and charged nothing for it. You designed this outcome. Their judgement was fine.`}
             {res.bonus > 35 && (res.clawback || res.defer) &&
-              `A ${res.bonus}% bonus share bought you ${res.effort}% effort, and the ${res.clawback && res.defer ? "clawback and deferral held" : res.clawback ? "clawback held" : "deferral held"} risk-taking down to ${res.riskAppetite}%. This is the whole solution to moral hazard: make the agent hold some of the downside. Nothing else reliably works, because monitoring cannot see what you cannot observe.`}
+              `A ${res.bonus}% bonus share bought you ${res.effort}% effort, and the ${res.clawback && res.defer ? "clawback and deferral held" : res.clawback ? "clawback held" : "deferral held"} risk-taking down to ${res.riskAppetite}%. That is the fix: make the agent hold some of the downside. Monitoring cannot see what you cannot observe, so the contract has to do the work.`}
             {res.bonus <= 15 &&
               `A ${res.bonus}% bonus share produced only ${res.effort}% effort. Risk-taking stayed low at ${res.riskAppetite}%, which is safe and unproductive. This is the other failure mode: a contract so flat that there is no reason to work hard. The problem is two-sided, and the solution is a share of upside paired with genuine exposure to downside.`}
             {res.bonus > 15 && res.bonus <= 35 &&
@@ -2379,6 +2834,7 @@ function Cascades({ onBack }) {
         One of two options is correct. You get a private signal that is right 70% of the time. So did everyone ahead of you, but you can only see what they chose, not what they knew. Once two people lean the same way, everyone after them rationally stops using their own information.
       </SimHeader>
       <Goal>Pick the correct option. Decide how much weight to give your own signal against what the queue did.</Goal>
+      <ModelDiagram id="cascade" />
 
       <Label>Your position in the queue</Label>
       <div style={{ display: "flex", gap: "6px", marginBottom: "18px" }}>
@@ -2416,7 +2872,7 @@ function Cascades({ onBack }) {
               {cascadeOn && choice.c !== round.mySig &&
                 `You abandoned your own signal and followed the queue. That was rational: with ${Math.max(aC, bC)} people leaning one way, the crowd's information outweighs your single 70% signal. But notice the consequence. Your private information never entered the pool, so the person behind you sees a longer queue and even less real evidence. This is how a consensus built on two early opinions becomes unanimous.`}
               {cascadeOn && choice.c === round.mySig &&
-                `You backed your own signal against an active cascade. ${choice.correct ? "It paid this time." : "It cost you this time."} Either way, you did the thing that keeps markets informative: you put private information into the public pool. Cascades are fragile precisely because one credible contrarian breaks them.`}
+                `You backed your own signal against an active cascade. ${choice.correct ? "It paid this time." : "It cost you this time."} Either way, you did the thing that keeps markets informative: you put private information into the public pool. Cascades are fragile. One credible contrarian breaks them.`}
               {!cascadeOn &&
                 `No cascade had formed yet, so the queue carried little information and your own signal was the best evidence available. This is the early part of the sequence where independent judgement still enters the pool. Two more people leaning the same way and it stops.`}
             </Insight>
@@ -2486,6 +2942,7 @@ function ProspectTheory({ onBack }) {
         Four decisions. Two pairs are mathematically identical and only differ in how they are worded. Answer quickly and honestly rather than carefully, because the effect being measured is the one that operates when you are not watching for it.
       </SimHeader>
       <Goal>Answer all four, then see which framing effects moved you. Most people are moved by at least one.</Goal>
+      <ModelDiagram id="prospect" />
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
@@ -2523,9 +2980,9 @@ function ProspectTheory({ onBack }) {
 
           <Insight tone={framingFlip || reflection ? "neutral" : "good"} title={framingFlip || reflection ? "The framing moved you." : "You were consistent across framings."}>
             {framingFlip &&
-              `Decisions 1 and 2 describe exactly the same outcomes. One was worded as lives saved, the other as lives lost, and you answered them differently. This is the reflection effect, and it is the most robust finding in behavioural decision research. You did not change your mind about the facts. The reference point moved, and your risk appetite moved with it. `}
+              `Decisions 1 and 2 describe exactly the same outcomes. One was worded as lives saved, the other as lives lost, and you answered them differently. This is the reflection effect, and it holds up across decades of experiments. You did not change your mind about the facts. The reference point moved, and your risk appetite moved with it. `}
             {reflection &&
-              `Decisions 3 and 4 show the same pattern in money. You took the certain gain and gambled on the loss, which means you applied two different risk appetites within four minutes. In the domain of gains you were risk-averse. In the domain of losses you became risk-seeking. This is what keeps failing projects funded: stopping means realising a certain loss, and continuing preserves the chance of not having lost at all. `}
+              `Decisions 3 and 4 show the same pattern in money. You took the certain gain and gambled on the loss, which means you applied two different risk appetites within four minutes. You played it safe on the gain and gambled on the loss. This is what keeps failing projects funded: stopping means realising a certain loss, and continuing preserves the chance of not having lost at all. `}
             {!framingFlip && !reflection &&
               `You answered consistently across both framings, which is unusual and worth noting. Most people flip. The value of knowing this is less about your own answers and more about everyone else's: your customers, your staff and your counterparties are all running the standard pattern, and your framing choices move their decisions. `}
             {`Losses weigh roughly twice as much as equivalent gains. Once you know that, the framing of a concession, a price, a performance report or a write-off is a decision variable rather than a presentational detail.`}
@@ -2576,6 +3033,7 @@ function WarOfAttrition({ onBack }) {
         You and a rival are both burning cash to win a market worth {prize}. Every round you stay in costs you money whether you win or not. The winner takes the prize minus everything spent. The loser takes nothing minus everything spent.
       </SimHeader>
       <Goal>Finish with a positive net. The prize is {prize}, so every round you stay reduces the maximum you can possibly win.</Goal>
+      <ModelDiagram id="attrition" />
 
       <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", marginBottom: "18px" }}>
         <div style={{ minWidth: "210px" }}>
@@ -2622,11 +3080,11 @@ function WarOfAttrition({ onBack }) {
             {outcome.won && outcome.net > 0 &&
               `You won with ${outcome.net} left over. They ran out first. Note how much of the ${prize} prize the fight itself consumed: ${outcome.spent} of it, or ${Math.round(outcome.spent / prize * 100)}%. Winning a war of attrition is rarely as valuable as the scoreboard suggests.`}
             {outcome.won && outcome.net <= 0 &&
-              `You won and still lost ${Math.abs(outcome.net)}. This is the defining feature of the model: in a symmetric contest, the expected value to both sides is roughly zero because the fight dissipates the prize. You outlasted them and the prize was already gone.`}
+              `You won and still lost ${Math.abs(outcome.net)}. That is the point of this model. In an even contest the expected value to both sides is roughly zero, because the fight eats the prize. You outlasted them and the prize was already gone.`}
             {!outcome.won && outcome.quit &&
               `You conceded after ${outcome.rounds} rounds, down ${outcome.spent}. Conceding early is usually the correct move and almost nobody does it, because by the time the arithmetic is obvious you have sunk enough that quitting feels like admitting the earlier spending was wasted. It was. That is not a reason to spend more.`}
             {!outcome.won && outcome.forced &&
-              `You spent ${outcome.spent} chasing a prize worth ${prize} and had to stop anyway. Every round past ${prize} was guaranteed loss, and you kept going. This is sunk-cost gravity, and it is why recognising the structure before you are deep in it is the entire strategic advantage.`}
+              `You spent ${outcome.spent} chasing a prize worth ${prize} and had to stop anyway. Every round past ${prize} was guaranteed loss, and you kept going. This is sunk-cost gravity, Spotting the structure before you are deep in it is the whole advantage.`}
           </Insight>
           <TryThis items={[
             "Play against a Deep-pocketed rival and try to win. Then calculate what conceding at round one would have cost.",
@@ -2671,6 +3129,7 @@ function HoldUp({ onBack }) {
         You can invest in tooling, integration or a facility that only has value inside one relationship. The investment more than doubles the joint value. Once it is sunk, your counterparty knows you cannot walk away, and reopens the terms.
       </SimHeader>
       <Goal>Invest enough to create value, and keep enough of it. Those two goals fight each other.</Goal>
+      <ModelDiagram id="holdup" />
 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
         <Slider label="Relationship-specific investment" value={invest} onChange={setInvest} min={0} max={60}
@@ -2696,9 +3155,9 @@ function HoldUp({ onBack }) {
           </div>
           <Insight tone={res.yours > 0 ? "good" : "bad"}>
             {res.protection === "none" && res.invest > 20 &&
-              `You sank ${res.invest} on a handshake. The asset is worth ${res.outsideValue} outside this relationship, so your walk-away threat is empty and they took ${res.grab} of the value you created. You did nothing wrong operationally. You created value and then had no mechanism to keep it. This is why anticipated hold-up suppresses efficient investment before it ever happens.`}
+              `You sank ${res.invest} on a handshake. The asset is worth ${res.outsideValue} outside this relationship, so your walk-away threat is empty and they took ${res.grab} of the value you created. You did nothing wrong operationally. You created value and then had no mechanism to keep it. This is why the mere expectation of hold-up stops good investments from being made at all.`}
             {res.protection === "none" && res.invest <= 20 &&
-              `You under-invested, which protected you from hold-up and also left value uncreated. Joint value reached only ${res.jointValue}. This is the deeper cost of the model: the biggest loss is not the value that gets taken, it is the value that never gets built because both sides can see what would happen.`}
+              `You under-invested, which protected you from hold-up and also left value uncreated. Joint value reached only ${res.jointValue}. That is the real cost here. The biggest loss is the value that never gets built, because both sides can see in advance what would happen to it.`}
             {res.protection === "contract" &&
               `The long-term contract cost ${res.protCost} and cut their grab to ${res.grab}. Contracts help, and they are incomplete by nature: they cannot specify every contingency, and hold-up lives in the gaps. Notice that you paid for protection and still lost ground.`}
             {res.protection === "integrate" &&
@@ -2760,6 +3219,7 @@ function MechanismDesign({ onBack }) {
         Eight salespeople. You choose what to pay them on. They will maximise whatever you measure, competently and without malice. This is inverse game theory: instead of predicting behaviour inside a fixed game, you design the game so that self-interest produces what you actually want.
       </SimHeader>
       <Goal>Maximise net value to the business, which is revenue minus the cost of gaming and churn.</Goal>
+      <ModelDiagram id="mechanism" />
 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
         <Label>Pay them on</Label>
@@ -2786,9 +3246,9 @@ function MechanismDesign({ onBack }) {
           </div>
           <Insight tone={res.net > 550 ? "good" : "bad"}>
             {res.metric === "volume" && !res.quality &&
-              `You paid on units and got units. Headline revenue looks strong at ${res.revenue}, and a ${res.gaming}% gaming rate and ${res.churn}% churn ate most of it. Nobody on this team behaved badly. They optimised the number you chose to pay for, which is what a compensation scheme is for. If you dislike the result, the mechanism is the suspect, not the people.`}
+              `You paid on units and got units. Headline revenue looks strong at ${res.revenue}, and a ${res.gaming}% gaming rate and ${res.churn}% churn ate most of it. Nobody on this team behaved badly. They optimised the number you chose to pay for, which is what a compensation scheme does. If you dislike the result, look at the scheme first and the people last.`}
             {res.metric === "retention" &&
-              `Paying on retention produced the lowest gaming rate at ${res.gaming}% and churn of just ${res.churn}%. Headline revenue is lower, and net value is higher. The metric closest to what the business actually wants is usually the hardest to move and the least attractive to put on a scorecard, which is exactly why it rarely gets chosen.`}
+              `Paying on retention produced the lowest gaming rate at ${res.gaming}% and churn of just ${res.churn}%. Headline revenue is lower, and net value is higher. The metric closest to what the business actually wants is usually the hardest to move and the least attractive to put on a scorecard, which is why it rarely gets chosen.`}
             {(res.metric === "revenue" || res.metric === "margin") &&
               `Paying on ${res.metric} landed you at ${res.gaming}% gaming and ${res.churn}% churn for ${res.net} net. ${res.cap || res.quality ? "Your controls are doing real work here: each one closes a route the team would otherwise take." : "Add a quality gate and rerun. The same metric performs very differently once the payout is conditional."}`}
           </Insight>
@@ -2846,6 +3306,7 @@ function RealOptions({ onBack }) {
         A project costs {COST} and is expected to return about {BASE}, but the true value only becomes clear after you commit. Standard analysis compares investing now against never investing. That is not the choice you have. You can also wait, or stage the commitment and kill it at a gate.
       </SimHeader>
       <Goal>Maximise cumulative payoff over many attempts. The right answer changes as uncertainty rises.</Goal>
+      <ModelDiagram id="realopt" />
 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
         <Slider label="Uncertainty" value={vol} onChange={v => { setVol(v); setRes(null); }} min={5} max={90} suffix="%"
@@ -2867,11 +3328,11 @@ function RealOptions({ onBack }) {
           </div>
           <Insight tone={res.payoff > 0 ? "good" : "bad"}>
             {res.action === "now" && res.revealed < COST &&
-              `You committed the full {COST} and the project turned out to be worth ${res.revealed}. You lost ${Math.abs(res.payoff)} with no way to stop. This is what a positive expected NPV buys you when there is no option to abandon: the average is fine and the individual outcome can be terrible.`}
+              `You committed the full {COST} and the project turned out to be worth ${res.revealed}. You lost ${Math.abs(res.payoff)} with no way to stop. A positive expected NPV tells you the average is fine. It says nothing about how bad any single outcome can get when you cannot stop.`}
             {res.action === "now" && res.revealed >= COST &&
               `Committing paid off this time, returning ${res.payoff}. At ${vol}% uncertainty, that was partly luck. Run the same decision twenty times and compare the total against staging, which trades a small fee for the right to stop.`}
             {res.action !== "now" && res.revealed < COST &&
-              `The project turned out to be worth ${res.revealed}, below the ${COST} cost, and you ${res.action === "wait" ? `walked away for just the ${8} waiting cost` : "killed it at the first gate for 35"} instead of losing ${COST - res.revealed}. That saving is the option value, and standard NPV analysis cannot see it because it never models the decision to stop.`}
+              `The project turned out to be worth ${res.revealed}, below the ${COST} cost, and you ${res.action === "wait" ? `walked away for just the ${8} waiting cost` : "killed it at the first gate for 35"} instead of losing ${COST - res.revealed}. That saving is what the option was worth. Standard NPV misses it because it never models the decision to stop.`}
             {res.action !== "now" && res.revealed >= COST &&
               `You ${res.action === "wait" ? "waited" : "staged"} and then proceeded, netting ${res.payoff}. The flexibility cost you a little on the upside. It is insurance, and the premium is worth paying whenever uncertainty is high enough that walking away is a real possibility.`}
           </Insight>
@@ -2911,10 +3372,10 @@ const SCHELLING = [
     why: "Net 30 is a focal point, not an optimum. No analysis established 30 days as efficient. It persists because deviating unilaterally is costly even when the convention is arbitrary." },
   { q: "Two of you must independently name a number. Matching wins. Any positive whole number is allowed.",
     opts: ["1", "7", "100", "42"], focal: 0,
-    why: "One is the most common answer because it is the unique smallest positive integer, which makes it salient in a way no other number is. Salience beats sophistication here." },
+    why: "One is the most common answer because it is the unique smallest positive integer, which makes it stand out in a way no other number does. Obvious beats clever here." },
   { q: "You must independently pick a price point for a premium product. Matching your competitor stabilises the category.",
     opts: ["$99", "$104", "$117", "$125"], focal: 0,
-    why: "Round and near-round numbers dominate because they are mutually obvious. Offers and prices cluster at salient points, which is why deliberately pricing off the focal point moves the whole negotiating range." },
+    why: "Round numbers win because both sides land on them without discussing it. Offers and prices bunch at those points, which is why deliberately pricing off the focal point moves the whole negotiating range." },
 ];
 
 function Schelling({ onBack }) {
@@ -2940,6 +3401,7 @@ function Schelling({ onBack }) {
         Four coordination problems with no communication allowed. You win by matching what the other person independently chooses. There is no correct answer in any objective sense. There is only the answer everyone expects everyone else to give.
       </SimHeader>
       <Goal>Match the other party. Ask what they will expect you to pick, not what is best.</Goal>
+      <ModelDiagram id="schelling" />
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
@@ -2975,8 +3437,8 @@ function Schelling({ onBack }) {
           </div>
           <Insight tone={score >= 3 ? "good" : "neutral"}>
             {score >= 3
-              ? "You found the focal points, which means you were answering the right question: not what is best, but what is obvious to both of us. That reframing is the entire skill. Most of the conventions in your industry are exactly this — stable because everyone expects everyone else to keep following them, and not because anyone established that they were efficient."
-              : "You reasoned about which option was better rather than which was more obvious. That is the standard mistake, and it is expensive in practice because coordination problems reward salience over merit. Payment terms, notice periods, pricing tiers and fiscal calendars are all focal points, and none of them were optimised."}
+              ? "You found the focal points, which means you were answering the right question: what is obvious to both of us. That is the whole skill. Most of the conventions in your industry work this way. They are stable because everyone expects everyone else to keep following them. Nobody established that they were efficient."
+              : "You reasoned about which option was better rather than which was more obvious. That is the standard mistake, and it costs money, because coordination problems reward the obvious answer over the best one. Payment terms, notice periods, pricing tiers and fiscal calendars are all focal points, and none of them were optimised."}
           </Insight>
           <TryThis items={[
             "List three conventions in your industry nobody can justify. Each is a focal point.",
@@ -3026,9 +3488,10 @@ function CheapTalk({ onBack }) {
   return (
     <div>
       <SimHeader onBack={onBack} title="Cheap Talk" tag="Credibility" tagColor="#70B0C0">
-        Four statements. Each costs the speaker nothing to make and cannot be verified before you act on it. Your job is to decide which ones carry information. The test is not confidence or seniority. It is whether the speaker's interests align with yours.
+        Four statements. Each costs the speaker nothing to make and cannot be verified before you act on it. Your job is to decide which ones carry information. The test is whether the speaker's interests line up with yours.
       </SimHeader>
       <Goal>Judge each statement correctly. Ask what the speaker loses if they turn out to be wrong.</Goal>
+      <ModelDiagram id="cheaptalk" />
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
@@ -3311,7 +3774,33 @@ function Home({ onNav }) {
 // APP SHELL
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function Sagax() {
-  const [page, setPage] = useState("home");
+  const [page, setPageState] = useState(() =>
+    typeof window === "undefined" ? "home" : pathToPage(window.location.pathname));
+
+  // Push a real URL so every model is linkable, bookmarkable and back-button friendly
+  const setPage = (p) => {
+    const path = pageToPath(p);
+    if (typeof window !== "undefined" && window.location.pathname !== path) {
+      window.history.pushState({ page: p }, "", path);
+    }
+    setPageState(p);
+    if (typeof window !== "undefined") window.scrollTo(0, 0);
+  };
+
+  useEffect(() => {
+    const onPop = () => setPageState(pathToPage(window.location.pathname));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // Keep the tab title in step with the page
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const sim = SIMS.find(s => s.id === page);
+    document.title = sim
+      ? `${sim.name} · Sagax`
+      : "Sagax — Applied Game Theory for Finance and Negotiation";
+  }, [page]);
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body }}>
