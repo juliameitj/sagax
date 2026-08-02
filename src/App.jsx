@@ -423,40 +423,37 @@ const SIMS = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// KIT (CONVERTKIT) — newsletter subscribe
-// ═══════════════════════════════════════════════════════════════════════════════
-async function subscribeToKit(email) {
-  const apiKey = import.meta.env.VITE_KIT_API_KEY;
-  const formId = import.meta.env.VITE_KIT_FORM_ID;
-  const res = await fetch(`https://api.convertkit.com/v3/forms/${formId}/subscribe`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-    body: JSON.stringify({ api_key: apiKey, email }),
-  });
-  if (!res.ok) throw new Error("Kit subscribe failed");
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // HOME PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 function Home({ onNav }) {
+  
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubscribe = async () => {
-    if (!email.includes("@") || loading) return;
-    setError("");
+    if (!email.includes("@")) return;
     setLoading(true);
+    setError("");
     try {
-      await subscribeToKit(email.trim());
-      setSubscribed(true);
-    } catch {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setSubscribed(true);
+      } else {
+        console.error("Subscribe failed:", res.status, data);
+        setError("Something went wrong. Try again.");
+      }
+    } catch (e) {
+      console.error("Subscribe error:", e);
       setError("Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (
