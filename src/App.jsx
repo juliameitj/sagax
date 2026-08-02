@@ -423,11 +423,41 @@ const SIMS = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// KIT (CONVERTKIT) — newsletter subscribe
+// ═══════════════════════════════════════════════════════════════════════════════
+async function subscribeToKit(email) {
+  const apiKey = import.meta.env.VITE_KIT_API_KEY;
+  const formId = import.meta.env.VITE_KIT_FORM_ID;
+  const res = await fetch(`https://api.convertkit.com/v3/forms/${formId}/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+    body: JSON.stringify({ api_key: apiKey, email }),
+  });
+  if (!res.ok) throw new Error("Kit subscribe failed");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // HOME PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 function Home({ onNav }) {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!email.includes("@") || loading) return;
+    setError("");
+    setLoading(true);
+    try {
+      await subscribeToKit(email.trim());
+      setSubscribed(true);
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -503,10 +533,11 @@ function Home({ onNav }) {
               One email when a new simulator drops. Game theory applied to finance.
             </p>
             <div style={{ display: "flex", gap: "8px", maxWidth: "380px" }}>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com"
+              <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }} onKeyDown={e => e.key === "Enter" && handleSubscribe()} placeholder="you@example.com"
                 style={{ flex: 1, padding: "9px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.body, fontSize: "13px", outline: "none" }} />
-              <Btn onClick={() => { if (email.includes("@")) setSubscribed(true); }}>Subscribe</Btn>
+              <Btn onClick={handleSubscribe} disabled={loading || !email.includes("@")}>Subscribe</Btn>
             </div>
+            {error && <p style={{ fontSize: "12px", color: C.red, margin: "8px 0 0", lineHeight: 1.5 }}>{error}</p>}
           </>
         ) : (
           <div style={{ fontSize: "14px", color: C.amber }}>✓ You're in. First email when Nash Bargaining ships.</div>
