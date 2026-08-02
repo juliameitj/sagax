@@ -7,14 +7,25 @@ const C = {
   bg: "#0E0D0B", surface: "#191714", surfaceHover: "#221F1A",
   border: "#2C2822", borderStrong: "#423B32",
   // Amber is the only brand accent. It marks the single most important thing on a screen.
-  amber: "#D9A648", amberMuted: "#D9A64818", amberStrong: "#E8B95C",
+  amber: "#DCAF5D", amberMuted: "#DCAF5D18", amberStrong: "#EABE72",
   // Semantic only. These appear inside gameplay and diagrams, never as decoration.
   steel: "#7FA3CC", steelMuted: "#7FA3CC20",
   green: "#6FB582", greenMuted: "#6FB58218",
   red: "#D46A6A", redMuted: "#D46A6A18",
+  // Background tints must stay under ~15% saturation or they read as mud at low
+  // luminance. Any hue in the 20-60 deg band is worst affected, which is why the
+  // earlier wood tone went olive. Warm graphite carries the grid without a colour cast.
+  grid: "#9E9A94",
   // Warm greyscale, raised for contrast against the near-black ground.
   text: "#EAE5DB", textSec: "#ADA598", textMut: "#8A8173", textFaint: "#6E655B",
 };
+// Cards read as tiles resting on the board: lit from above, with a real shadow.
+// Depth comes from the shadow, which lets the texture behind them run much stronger.
+const CARD_BG = "linear-gradient(180deg, #252220 0%, #1A1817 100%)";
+const CARD_BG_HOVER = "linear-gradient(180deg, #302C29 0%, #221F1D 100%)";
+const CARD_SHADOW = "inset 0 1px 0 rgba(234,229,219,0.06), 0 2px 10px rgba(0,0,0,0.45)";
+const CARD_SHADOW_HOVER = "inset 0 1px 0 rgba(220,175,93,0.16), 0 8px 24px rgba(0,0,0,0.55)";
+
 const F = { display: "Georgia, 'Times New Roman', serif", body: "system-ui, -apple-system, sans-serif", mono: "'SF Mono', 'Cascadia Code', Consolas, monospace" };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -495,6 +506,15 @@ function pathToPage(p) {
 }
 function pageToPath(page) {
   return page === "home" ? "/" : "/" + SLUGS[page];
+}
+
+// Navigate from anywhere. The shell already listens for popstate, so pushing the
+// URL and re-emitting the event keeps it in sync without threading a callback down.
+function go(page) {
+  if (typeof window === "undefined") return;
+  window.history.pushState({ page }, "", pageToPath(page));
+  window.dispatchEvent(new PopStateEvent("popstate"));
+  window.scrollTo(0, 0);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1781,6 +1801,8 @@ function ModelBrief({ id }) {
           </div>
         ))}
       </div>
+
+      <ModelNav id={id} />
     </div>
   );
 }
@@ -2202,6 +2224,66 @@ function ModelDiagram({ id }) {
 
     default: return null;
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODEL NAV — prev/next at the foot of each model.
+// Placed after the content rather than floating over it, so it behaves identically
+// at 375px and 1440px. Floating side arrows were rejected: on a phone the gutter is
+// 24px, well under the 44px minimum touch target.
+// ═══════════════════════════════════════════════════════════════════════════════
+function ModelNav({ id }) {
+  const i = SIMS.findIndex(s => s.id === id);
+  if (i === -1) return null;
+  const prev = i > 0 ? SIMS[i - 1] : null;
+  const next = i < SIMS.length - 1 ? SIMS[i + 1] : null;
+
+  const Side = ({ sim, dir }) => (
+    <button onClick={() => go(sim.id)}
+      style={{
+        flex: "1 1 210px", minWidth: 0, textAlign: dir === "next" ? "right" : "left",
+        background: CARD_BG, border: `1px solid ${C.border}`, borderRadius: "3px",
+        padding: "14px 18px", cursor: "pointer", boxShadow: CARD_SHADOW,
+        fontFamily: F.body, color: C.text,
+        transition: "background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = CARD_BG_HOVER;
+        e.currentTarget.style.borderColor = C.borderStrong;
+        e.currentTarget.style.boxShadow = CARD_SHADOW_HOVER;
+        e.currentTarget.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = CARD_BG;
+        e.currentTarget.style.borderColor = C.border;
+        e.currentTarget.style.boxShadow = CARD_SHADOW;
+        e.currentTarget.style.transform = "translateY(0)";
+      }}>
+      <div style={{ fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.13em", color: C.textMut, fontWeight: 600, marginBottom: "6px" }}>
+        {dir === "prev" ? "\u2190 Previous" : "Next \u2192"}
+      </div>
+      <div style={{ fontSize: "14.5px", color: C.text, lineHeight: 1.4 }}>
+        <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint, marginRight: "7px" }}>
+          {String(MODELS[sim.id].n).padStart(2, "0")}
+        </span>
+        {sim.name}
+      </div>
+    </button>
+  );
+
+  return (
+    <div style={{ marginTop: "36px", paddingTop: "26px", borderTop: `1px solid ${C.border}` }}>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "16px" }}>
+        {prev ? <Side sim={prev} dir="prev" /> : <div style={{ flex: "1 1 210px" }} />}
+        {next ? <Side sim={next} dir="next" /> : <div style={{ flex: "1 1 210px" }} />}
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <button onClick={() => go("home")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12.5px", color: C.textMut, fontFamily: F.body, textDecoration: "underline", textUnderlineOffset: "3px", padding: "6px 10px" }}>
+          All 22 models
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -3568,24 +3650,24 @@ function BoardTexture() {
   }
   return (
     <div aria-hidden="true" style={{
-      position: "fixed", right: "-9vw", bottom: "-10vh",
-      width: "min(464px, 66vw)", height: "min(464px, 66vw)",
+      position: "fixed", right: "-5vw", bottom: "-7vh",
+      width: "min(560px, 74vw)", height: "min(560px, 74vw)",
       pointerEvents: "none", userSelect: "none", zIndex: 0,
     }}>
       <svg viewBox={`0 0 ${W} ${W}`} width="100%" height="100%" style={{ transform: "rotate(-7deg)", display: "block" }}>
         <defs>
           {/* Fades toward the content so the grid dissolves before it reaches anything readable */}
           <radialGradient id="sgxFade" cx="0.74" cy="0.8" r="0.82">
-            <stop offset="0" stopColor="#fff" stopOpacity="0.065" />
-            <stop offset="0.45" stopColor="#fff" stopOpacity="0.038" />
-            <stop offset="0.8" stopColor="#fff" stopOpacity="0.012" />
+            <stop offset="0" stopColor="#fff" stopOpacity="0.12" />
+            <stop offset="0.42" stopColor="#fff" stopOpacity="0.072" />
+            <stop offset="0.78" stopColor="#fff" stopOpacity="0.024" />
             <stop offset="1" stopColor="#fff" stopOpacity="0" />
           </radialGradient>
           <mask id="sgxMask"><rect width={W} height={W} fill="url(#sgxFade)" /></mask>
         </defs>
         <g mask="url(#sgxMask)">
-          <g fill={C.amber}>{dark}</g>
-          <g stroke={C.amber} strokeWidth="0.75" opacity="1">{lines}</g>
+          <g fill={C.grid}>{dark}</g>
+          <g stroke={C.grid} strokeWidth="1.1" opacity="1">{lines}</g>
         </g>
       </svg>
     </div>
@@ -3818,9 +3900,23 @@ function Home({ onNav }) {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(268px, 1fr))", gap: "10px" }}>
               {items.map(sim => (
                 <div key={sim.id} onClick={() => onNav(sim.id)}
-                  style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "18px", cursor: "pointer", transition: "all 0.12s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = C.surfaceHover; e.currentTarget.style.borderColor = C.borderStrong; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = C.surface; e.currentTarget.style.borderColor = C.border; }}>
+                  style={{
+                    background: CARD_BG, border: `1px solid ${C.border}`, borderRadius: "3px",
+                    padding: "20px", cursor: "pointer", boxShadow: CARD_SHADOW,
+                    transition: "background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = CARD_BG_HOVER;
+                    e.currentTarget.style.borderColor = C.borderStrong;
+                    e.currentTarget.style.boxShadow = CARD_SHADOW_HOVER;
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = CARD_BG;
+                    e.currentTarget.style.borderColor = C.border;
+                    e.currentTarget.style.boxShadow = CARD_SHADOW;
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", flexWrap: "wrap" }}>
                     <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
                     <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
@@ -3900,6 +3996,21 @@ export default function Sagax() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  // Arrow keys step between models. Skipped while a field or slider has focus.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      const i = SIMS.findIndex(s => s.id === page);
+      if (i === -1) return;
+      if (e.key === "ArrowLeft" && i > 0) setPage(SIMS[i - 1].id);
+      if (e.key === "ArrowRight" && i < SIMS.length - 1) setPage(SIMS[i + 1].id);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [page]);
+
   // Keep the tab title in step with the page
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -3911,14 +4022,21 @@ export default function Sagax() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body, position: "relative", overflowX: "hidden" }}>
+      <style>{`@media (max-width: 660px) { .sgx-gloss { display: none; } }`}</style>
       <BoardTexture />
       <div style={{ position: "relative", zIndex: 1 }}>
       {/* ── Nav ── */}
       <nav style={{ maxWidth: "880px", margin: "0 auto", padding: "20px 24px", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+        {/* Lexical entry, not a tagline. The gloss is the literal root rather than a
+            flattering triplet, and it drops out on narrow screens. */}
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}>
           <span style={{ fontSize: "19px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sagax</span>
           <span style={{ fontSize: "11px", color: C.textMut, marginLeft: "8px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.body }}>
             /ˈsa.gaks/
+          </span>
+          <span className="sgx-gloss" style={{ fontSize: "11.5px", color: C.textFaint, marginLeft: "10px", fontFamily: F.body }}>
+            <em style={{ fontStyle: "italic", marginRight: "5px" }}>adj.</em>
+            keen-scented; quick to perceive
           </span>
         </button>
         <div style={{ display: "flex", gap: "16px" }}>
