@@ -81,12 +81,12 @@ function aiMove(id, hist) {
 }
 
 const INSIGHTS = {
-  always_defect: (w) => w ? "You matched or beat Always Defect — likely by defecting yourself. When your counterpart will never cooperate, mutual defection is the Nash equilibrium. In markets, this is the price war that destroys everyone's margins." : "Against a permanent defector, the best you can do is also defect — 1 point per round, mutual destruction. No strategy beats unconditional defection with cooperation.",
-  always_coop: () => "Against unconditional cooperation, defection dominates: you get 5 instead of 3 every round. The lesson for finance: a counterparty who never walks away from a deal leaves surplus on the table for the other side.",
-  tit_for_tat: (w) => w ? "You beat Tit-for-Tat — probably by exploiting early. But mutual cooperation yields 6 total per round vs. 2 for mutual defection. Axelrod's 1984 tournaments proved Tit-for-Tat the strongest simple strategy in repeated interactions: nice, retaliatory, forgiving." : "Tit-for-Tat wins by being predictable: cooperate first (signal goodwill), retaliate immediately (punish exploitation), forgive instantly (restore cooperation). In business, this is the reputation for fair dealing that compounds over decades.",
-  grudger: (w, defected) => defected ? "Grudger cooperates until betrayed, then defects forever. One defection costs you the entire cooperative surplus for all remaining rounds. Some professional relationships work the same way — the option value of maintained trust exceeds any one-time gain from exploitation." : "You cooperated throughout and achieved maximum mutual payoff. Against a Grudger, sustained cooperation is optimal — a single defection cascades irreversibly.",
-  random: () => "Against randomness, your strategy barely matters — outcomes are driven by noise. In markets, this is trading against a counterparty whose behavior you can't model. The rational response: defect, since you can't condition on their cooperation.",
-  pavlov: () => "Pavlov (win-stay, lose-shift) adapts based on outcomes rather than mirroring your moves. It recovers from accidental defections better than Tit-for-Tat. In finance, Pavlov resembles momentum strategies — repeat what worked, reverse what didn't.",
+  always_defect: (w) => w ? "You matched or beat Always Defect, likely by defecting yourself. When your counterpart will never cooperate, mutual defection is the Nash equilibrium. In markets, this is the price war that destroys everyone's margins." : "Against a permanent defector, the best you can do is also defect: 1 point per round, mutual destruction. Cooperation cannot beat unconditional defection.",
+  always_coop: () => "Against unconditional cooperation, defection dominates: you get 5 instead of 3 every round. A counterparty who never walks away leaves surplus on the table.",
+  tit_for_tat: (w) => w ? "You beat Tit-for-Tat, probably by exploiting early rounds. Mutual cooperation yields 6 total per round vs. 2 for mutual defection. In Axelrod's 1984 tournaments, Tit-for-Tat was the strongest simple strategy in repeated games: nice, retaliatory, forgiving." : "Tit-for-Tat cooperates first, retaliates immediately, and forgives instantly. In business, this is the reputation for fair dealing that compounds over decades.",
+  grudger: (w, defected) => defected ? "Grudger cooperates until betrayed, then defects forever. One defection costs you the cooperative surplus for all remaining rounds. Maintained trust is often worth more than any one-time gain from exploitation." : "You cooperated throughout and achieved maximum mutual payoff. Against a Grudger, sustained cooperation is optimal. A single defection cascades irreversibly.",
+  random: () => "Against randomness, your strategy barely matters. Outcomes are driven by noise. In markets, this is trading against a counterparty you can't model. Defect, since you can't condition on their cooperation.",
+  pavlov: () => "Pavlov (win-stay, lose-shift) adapts based on outcomes instead of mirroring your moves. It recovers from accidental defections better than Tit-for-Tat. In finance, Pavlov resembles momentum strategies: repeat what worked, reverse what didn't.",
 };
 
 function PrisonersDilemma({ onBack }) {
@@ -121,7 +121,7 @@ function PrisonersDilemma({ onBack }) {
 
       {/* Payoff matrix */}
       <div style={{ marginBottom: "20px" }}>
-        <Label>Payoff Matrix — you, opponent</Label>
+        <Label>Payoff Matrix (you, opponent)</Label>
         <div style={{ display: "inline-block", border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
           <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "12.5px" }}>
             <thead><tr>
@@ -261,7 +261,7 @@ function SealedBidAuction({ onBack }) {
         <Tag color={C.amber}>Winner's Curse</Tag>
       </div>
       <p style={{ color: C.textSec, fontSize: "13.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px" }}>
-        An asset has an unknown true value. You receive a noisy private estimate and submit a sealed bid against {numAI} competitors. Highest bid wins and pays their bid. The problem: the winner is systematically the one who overestimated the most.
+        An asset has an unknown true value. You receive a noisy private estimate and submit a sealed bid against {numAI} competitors. Highest bid wins and pays their bid. The winner is usually the one who overestimated the most.
       </p>
 
       <div style={{ marginBottom: "18px" }}>
@@ -269,7 +269,7 @@ function SealedBidAuction({ onBack }) {
         <div style={{ display: "flex", gap: "6px" }}>
           {[3, 5, 8, 12].map(n => <Pill key={n} active={numAI === n} onClick={() => { setNumAI(n); resetAll(); }}>{n}</Pill>)}
         </div>
-        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "5px 0 0", fontStyle: "italic" }}>More bidders amplifies the curse — the maximum overestimate grows with the field.</p>
+        <p style={{ fontSize: "11.5px", color: C.textMut, margin: "5px 0 0", fontStyle: "italic" }}>More bidders amplifies the curse. The maximum overestimate grows with the field.</p>
       </div>
 
       {!results && (
@@ -319,9 +319,9 @@ function SealedBidAuction({ onBack }) {
           </div>
           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "13px 16px", marginBottom: "14px" }}>
             <div style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.65 }}>
-              {results.won && results.profit < 0 && `Winner's curse. You paid ${Math.round(results.playerBid)} for an asset worth ${results.tv}, losing ${Math.abs(Math.round(results.profit))}. Winning a common-value auction is Bayesian bad news — it means your signal was the highest overestimate. With ${numAI + 1} bidders, bid ~${Math.round(68 - numAI)}% of your signal to compensate.`}
-              {results.won && results.profit >= 0 && `Good shade — you paid ${Math.round(results.playerBid)} for an asset worth ${results.tv}. The key: bid as if your signal is the highest in the room, because if you win, it was.`}
-              {!results.won && `You lost. The winner bid ${Math.round(results.all[0].bid)} for an asset worth ${results.tv}${results.all[0].bid > results.tv ? ` and overpaid by ${Math.round(results.all[0].bid) - results.tv}. The curse strikes.` : `.`} Not winning a common-value auction is often the correct outcome.`}
+              {results.won && results.profit < 0 && `Winner's curse. You paid ${Math.round(results.playerBid)} for an asset worth ${results.tv}, losing ${Math.abs(Math.round(results.profit))}. Winning a common-value auction is Bayesian bad news: your signal was the highest overestimate. With ${numAI + 1} bidders, bid ~${Math.round(68 - numAI)}% of your signal to compensate.`}
+              {results.won && results.profit >= 0 && `Solid bid. You paid ${Math.round(results.playerBid)} for an asset worth ${results.tv}. Bid as if your signal is the highest in the room, because if you win, it was.`}
+              {!results.won && `You lost. The winner bid ${Math.round(results.all[0].bid)} for an asset worth ${results.tv}${results.all[0].bid > results.tv ? ` and overpaid by ${Math.round(results.all[0].bid) - results.tv}. The curse strikes.` : `.`} Losing a common-value auction is often the right outcome.`}
             </div>
           </div>
           <Btn onClick={newRound}>Next Round →</Btn>
@@ -330,7 +330,7 @@ function SealedBidAuction({ onBack }) {
 
       {history.length > 0 && (
         <div>
-          <Label>Session — {history.length} rounds</Label>
+          <Label>Session ({history.length} rounds)</Label>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <Stat label="Cumulative P&L" value={pnl >= 0 ? `+${pnl}` : pnl} color={pnl >= 0 ? C.green : C.red} />
             <Stat label="Win Rate" value={`${wins}/${history.length}`} />
@@ -412,14 +412,14 @@ function HeroGame({ onGoDeeper }) {
 // LIBRARY DATA
 // ═══════════════════════════════════════════════════════════════════════════════
 const SIMS = [
-  { id: "pd", name: "Prisoner's Dilemma", cat: "Repeated Games", catColor: C.steel, status: "live", desc: "Two firms, twenty rounds, six opponent strategies. See how cooperation and retaliation play out when the game doesn't end after one move.", finance: "Competitive pricing · Supplier relationships · Cartel stability" },
-  { id: "auction", name: "Sealed-Bid Auction", cat: "Winner's Curse", catColor: C.amber, status: "live", desc: "Bid on an asset with uncertain value against AI opponents. Discover why the highest bidder systematically overpays — and how to correct for it.", finance: "IPO allocation · M&A bidding · Oil lease auctions" },
+  { id: "pd", name: "Prisoner's Dilemma", cat: "Repeated Games", catColor: C.steel, status: "live", desc: "Two firms, twenty rounds, six opponent strategies. See how cooperation and retaliation play out over repeated moves.", finance: "Competitive pricing · Supplier relationships · Cartel stability" },
+  { id: "auction", name: "Sealed-Bid Auction", cat: "Winner's Curse", catColor: C.amber, status: "live", desc: "Bid on an asset with uncertain value against AI opponents. Learn why the highest bidder overpays and how to adjust.", finance: "IPO allocation · M&A bidding · Oil lease auctions" },
   { id: "nash", name: "Nash Bargaining", cat: "Negotiation", catColor: C.green, status: "soon", desc: "Split the surplus with adjustable BATNAs, patience, and outside options. See how each parameter shifts the negotiated outcome.", finance: "Salary negotiation · Deal structuring · Vendor contracts" },
   { id: "bank", name: "Bank Run", cat: "Coordination Crisis", catColor: C.red, status: "soon", desc: "N depositors choose simultaneously: wait or withdraw. Rational individual action cascades into systemic failure.", finance: "SVB · Northern Rock · Money market fund redemptions" },
-  { id: "beauty", name: "Beauty Contest", cat: "Second-Order Thinking", catColor: "#B080D0", status: "soon", desc: "Guess ⅔ of the average guess. See how layers of strategic reasoning converge toward zero — and why markets overshoot.", finance: "Speculative bubbles · Momentum · Market timing" },
-  { id: "signal", name: "Job Market Signaling", cat: "Information", catColor: "#E09050", status: "soon", desc: "Education as a signal of ability, even when it doesn't increase productivity. Adjust costs and see separating vs. pooling equilibria.", finance: "CFA/MBA credential value · IPO underpricing · Guidance credibility" },
+  { id: "beauty", name: "Beauty Contest", cat: "Second-Order Thinking", catColor: "#B080D0", status: "soon", desc: "Guess ⅔ of the average guess. See how strategic reasoning layers converge toward zero and why markets overshoot.", finance: "Speculative bubbles · Momentum · Market timing" },
+  { id: "signal", name: "Job Market Signaling", cat: "Information", catColor: "#E09050", status: "soon", desc: "Education as a signal of ability, separate from productivity. Adjust costs and see separating vs. pooling equilibria.", finance: "CFA/MBA credential value · IPO underpricing · Guidance credibility" },
   { id: "entry", name: "Entry Deterrence", cat: "Competitive Moats", catColor: "#70B0C0", status: "soon", desc: "An incumbent signals capacity to deter entry. See when bluffs work and when commitment is required.", finance: "Moat analysis · Predatory pricing · Capacity investment" },
-  { id: "ultimatum", name: "Ultimatum Game", cat: "Behavioral Anomalies", catColor: "#D07070", status: "soon", desc: "Propose a split. See how 'irrational' rejections defy homo economicus — and what that means for deal-making.", finance: "Final-offer arbitration · Fee negotiation · Fairness norms" },
+  { id: "ultimatum", name: "Ultimatum Game", cat: "Behavioral Anomalies", catColor: "#D07070", status: "soon", desc: "Propose a split. See how rejections that look irrational affect deal-making.", finance: "Final-offer arbitration · Fee negotiation · Fairness norms" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -441,7 +441,7 @@ function Home({ onNav }) {
             Applied Game Theory for Finance and Negotiation
           </p>
           <p style={{ fontSize: "15px", color: C.textSec, lineHeight: 1.7, margin: "0 0 8px", maxWidth: "440px" }}>
-            Interactive simulators for the strategic interactions that shape financial markets. Auctions, negotiations, competitive dynamics, coordination failures. Each one framed with a real finance scenario and built to reveal the insight through experience.
+            Interactive simulators for strategic interactions in financial markets: auctions, negotiations, competitive dynamics, coordination failures. Each one uses a real finance scenario and teaches through play.
           </p>
           <p style={{ fontSize: "13px", color: C.textMut, lineHeight: 1.6, margin: 0, maxWidth: "440px" }}>
             Make a move. ↓
@@ -481,10 +481,10 @@ function Home({ onNav }) {
         <Label>How Sagax Teaches</Label>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: "20px" }}>
           {[
-            ["Play first", "Every simulator opens with a decision, not a definition. You form intuitions through action before encountering theory."],
-            ["Finance-framed", "Each game maps to real scenarios — M&A bidding, salary negotiation, pricing strategy, liquidity crises."],
-            ["Adjustable", "Change players, payoffs, noise, and discount rates. Watch the equilibrium shift under your hands."],
-            ["Insight, not lecture", "A brief debrief after each game explains the result in one paragraph. Theory follows experience."],
+            ["Play first", "Every simulator starts with a decision. You play first, then read the theory."],
+            ["Finance-framed", "Each game maps to real scenarios: M&A bidding, salary negotiation, pricing strategy, liquidity crises."],
+            ["Adjustable", "Change players, payoffs, noise, and discount rates. Watch the equilibrium shift."],
+            ["Brief debrief", "After each game, one paragraph explains the result. Theory follows experience."],
           ].map(([t, d]) => (
             <div key={t}>
               <div style={{ fontSize: "13px", color: C.text, fontWeight: 500, marginBottom: "5px" }}>{t}</div>
@@ -500,7 +500,7 @@ function Home({ onNav }) {
           <>
             <div style={{ fontSize: "15px", color: C.text, fontWeight: 500, marginBottom: "4px" }}>New simulator every month</div>
             <p style={{ fontSize: "13px", color: C.textSec, margin: "0 0 12px", lineHeight: 1.5 }}>
-              One email when a new simulator drops. No spam, no fluff, just game theory applied to finance.
+              One email when a new simulator drops. Game theory applied to finance.
             </p>
             <div style={{ display: "flex", gap: "8px", maxWidth: "380px" }}>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com"
@@ -549,7 +549,7 @@ export default function Sagax() {
       {/* ── Footer ── */}
       <footer style={{ borderTop: `1px solid ${C.border}`, maxWidth: "880px", margin: "0 auto", padding: "16px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-          <span style={{ fontSize: "11px", color: C.textFaint }}>Sagax · Applied game theory for finance and negotiation · Educational, not investment advice</span>
+          <span style={{ fontSize: "11px", color: C.textFaint }}>Sagax · Applied game theory for finance and negotiation · For education only</span>
           <span style={{ fontSize: "11px", color: C.textFaint }}>Latin: keen, shrewd, perceptive</span>
         </div>
       </footer>
