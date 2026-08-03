@@ -212,6 +212,7 @@ function PrisonersDilemma({ onBack }) {
     <div>
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
+        <ModelGlyph id="pd" width="44px" style={{ flexShrink: 0 }} />
         <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Prisoner's Dilemma</h2>
         <Tag>Repeated Games</Tag>
       </div>
@@ -376,6 +377,7 @@ function SealedBidAuction({ onBack }) {
     <div>
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
+        <ModelGlyph id="auction" width="44px" style={{ flexShrink: 0 }} />
         <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sealed-Bid Auction</h2>
         <Tag>Winner's Curse</Tag>
       </div>
@@ -476,10 +478,11 @@ function SealedBidAuction({ onBack }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SHARED — simulator header
 // ═══════════════════════════════════════════════════════════════════════════════
-const SimHeader = ({ onBack, title, tag, tagColor, children }) => (
+const SimHeader = ({ onBack, title, tag, tagColor, gid, children }) => (
   <>
     <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
     <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
+      {gid && <ModelGlyph id={gid} width="44px" style={{ flexShrink: 0 }} />}
       <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>{title}</h2>
       <Tag color={tagColor}>{tag}</Tag>
     </div>
@@ -523,6 +526,8 @@ const SLUGS = {
   mechanism: "mechanism-design", realopt: "real-options", schelling: "focal-points",
   cheaptalk: "cheap-talk",
   terms: "terms",
+  about: "about",
+  map: "map",
 };
 const SLUG_TO_ID = Object.fromEntries(Object.entries(SLUGS).map(([k, v]) => [v, k]));
 
@@ -987,6 +992,60 @@ function ScrollProgress() {
   );
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODEL GLYPHS — one shared vocabulary across all 22.
+// Circles are people, squares are outcomes, lines are moves. Amber is always you,
+// steel is always the counterparty, grey is everyone else. Fill means committed,
+// outline means available, dashed means hidden or hypothetical.
+// ═══════════════════════════════════════════════════════════════════════════════
+const GW = 200, GH = 116;
+const GYou  = ({ x, y, r = 7 }) => <circle cx={x} cy={y} r={r} fill={C.amber} />;
+const GThem = ({ x, y, r = 7 }) => <circle cx={x} cy={y} r={r} fill="none" stroke={C.steel} strokeWidth="2.4" />;
+const GDot  = ({ x, y, r = 3.4, o = 1 }) => <circle cx={x} cy={y} r={r} fill={C.textMut} opacity={o} />;
+const GCell = ({ x, y, s = 22, on, c = C.amber }) => <rect x={x} y={y} width={s} height={s} fill={on ? c : "none"} stroke={c} strokeWidth="2" opacity={on ? 1 : 0.45} />;
+const GBar  = ({ x, y, w, h, c = C.amber, o = 1 }) => <rect x={x} y={y} width={w} height={h} fill={c} opacity={o} />;
+const GLn   = ({ x1, y1, x2, y2, c = C.textMut, w = 2, d }) => <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={c} strokeWidth={w} strokeDasharray={d ? "3 3" : undefined} />;
+const GAr   = ({ x1, y1, x2, y2, c = C.amber, d }) => <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={c} strokeWidth="2.2" strokeDasharray={d ? "4 3" : undefined} markerEnd={`url(#gm${c.slice(1)})`} />;
+const GTh   = ({ x, c = C.red }) => <line x1={x} y1={12} x2={x} y2={GH - 12} stroke={c} strokeWidth="1.6" strokeDasharray="4 3" />;
+const GHTh  = ({ y, c = C.textMut }) => <line x1={14} y1={y} x2={GW - 14} y2={y} stroke={c} strokeWidth="1.6" strokeDasharray="4 3" />;
+const GDefs = () => <defs>{[C.amber, C.steel, C.textMut, C.green, C.red].map(c =>
+  <marker key={c} id={`gm${c.slice(1)}`} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={c} /></marker>)}</defs>;
+
+const GLYPH = {
+  cournot:   <>{[0,1,2,3].map(i => <GBar key={i} x={26+i*34} y={GH-22-(14+i*16)} w={20} h={14+i*16} o={0.75} />)}<GLn x1={22} y1={26} x2={182} y2={84} c={C.red} w={2.6} /></>,
+  beauty:    <>{[[168,1],[126,.75],[96,.5],[76,.32],[64,.2]].map(([x,o],i) => <g key={i}>{[0,1,2].map(j => <GDot key={j} x={x} y={44+j*14} o={o} />)}</g>)}<GYou x={40} y={58} r={6} /></>,
+  lemons:    <>{[0,1,2,3,4,5,6,7].map(i => { const h=12+i*8, gone=i>3; return <GBar key={i} x={22+i*21} y={gone?GH-30-h-16:GH-30-h} w={14} h={h} c={gone?C.textMut:C.amber} o={gone?.3:.9} />; })}<GTh x={106} c={C.amber} /><GLn x1={16} y1={GH-30} x2={186} y2={GH-30} c={C.border} w={2} /></>,
+  cascade:   <>{[0,1,2,3,4,5,6].map(i => { const own=i<2, l=own?0:Math.min(58,(i-1)*13); return <g key={i} transform={`rotate(${l} ${26+i*25} ${GH-24})`}><rect x={22+i*25} y={GH-72} width={9} height={48} fill={own?C.amber:C.textMut} opacity={own?1:.55} /></g>; })}<GLn x1={14} y1={GH-24} x2={186} y2={GH-24} c={C.border} w={2} /></>,
+  entry:     <><GBar x={94} y={20} w={13} h={76} /><GThem x={40} y={58} /><GAr x1={54} y1={58} x2={86} y2={58} c={C.steel} /><GAr x1={82} y1={44} x2={52} y2={30} c={C.red} /></>,
+  signal:    <><GHTh y={58} c={C.amber} /><GYou x={68} y={34} /><GAr x1={68} y1={78} x2={68} y2={46} d /><GThem x={140} y={84} /><GAr x1={140} y1={78} x2={140} y2={68} c={C.steel} d /></>,
+  cheaptalk: <><GThem x={38} y={58} /><path d="M84 58 l14 -9 l14 9 l-14 9 z" fill="none" stroke={C.textMut} strokeWidth="2" strokeDasharray="3 3" /><GLn x1={52} y1={58} x2={80} y2={58} w={1.6} d /><GLn x1={116} y1={58} x2={146} y2={58} w={1.6} d /><GYou x={162} y={58} /></>,
+  schelling: <>{[40,76,112,148].map((x,i) => <GLn key={i} x1={x} y1={82} x2={x} y2={90} c={C.border} w={2} />)}<GBar x={104} y={62} w={17} h={17} />{[[96,34],[112,26],[128,34]].map(([x,y],i) => <GDot key={i} x={x} y={y} o={.8} />)}{[[96,42],[112,34],[128,42]].map(([x,y],i) => <GAr key={i} x1={x} y1={y} x2={112} y2={56} c={C.textMut} />)}</>,
+  nash:      <><GBar x={20} y={44} w={34} h={28} o={.35} /><GBar x={54} y={44} w={78} h={28} /><GBar x={132} y={44} w={48} h={28} c={C.steel} o={.35} /><GLn x1={132} y1={36} x2={132} y2={80} c={C.text} w={2} /></>,
+  ultimatum: <><GBar x={20} y={44} w={118} h={28} /><GBar x={138} y={44} w={42} h={28} c={C.steel} o={.5} /><GTh x={112} /><GLn x1={112} y1={88} x2={180} y2={88} c={C.red} w={2.4} /></>,
+  chicken:   <><GYou x={40} y={58} /><GThem x={160} y={58} /><GAr x1={54} y1={58} x2={88} y2={58} /><GAr x1={146} y1={58} x2={112} y2={58} c={C.steel} />{[0,1,2,3,4,5].map(i => { const a=(i/6)*Math.PI*2; return <GLn key={i} x1={100+Math.cos(a)*7} y1={58+Math.sin(a)*7} x2={100+Math.cos(a)*15} y2={58+Math.sin(a)*15} c={C.red} w={2.2} />; })}</>,
+  vickrey:   <>{[74,58,44,32].map((h,i) => <GBar key={i} x={30+i*40} y={GH-26-h} w={26} h={h} c={i===0?C.amber:C.textMut} o={i===0?1:.4} />)}<line x1={20} y1={GH-84} x2={182} y2={GH-84} stroke={C.green} strokeWidth="2.4" strokeDasharray="4 3" /></>,
+  auction:   <><GTh x={92} c={C.text} />{[[44,52],[58,72],[70,40],[80,64],[86,50],[100,68],[108,44],[118,58],[132,50],[146,66]].map(([x,y],i) => <GDot key={i} x={x} y={y} r={4} o={.45} />)}<GYou x={166} y={54} /><GLn x1={92} y1={94} x2={182} y2={94} c={C.red} w={2.4} /></>,
+  holdup:    <><GBar x={26} y={44} w={112} h={28} /><GBar x={138} y={44} w={36} h={28} c={C.steel} /><path d="M20 78 l0 8 l124 0 l0 -8" fill="none" stroke={C.textMut} strokeWidth="1.8" /><GLn x1={138} y1={38} x2={174} y2={38} c={C.steel} w={2} /></>,
+  realopt:   <><GYou x={34} y={58} r={6} /><GAr x1={44} y1={52} x2={168} y2={26} c={C.green} /><GLn x1={44} y1={64} x2={104} y2={82} c={C.red} w={2.2} /><GBar x={102} y={72} w={5} h={22} /><GLn x1={112} y1={86} x2={168} y2={98} w={2} d /></>,
+  stag:      <><GCell x={84} y={44} s={30} c={C.green} /><GYou x={32} y={58} /><GThem x={168} y={58} /><GAr x1={46} y1={58} x2={76} y2={58} d /><GAr x1={154} y1={58} x2={124} y2={58} c={C.steel} d /></>,
+  pd:        <><GCell x={62} y={22} s={34} c={C.green} on /><GCell x={104} y={22} s={34} c={C.textMut} /><GCell x={62} y={64} s={34} c={C.textMut} /><GCell x={104} y={64} s={34} c={C.red} on /><GAr x1={100} y1={39} x2={112} y2={39} c={C.red} /><GAr x1={79} y1={60} x2={79} y2={72} c={C.red} /></>,
+  hazard:    <><GLn x1={20} y1={58} x2={180} y2={58} c={C.border} w={1.6} /><path d="M28 58 L100 58 L176 26" stroke={C.steel} strokeWidth="2.6" fill="none" /><path d="M28 26 L100 58 L176 96" stroke={C.amber} strokeWidth="2.6" fill="none" strokeDasharray="5 3" /><GBar x={28} y={54} w={72} h={8} c={C.red} o={.28} /></>,
+  mechanism: <><GCell x={22} y={42} s={34} on /><GAr x1={62} y1={59} x2={86} y2={59} c={C.textMut} /><rect x={88} y={36} width={30} height={46} fill="none" stroke={C.textMut} strokeWidth="2.2" /><GAr x1={124} y1={59} x2={148} y2={59} c={C.red} /><GCell x={150} y={42} s={34} c={C.red} on /></>,
+  attrition: <><GHTh y={44} c={C.amber} /><path d="M24 98 L172 24" stroke={C.amber} strokeWidth="2.6" fill="none" /><path d="M24 98 L164 30" stroke={C.steel} strokeWidth="2.4" fill="none" strokeDasharray="5 3" /><circle cx={132} cy={44} r={5} fill={C.red} /></>,
+  prospect:  <><GLn x1={20} y1={58} x2={180} y2={58} c={C.border} w={1.6} /><GLn x1={100} y1={16} x2={100} y2={100} c={C.border} w={1.6} /><path d="M100 58 Q136 38 178 30" stroke={C.green} strokeWidth="2.6" fill="none" /><path d="M100 58 Q72 92 24 102" stroke={C.red} strokeWidth="2.8" fill="none" /><circle cx={100} cy={58} r={4} fill={C.amber} /></>,
+  bank:      <>{[0,1,2,3,4,5,6,7].map(i => i<4 ? <GDot key={i} x={26+i*22} y={40} r={5} o={.5} /> : <GYou key={i} x={26+i*22} y={58} r={6} />)}{[0,1,2,3].map(i => <GAr key={i} x1={26+i*22} y1={52} x2={26+i*22} y2={44} c={C.textMut} />)}<GTh x={104} /><path d="M14 84 L104 84 L104 104 L186 104" stroke={C.red} strokeWidth="2.6" fill="none" /></>,
+};
+
+function ModelGlyph({ id, width = "100%", style = {} }) {
+  if (!GLYPH[id]) return null;
+  return (
+    <svg viewBox={`0 0 ${GW} ${GH}`} aria-hidden="true" style={{ width, display: "block", ...style }}>
+      <GDefs />{GLYPH[id]}
+    </svg>
+  );
+}
+
 const Goal = ({ children }) => (
   <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "18px", padding: "10px 14px", background: C.surface, borderLeft: `2px solid ${C.amber}`, borderRadius: "2px", flexWrap: "wrap" }}>
     <span style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.amber, fontWeight: 600, whiteSpace: "nowrap" }}>Your goal</span>
@@ -1083,7 +1142,7 @@ function NashBargaining({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Nash Bargaining" tag="Negotiation" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="nash" title="Nash Bargaining" tag="Negotiation" tagColor={undefined}>
         You and a counterparty split 100 points. Each round you fail to agree, the total shrinks by the discount factor. If nobody agrees within {MAX_ROUNDS} rounds, you each fall back to your outside option (BATNA).
       </SimHeader>
 
@@ -1248,7 +1307,7 @@ function BankRun({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Bank Run" tag="Coordination Crisis" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="bank" title="Bank Run" tag="Coordination Crisis" tagColor={undefined}>
         You are one of {n} depositors. The bank has lent out most of its deposits, so it can only pay {failThreshold} people on demand. Wait and the bank pays interest. Withdraw and you get your money back with no interest. If more than {failThreshold} people withdraw, the bank fails and late withdrawers lose most of their deposit.
       </SimHeader>
 
@@ -1415,7 +1474,7 @@ function BeautyContest({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Beauty Contest" tag="Second-Order Thinking" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="beauty" title="Beauty Contest" tag="Second-Order Thinking" tagColor={undefined}>
         Pick a number between 0 and 100. The winner is whoever comes closest to two-thirds of the average guess across all {n} players. Keynes used this to describe markets: you are not picking the best asset, you are picking what everyone else will pick.
       </SimHeader>
 
@@ -1573,7 +1632,7 @@ function JobMarketSignaling({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Job Market Signaling" tag="Costly Signals" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="signal" title="Job Market Signaling" tag="Costly Signals" tagColor={undefined}>
         You are a worker with private knowledge of your own ability. Education costs you money and adds nothing to your productivity. Employers cannot see your ability, only your education, and they pay {WAGE_HI} above the threshold and {WAGE_LO} below it. The question is whether education can separate the two types when it teaches nobody anything.
       </SimHeader>
 
@@ -1739,7 +1798,7 @@ function EntryDeterrence({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Entry Deterrence" tag="Competitive Moats" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="entry" title="Entry Deterrence" tag="Competitive Moats" tagColor={undefined}>
         You are the incumbent in a monopoly worth {MONOPOLY}. A potential entrant is watching. You can invest {INVEST_COST} in excess capacity, which is only worth building if it convinces them to stay out. They observe your choice before deciding. A threat only works when carrying it out is in your interest.
       </SimHeader>
 
@@ -1860,7 +1919,7 @@ function UltimatumGame({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Ultimatum Game" tag="Fairness Constraint" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="ultimatum" title="Ultimatum Game" tag="Fairness Constraint" tagColor={undefined}>
         You have 100 points to divide. Offer the responder any amount. If they accept, you both keep your shares. If they reject, you both get nothing. Standard theory says offer 1 and they should take it. Twenty years of experiments say otherwise.
       </SimHeader>
 
@@ -2280,9 +2339,9 @@ function ModelDiagram({ id }) {
     );
 
     case "beauty": return (
-      <Diagram h={185} caption="Each rung is one more layer of thinking about what everyone else is thinking. Nobody climbs all of them.">
+      <Diagram h={198} caption="Each rung is one more layer of thinking about what everyone else is thinking. Nobody climbs all of them.">
         {[["50", "guess randomly", 0], ["33", "assume others are random", 1], ["22", "assume others did that", 2], ["15", "and so on", 3], ["0", "Nash equilibrium", 4]].map(([v, l, i]) => {
-          const y = 26 + i * 32;
+          const y = 18 + i * 29;
           return (
             <g key={i}>
               <rect x={150 - i * 22} y={y} width={110} height={22} fill={i === 4 ? C.amberMuted : C.steelMuted} stroke={i === 4 ? C.amber : C.steel + "60"} />
@@ -2291,7 +2350,7 @@ function ModelDiagram({ id }) {
             </g>
           );
         })}
-        {TX(300, 176, "Most real players stop at the second or third rung. Winning means stopping where they stop.", C.textFaint, 9.5)}
+        {TX(300, 186, "Most real players stop at the second or third rung. Winning means stopping where they stop.", C.textFaint, 9.5)}
       </Diagram>
     );
 
@@ -2344,7 +2403,7 @@ function ModelDiagram({ id }) {
     );
 
     case "stag": return (
-      <Diagram h={195} caption="Commit once you believe there is better than a 38% chance the other side will too. Below that the safe option is correct, which is why so many good partnerships never start.">
+      <Diagram h={202} caption="Commit once you believe there is better than a 38% chance the other side will too. Below that the safe option is correct, which is why so many good partnerships never start.">
         {AX(60, 150, 545, 150)}{AX(60, 24, 60, 150)}
         <line x1={60} y1={104} x2={545} y2={104} stroke={C.amber} strokeWidth="2" strokeDasharray="5 3" />
         {TX(486, 98, "go it alone: 3", C.amber, 10)}
@@ -2512,11 +2571,14 @@ function ModelNav({ id }) {
       <div style={{ fontSize: "10.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.13em", color: C.textMut, fontWeight: 600, marginBottom: "6px" }}>
         {dir === "prev" ? "\u2190 Previous" : "Next \u2192"}
       </div>
-      <div style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.4, fontFamily: F.head, fontWeight: 600, letterSpacing: "0.005em" }}>
-        <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint, marginRight: "7px" }}>
-          {String(MODELS[sim.id].n).padStart(2, "0")}
-        </span>
-        {sim.name}
+      <div style={{ display: "flex", alignItems: "center", gap: "11px", flexDirection: dir === "next" ? "row-reverse" : "row" }}>
+        <ModelGlyph id={sim.id} width="46px" style={{ flexShrink: 0 }} />
+        <div style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.4, fontFamily: F.head, fontWeight: 600, letterSpacing: "0.005em" }}>
+          <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint, marginRight: "7px" }}>
+            {String(MODELS[sim.id].n).padStart(2, "0")}
+          </span>
+          {sim.name}
+        </div>
       </div>
     </button>
   );
@@ -2562,7 +2624,7 @@ function MatrixGame({ onBack, id, title, tag, tagColor, blurb, goal, la, lb, pay
 
   return (
     <div>
-      <SimHeader onBack={onBack} title={title} tag={tag} tagColor={tagColor}>{blurb}</SimHeader>
+      <SimHeader onBack={onBack} gid={id} title={title} tag={tag} tagColor={tagColor}>{blurb}</SimHeader>
       <Goal>{goal}</Goal>
       <ModelDiagram id={id} />
 
@@ -2714,7 +2776,7 @@ function CournotBertrand({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Cournot vs Bertrand" tag="Industry Structure" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="cournot" title="Cournot vs Bertrand" tag="Industry Structure" tagColor={undefined}>
         Two firms, identical costs of {MC} per unit. In Cournot you both choose how much to produce and the market sets the price. In Bertrand you both choose a price and customers buy the cheaper one. Same industry, same costs, radically different outcomes.
       </SimHeader>
       <Goal>Maximise your profit, then switch modes and notice that the winning move reverses.</Goal>
@@ -2820,7 +2882,7 @@ function VickreyAuction({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Vickrey Auction" tag="Truthful Bidding" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="vickrey" title="Vickrey Auction" tag="Truthful Bidding" tagColor={undefined}>
         Same asset, same bidders, two different rulebooks. Under first-price rules the winner pays their own bid. Under second-price rules the winner pays the runner-up's bid. That single change flips the optimal strategy from shading to honesty.
       </SimHeader>
       <Goal>Win the asset for less than it is worth to you. Your private valuation is shown before you bid.</Goal>
@@ -2941,7 +3003,7 @@ function Lemons({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Market for Lemons" tag="Adverse Selection" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="lemons" title="Market for Lemons" tag="Adverse Selection" tagColor={undefined}>
         You are a buyer. Forty sellers each hold something worth between 20 and 100 to you, and each knows their own quality while you do not. A seller will only trade if your price beats what the item is worth to them. Set one price for everyone and see who shows up.
       </SimHeader>
       <Goal>Buy above your cost. The trap is that the price you offer determines which sellers accept, and therefore what you are actually buying.</Goal>
@@ -3057,7 +3119,7 @@ function MoralHazard({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Moral Hazard" tag="Contract Design" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="hazard" title="Moral Hazard" tag="Contract Design" tagColor={undefined}>
         You are hiring someone to run a business line. You cannot observe their effort or how much risk they take, only the result. You choose the contract. They respond to it rationally. Whatever they do next is something you designed.
       </SimHeader>
       <Goal>Design a contract that maximises what you keep after paying them. Effort and risk-taking both respond to how you pay.</Goal>
@@ -3168,7 +3230,7 @@ function Cascades({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Information Cascades" tag="Herding" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="cascade" title="Information Cascades" tag="Herding" tagColor={undefined}>
         One of two options is correct. You get a private signal that is right 70% of the time. So did everyone ahead of you, but you can only see what they chose, not what they knew. Once two people lean the same way, everyone after them rationally stops using their own information.
       </SimHeader>
       <Goal>Pick the correct option. Decide how much weight to give your own signal against what the queue did.</Goal>
@@ -3276,7 +3338,7 @@ function ProspectTheory({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Prospect Theory" tag="Loss Aversion" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="prospect" title="Prospect Theory" tag="Loss Aversion" tagColor={undefined}>
         Four decisions. Two pairs are mathematically identical and only differ in how they are worded. Answer quickly and honestly rather than carefully, because the effect being measured is the one that operates when you are not watching for it.
       </SimHeader>
       <Goal>Answer all four, then see which framing effects moved you. Most people are moved by at least one.</Goal>
@@ -3367,7 +3429,7 @@ function WarOfAttrition({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="War of Attrition" tag="Exit Timing" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="attrition" title="War of Attrition" tag="Exit Timing" tagColor={undefined}>
         You and a rival are both burning cash to win a market worth {prize}. Every round you stay in costs you money whether you win or not. The winner takes the prize minus everything spent. The loser takes nothing minus everything spent.
       </SimHeader>
       <Goal>Finish with a positive net. The prize is {prize}, so every round you stay reduces the maximum you can possibly win.</Goal>
@@ -3463,7 +3525,7 @@ function HoldUp({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Hold-Up Problem" tag="Specific Investment" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="holdup" title="Hold-Up Problem" tag="Specific Investment" tagColor={undefined}>
         You can invest in tooling, integration or a facility that only has value inside one relationship. The investment more than doubles the joint value. Once it is sunk, your counterparty knows you cannot walk away, and reopens the terms.
       </SimHeader>
       <Goal>Invest enough to create value, and keep enough of it. Those two goals fight each other.</Goal>
@@ -3553,7 +3615,7 @@ function MechanismDesign({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Mechanism Design" tag="Rule Design" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="mechanism" title="Mechanism Design" tag="Rule Design" tagColor={undefined}>
         Eight salespeople. You choose what to pay them on. They will maximise whatever you measure, competently and without malice. This is inverse game theory: instead of predicting behaviour inside a fixed game, you design the game so that self-interest produces what you actually want.
       </SimHeader>
       <Goal>Maximise net value to the business, which is revenue minus the cost of gaming and churn.</Goal>
@@ -3640,7 +3702,7 @@ function RealOptions({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Real Options" tag="Flexibility Value" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="realopt" title="Real Options" tag="Flexibility Value" tagColor={undefined}>
         A project costs {COST} and is expected to return about {BASE}, but the true value only becomes clear after you commit. Standard analysis compares investing now against never investing. That is not the choice you have. You can also wait, or stage the commitment and kill it at a gate.
       </SimHeader>
       <Goal>Maximise cumulative payoff over many attempts. The right answer changes as uncertainty rises.</Goal>
@@ -3735,7 +3797,7 @@ function Schelling({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Schelling Focal Points" tag="Convention" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="schelling" title="Schelling Focal Points" tag="Convention" tagColor={undefined}>
         Four coordination problems with no communication allowed. You win by matching what the other person independently chooses. There is no correct answer in any objective sense. There is only the answer everyone expects everyone else to give.
       </SimHeader>
       <Goal>Match the other party. Ask what they will expect you to pick, not what is best.</Goal>
@@ -3825,7 +3887,7 @@ function CheapTalk({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} title="Cheap Talk" tag="Credibility" tagColor={undefined}>
+      <SimHeader onBack={onBack} gid="cheaptalk" title="Cheap Talk" tag="Credibility" tagColor={undefined}>
         Four statements. Each costs the speaker nothing to make and cannot be verified before you act on it. Your job is to decide which ones carry information. The test is whether the speaker's interests line up with yours.
       </SimHeader>
       <Goal>Judge each statement correctly. Ask what the speaker loses if they turn out to be wrong.</Goal>
@@ -3920,6 +3982,146 @@ function BoardTexture() {
           <g stroke={C.grid} strokeWidth="1.1" opacity="1">{lines}</g>
         </g>
       </svg>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODEL MAP — all 22 at once, by shape. Someone with a live problem knows their
+// situation, not my model names. Shapes are faster to scan than titles.
+// ═══════════════════════════════════════════════════════════════════════════════
+// The ten symbols, shown as a key at the top of the map
+const KEYS = [
+  ["You", <circle cx={13} cy={12} r={7} fill={C.amber} />, "Filled amber circle. Always the reader."],
+  ["Them", <circle cx={13} cy={12} r={7} fill="none" stroke={C.steel} strokeWidth="2.4" />, "Steel outline. The counterparty."],
+  ["Everyone else", <g fill={C.textMut}><circle cx={4} cy={12} r={3.2} /><circle cx={13} cy={12} r={3.2} /><circle cx={22} cy={12} r={3.2} /></g>, "Small grey dots. The crowd."],
+  ["Hidden type", <circle cx={13} cy={12} r={7} fill="none" stroke={C.textMut} strokeWidth="2" strokeDasharray="3 3" />, "Dashed outline. Something you cannot observe."],
+  ["Outcome", <rect x={4} y={3} width={18} height={18} fill={C.amber} />, "Square. A state or a payoff, never a person."],
+  ["Possible outcome", <rect x={4} y={3} width={18} height={18} fill="none" stroke={C.amber} strokeWidth="2" opacity="0.45" />, "Hollow square. Available, not taken."],
+  ["Value", <rect x={0} y={8} width={26} height={9} fill={C.amber} />, "Bar. Quantity, money, surplus."],
+  ["Threshold", <line x1={13} y1={1} x2={13} y2={23} stroke={C.red} strokeWidth="1.8" strokeDasharray="4 3" />, "Dashed line. A tipping point."],
+  ["Move", <line x1={2} y1={12} x2={21} y2={12} stroke={C.amber} strokeWidth="2.2" markerEnd="url(#kA)" />, "Solid arrow. Something that happened."],
+  ["Might move", <line x1={2} y1={12} x2={21} y2={12} stroke={C.textMut} strokeWidth="2" strokeDasharray="4 3" markerEnd="url(#kG)" />, "Dashed arrow. Something that could."],
+];
+
+function ModelMap({ onNav, onBack }) {
+  return (
+    <div>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "18px" }}>&larr; Back</button>
+      <h2 style={{ margin: "0 0 8px", fontSize: "26px", fontFamily: F.display, color: C.text, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Model Map</h2>
+      <p style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.62, margin: "0 0 26px", maxWidth: "620px" }}>
+        All 22 at once. Every diagram on the site uses the same ten symbols, so once you know these
+        you can read any of them without a caption.
+      </p>
+
+      <Label>Key</Label>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(258px, 1fr))", gap: "8px", marginBottom: "34px" }}>
+        {KEYS.map(([name, glyph, desc]) => (
+          <div key={name} style={{ display: "flex", alignItems: "center", gap: "14px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "12px 15px" }}>
+            <svg viewBox="0 0 26 24" width="26" height="24" style={{ flexShrink: 0, overflow: "visible" }}>
+              <defs>
+                <marker id="kA" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={C.amber} /></marker>
+                <marker id="kG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={C.textMut} /></marker>
+              </defs>
+              {glyph}
+            </svg>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: "12.5px", fontFamily: F.head, color: C.text, fontWeight: 600 }}>{name}</div>
+              <div style={{ fontSize: "11.5px", color: C.textMut, lineHeight: 1.45 }}>{desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {Object.entries(CATS).map(([ck, cat]) => {
+        const items = SIMS.filter(s => MODELS[s.id] && MODELS[s.id].cat === ck);
+        if (!items.length) return null;
+        return (
+          <div key={ck} style={{ marginBottom: "30px", paddingTop: "20px", borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: "11.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.14em", color: C.text, fontWeight: 600, marginBottom: "14px" }}>{cat.label}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))", gap: "8px" }}>
+              {items.map(sim => (
+                <button key={sim.id} onClick={() => onNav(sim.id)}
+                  style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "11px 11px 10px", cursor: "pointer", textAlign: "left", transition: "border-color 0.14s, background 0.14s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderStrong; e.currentTarget.style.background = C.surfaceHover; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; }}>
+                  <div style={{ background: C.bg, borderRadius: "2px", padding: "3px 1px", marginBottom: "9px" }}>
+                    <ModelGlyph id={sim.id} />
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", alignItems: "baseline" }}>
+                    <span style={{ fontFamily: F.mono, fontSize: "9.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
+                    <span style={{ fontSize: "11.5px", fontFamily: F.head, color: C.textSec, lineHeight: 1.32 }}>{sim.name}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ABOUT — the one page where a person appears. Everything else on the site is
+// models and cases, so this is what turns an anonymous artifact into a credential.
+// ═══════════════════════════════════════════════════════════════════════════════
+function About({ onBack }) {
+  const S = ({ h, children }) => (
+    <div style={{ marginBottom: "28px" }}>
+      <div style={{ fontSize: "12.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.13em", color: C.text, fontWeight: 600, marginBottom: "10px" }}>{h}</div>
+      <div style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.65 }}>{children}</div>
+    </div>
+  );
+  const A = ({ href, children }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer"
+      style={{ color: C.steel, textDecoration: "underline", textUnderlineOffset: "3px" }}>{children}</a>
+  );
+
+  return (
+    <div>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "18px" }}>&larr; Back</button>
+
+      <div style={{ marginBottom: "22px" }}><SagaxMark size={36} /></div>
+      <h2 style={{ margin: "0 0 8px", fontSize: "26px", fontFamily: F.display, color: C.text, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>About</h2>
+      <p style={{ fontSize: "15px", color: C.textSec, lineHeight: 1.65, margin: "0 0 34px", maxWidth: "620px" }}>
+        I&rsquo;m <strong style={{ color: C.text, fontWeight: 600 }}>Julia Mei</strong>. Economics and Psychology at
+        UC Santa Barbara, and last year on the General Course in the Department of Economics at LSE.
+      </p>
+
+      <S h="Why this exists">
+        I took Intro to Game Theory in my second year at UC Santa Barbara. It showed me objective mathematical models
+        that help players maximise very subjective utilities, which is the reason I ended up with two degrees. Last year
+        I took Games and Economic Behaviour at LSE and went a good deal deeper into it.
+        <br /><br />
+        Both courses were rigorous and both stopped at the proof. Business books have the opposite problem. They mention
+        the prisoner&rsquo;s dilemma, say cooperation is good, and move to the next chapter. Neither approach tells you
+        what to do on a Tuesday afternoon when you are the one in the situation. So I built the version I wanted to read.
+      </S>
+
+      <S h="What it is">
+        22 models, grouped by the stage of a deal you are in. Each one is a game you can finish in about two minutes.
+        You play first, then I explain what happened and where it turns up in a business. The case studies are real
+        events, cited where I could verify a source.
+        <br /><br />
+        I built it on my own. React and Vite, written in Cursor, versioned on GitHub, deployed through Vercel.
+        Cloudflare handles the domain and the email routing, and Kit handles the mailing list.
+        <br /><br />
+        Regarding privacy: the simulators run entirely in your browser, so I never see what you type into them. The only
+        thing that reaches me is your email address, and only if you subscribe.
+      </S>
+
+      <S h="Get in touch">
+        If I got something wrong, tell me. If you want to use this for teaching, please do. Reach me at{" "}
+        <A href="mailto:hello@sagaxlab.com">hello@sagaxlab.com</A> or on{" "}
+        <A href="https://www.linkedin.com/in/julia-tjmei/">LinkedIn</A>.
+      </S>
+
+      <div style={{ marginTop: "36px", paddingTop: "24px", borderTop: `1px solid ${C.border}` }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "12px", color: C.textMut, fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "4px" }}>
+          All 22 models
+        </button>
+      </div>
     </div>
   );
 }
@@ -4166,6 +4368,9 @@ function SimCard({ sim, i, onNav }) {
         e.currentTarget.style.borderColor = C.border;
         e.currentTarget.style.boxShadow = CARD_SHADOW;
       }}>
+      <div style={{ background: C.bg, borderRadius: "2px", padding: "5px 3px", marginBottom: "13px" }}>
+        <ModelGlyph id={sim.id} />
+      </div>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", flexWrap: "wrap" }}>
         <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
         <span style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
@@ -4248,8 +4453,7 @@ function Home({ onNav, subscribed, setSubscribed }) {
           <>
             <div style={{ fontSize: "13px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "9px" }}>Use these in your own work</div>
             <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 14px", lineHeight: 1.62, maxWidth: "520px" }}>
-              Learn how to apply these models to your business, your projects, and the decisions you make every week.
-              No spam. Every email has a one-click unsubscribe link.
+              Learn how to apply these models to your business, your projects, and the decisions you make every month.
             </p>
             <SubscribeForm onDone={() => setSubscribed(true)} />
           </>
@@ -4270,6 +4474,7 @@ export default function Sagax() {
 
   // Push a real URL so every model is linkable, bookmarkable and back-button friendly
   const setPage = (p) => {
+    if (page === "home" || page === "map") setOrigin(page);
     const path = pageToPath(p);
     if (typeof window !== "undefined" && window.location.pathname !== path) {
       window.history.pushState({ page: p }, "", path);
@@ -4287,6 +4492,9 @@ export default function Sagax() {
   const scrolled = useScrolled();
   const [subscribed, setSubscribed] = useState(false);
   const [floatOff, setFloatOff] = useState(false);
+  // Remember the last library page visited, so a model's Back button returns there.
+  // Only home and map qualify, which means prev/next between models leaves it alone.
+  const [origin, setOrigin] = useState("home");
   const showFloat = useFloat(floatOff || subscribed);
   const navRef = useRef(null);
   const navH = useBarHeight(navRef);
@@ -4313,6 +4521,8 @@ export default function Sagax() {
     const sim = SIMS.find(s => s.id === page);
     document.title = sim ? `${sim.name} · Sagax`
       : page === "terms" ? "Terms of Use · Sagax"
+      : page === "about" ? "About · Sagax"
+      : page === "map" ? "Model Map · Sagax"
       : "Sagax · Applied Game Theory for Finance and Negotiation";
   }, [page]);
 
@@ -4326,7 +4536,7 @@ export default function Sagax() {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 940px) { .sgx-tagline { display: none; } }
+        @media (max-width: 1000px) { .sgx-tagline { display: none; } }
         @media (max-width: 660px) {
           .sgx-gloss { display: none; }
           .sgx-blurb { display: none; }
@@ -4376,6 +4586,8 @@ export default function Sagax() {
             {page !== "home" && (
               <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>Home</button>
             )}
+            <button onClick={() => setPage("map")} className="sgx-navmap" style={{ background: "none", border: "none", color: page === "map" ? C.text : C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>Map</button>
+            <button onClick={() => setPage("about")} style={{ background: "none", border: "none", color: page === "about" ? C.text : C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>About</button>
           </div>
         </nav>
       </div>
@@ -4406,29 +4618,31 @@ export default function Sagax() {
       {/* ── Content ── */}
       <main key={page} style={{ maxWidth: "880px", margin: "0 auto", padding: "8px 24px 60px", animation: "sgxEnter 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
         {page === "home" && <Home onNav={setPage} subscribed={subscribed} setSubscribed={setSubscribed} />}
-        {page === "pd" && <PrisonersDilemma onBack={() => setPage("home")} />}
-        {page === "auction" && <SealedBidAuction onBack={() => setPage("home")} />}
-        {page === "nash" && <NashBargaining onBack={() => setPage("home")} />}
-        {page === "bank" && <BankRun onBack={() => setPage("home")} />}
-        {page === "beauty" && <BeautyContest onBack={() => setPage("home")} />}
-        {page === "signal" && <JobMarketSignaling onBack={() => setPage("home")} />}
-        {page === "entry" && <EntryDeterrence onBack={() => setPage("home")} />}
-        {page === "ultimatum" && <UltimatumGame onBack={() => setPage("home")} />}
-        {page === "cournot" && <CournotBertrand onBack={() => setPage("home")} />}
-        {page === "chicken" && <Chicken onBack={() => setPage("home")} />}
-        {page === "vickrey" && <VickreyAuction onBack={() => setPage("home")} />}
-        {page === "lemons" && <Lemons onBack={() => setPage("home")} />}
-        {page === "hazard" && <MoralHazard onBack={() => setPage("home")} />}
-        {page === "cascade" && <Cascades onBack={() => setPage("home")} />}
-        {page === "prospect" && <ProspectTheory onBack={() => setPage("home")} />}
-        {page === "stag" && <StagHunt onBack={() => setPage("home")} />}
-        {page === "attrition" && <WarOfAttrition onBack={() => setPage("home")} />}
-        {page === "holdup" && <HoldUp onBack={() => setPage("home")} />}
-        {page === "mechanism" && <MechanismDesign onBack={() => setPage("home")} />}
-        {page === "realopt" && <RealOptions onBack={() => setPage("home")} />}
-        {page === "schelling" && <Schelling onBack={() => setPage("home")} />}
-        {page === "cheaptalk" && <CheapTalk onBack={() => setPage("home")} />}
+        {page === "pd" && <PrisonersDilemma onBack={() => setPage(origin)} />}
+        {page === "auction" && <SealedBidAuction onBack={() => setPage(origin)} />}
+        {page === "nash" && <NashBargaining onBack={() => setPage(origin)} />}
+        {page === "bank" && <BankRun onBack={() => setPage(origin)} />}
+        {page === "beauty" && <BeautyContest onBack={() => setPage(origin)} />}
+        {page === "signal" && <JobMarketSignaling onBack={() => setPage(origin)} />}
+        {page === "entry" && <EntryDeterrence onBack={() => setPage(origin)} />}
+        {page === "ultimatum" && <UltimatumGame onBack={() => setPage(origin)} />}
+        {page === "cournot" && <CournotBertrand onBack={() => setPage(origin)} />}
+        {page === "chicken" && <Chicken onBack={() => setPage(origin)} />}
+        {page === "vickrey" && <VickreyAuction onBack={() => setPage(origin)} />}
+        {page === "lemons" && <Lemons onBack={() => setPage(origin)} />}
+        {page === "hazard" && <MoralHazard onBack={() => setPage(origin)} />}
+        {page === "cascade" && <Cascades onBack={() => setPage(origin)} />}
+        {page === "prospect" && <ProspectTheory onBack={() => setPage(origin)} />}
+        {page === "stag" && <StagHunt onBack={() => setPage(origin)} />}
+        {page === "attrition" && <WarOfAttrition onBack={() => setPage(origin)} />}
+        {page === "holdup" && <HoldUp onBack={() => setPage(origin)} />}
+        {page === "mechanism" && <MechanismDesign onBack={() => setPage(origin)} />}
+        {page === "realopt" && <RealOptions onBack={() => setPage(origin)} />}
+        {page === "schelling" && <Schelling onBack={() => setPage(origin)} />}
+        {page === "cheaptalk" && <CheapTalk onBack={() => setPage(origin)} />}
         {page === "terms" && <Terms onBack={() => setPage("home")} />}
+        {page === "about" && <About onBack={() => setPage("home")} />}
+        {page === "map" && <ModelMap onNav={setPage} onBack={() => setPage("home")} />}
       </main>
 
       {/* ── Floating subscribe ── */}
@@ -4447,9 +4661,7 @@ export default function Sagax() {
             <div style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.5 }}>
               Want to use these in your own business, projects, or everyday decisions?
             </div>
-            <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "3px" }}>
-              No spam. Every email has a one-click unsubscribe link.
-            </div>
+
           </div>
           <div style={{ flexShrink: 0 }}>
             <SubscribeForm compact onDone={() => setSubscribed(true)} />
@@ -4467,9 +4679,17 @@ export default function Sagax() {
           <span style={{ fontSize: "10.5px", color: C.textFaint, lineHeight: 1.55 }}>
             &copy; 2026 Julia Mei. All rights reserved. For education only, and not investment advice.
           </span>
-          <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
-            Terms of Use
-          </button>
+          <div style={{ display: "flex", gap: "16px" }}>
+            <button onClick={() => setPage("map")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+              Model Map
+            </button>
+            <button onClick={() => setPage("about")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+              About
+            </button>
+            <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+              Terms of Use
+            </button>
+          </div>
         </div>
       </footer>
       </div>
