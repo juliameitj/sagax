@@ -4160,7 +4160,9 @@ function ModelMap({ onNav, onBack }) {
 
         if (visible > 46) {
           return { ...r, d: `M ${sx1} ${sy1} L ${sx2} ${sy2}`,
-                   mx: (sx1 + sx2) / 2, my: (sy1 + sy2) / 2 };
+                   mx: (sx1 + sx2) / 2, my: (sy1 + sy2) / 2,
+                   tip: { x: sx2, y: sy2, ux: dx, uy: dy },
+                   tail: { x: sx1, y: sy1, ux: -dx, uy: -dy } };
         }
 
         // Neighbouring tiles leave no straight line to see, so arc over them.
@@ -4176,8 +4178,13 @@ function ModelMap({ onNav, onBack }) {
         const tb = Math.hypot(qx - b.cx, qy - b.cy) || 1;
         const [x1, y1] = clip(a.cx, a.cy, a.w, a.h, (qx - a.cx) / ta, (qy - a.cy) / ta, 4);
         const [x2, y2] = clip(b.cx, b.cy, b.w, b.h, (qx - b.cx) / tb, (qy - b.cy) / tb, 10);
+        // Tangent of a quadratic at its ends points at the control point
+        const de = Math.hypot(x2 - qx, y2 - qy) || 1;
+        const ds = Math.hypot(x1 - qx, y1 - qy) || 1;
         return { ...r, d: `M ${x1} ${y1} Q ${qx} ${qy} ${x2} ${y2}`,
-                 mx: (x1 + 2 * qx + x2) / 4, my: (y1 + 2 * qy + y2) / 4 };
+                 mx: (x1 + 2 * qx + x2) / 4, my: (y1 + 2 * qy + y2) / 4,
+                 tip: { x: x2, y: y2, ux: (x2 - qx) / de, uy: (y2 - qy) / de },
+                 tail: { x: x1, y: y1, ux: (x1 - qx) / ds, uy: (y1 - qy) / ds } };
       }).filter(Boolean));
     };
     draw();
@@ -4261,24 +4268,20 @@ function ModelMap({ onNav, onBack }) {
       <div ref={wrapRef} style={{ position: "relative", marginBottom: "10px" }}>
         {lines.length > 0 && (
           <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 6, overflow: "visible" }}>
-            <defs>
-              {Object.entries(REL).map(([k, v]) => (
-                <marker key={k} id={`rm-${k}`} markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto">
-                  <path d="M0,0 L0,6 L7,3 z" fill={v.c} />
-                </marker>
-              ))}
-              {Object.entries(REL).map(([k, v]) => (
-                <marker key={"s" + k} id={`rs-${k}`} markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
-                  <path d="M7,0 L7,6 L0,3 z" fill={v.c} />
-                </marker>
-              ))}
-            </defs>
             {lines.map((l, i) => {
               const r = REL[l.t];
+              // tip and tail carry a unit direction, so one helper draws either end
+              const head = (e) => {
+                const L = 9, W = 4.4;
+                const bx = e.x - e.ux * L, by = e.y - e.uy * L;
+                const px = -e.uy * W, py = e.ux * W;
+                return `${e.x},${e.y} ${bx + px},${by + py} ${bx - px},${by - py}`;
+              };
               return (
                 <g key={i}>
-                  <path d={l.d} fill="none" stroke={r.c} strokeWidth="1.9"
-                    markerEnd={`url(#rm-${l.t})`} markerStart={r.dir ? undefined : `url(#rs-${l.t})`} />
+                  <path d={l.d} fill="none" stroke={r.c} strokeWidth="1.9" strokeLinecap="round" />
+                  <polygon points={head(l.tip)} fill={r.c} />
+                  {!r.dir && <polygon points={head(l.tail)} fill={r.c} />}
                   <rect x={l.mx - r.short.length * 3.1 - 5} y={l.my - 8} width={r.short.length * 6.2 + 10} height={16}
                     rx="3" fill={C.bg} stroke={r.c + "70"} strokeWidth="1" />
                   <text x={l.mx} y={l.my + 3.5} textAnchor="middle" fontSize="8.5" fill={r.c}
@@ -4289,7 +4292,7 @@ function ModelMap({ onNav, onBack }) {
           </svg>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "20px" }}>
+        <div className="sgx-mapgrid">
           {SIMS.map(sim => {
             const isSel = sel === sim.id;
             const r = relOf(sim.id);
@@ -4297,11 +4300,11 @@ function ModelMap({ onNav, onBack }) {
             const dim = (sel && !isSel && !r) || (filterOn && !hit);
             const col = isSel ? C.amber : r ? REL[r.t].c : hit ? C.amber : C.border;
             return (
-              <div key={sim.id} ref={el => (tileRefs.current[sim.id] = el)}
+              <div key={sim.id} ref={el => (tileRefs.current[sim.id] = el)} className="sgx-maptile"
                 style={{
                   position: "relative", zIndex: isSel || r ? 4 : 1,
                   background: isSel || hit ? C.surfaceHover : C.surface,
-                  border: `1px solid ${col}`, borderRadius: "3px", padding: "12px 12px 10px",
+                  border: `1px solid ${col}`, borderRadius: "3px",
                   opacity: dim ? 0.15 : 1,
                   boxShadow: isSel || hit ? `0 0 0 1px ${C.amber}` : "none",
                   transition: "opacity 0.22s, border-color 0.22s, background 0.22s",
@@ -4311,11 +4314,11 @@ function ModelMap({ onNav, onBack }) {
                     <ModelGlyph id={sim.id} />
                   </div>
                   <div style={{ display: "flex", gap: "6px", alignItems: "baseline" }}>
-                    <span style={{ fontFamily: F.mono, fontSize: "9.5px", color: C.textFaint }}>{numOf(sim.id)}</span>
-                    <span style={{ fontSize: "11.5px", fontFamily: F.head, color: isSel ? C.text : C.textSec, lineHeight: 1.32 }}>{sim.name}</span>
+                    <span className="sgx-mapnum" style={{ fontFamily: F.mono, color: C.textFaint }}>{numOf(sim.id)}</span>
+                    <span className="sgx-mapname" style={{ fontFamily: F.head, color: isSel ? C.text : C.textSec, lineHeight: 1.32 }}>{sim.name}</span>
                   </div>
                 </div>
-                <button onClick={() => onNav(sim.id)} style={{ background: "none", border: "none", padding: "6px 0 0", cursor: "pointer", fontSize: "9.5px", fontFamily: F.label, color: C.textFaint, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600 }}>
+                <button onClick={() => onNav(sim.id)} className="sgx-mapopen" style={{ background: "none", border: "none", padding: "6px 0 0", cursor: "pointer", fontSize: "9.5px", fontFamily: F.label, color: C.textFaint, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600 }}>
                   Open &rarr;
                 </button>
               </div>
@@ -4332,6 +4335,9 @@ function ModelMap({ onNav, onBack }) {
             <span style={{ color: C.textMut, fontWeight: 400, marginLeft: "10px", fontSize: "12px" }}>
               {rels.length} connection{rels.length === 1 ? "" : "s"}
             </span>
+            <button onClick={() => onNav(sel)} style={{ background: "none", border: `1px solid ${C.borderStrong}`, borderRadius: "100px", padding: "4px 12px", marginLeft: "12px", cursor: "pointer", fontSize: "10px", fontFamily: F.label, color: C.amber, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600 }}>
+              Open &rarr;
+            </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             {rels.map((r, i) => (
@@ -4842,6 +4848,25 @@ export default function Sagax() {
           to   { opacity: 1; transform: translateY(0); }
         }
         @media (max-width: 660px) { .sgx-blurb { display: none; } }
+
+        /* Map grid. A single tile per screen defeats the point of a relationship
+           map, so phones get three columns and a much smaller glyph. */
+        .sgx-mapgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+        .sgx-maptile { padding: 12px 12px 10px; }
+        .sgx-mapnum  { font-size: 9.5px; }
+        .sgx-mapname { font-size: 11.5px; }
+        .sgx-mapopen { display: block; }
+        @media (max-width: 700px) {
+          .sgx-mapgrid { grid-template-columns: repeat(3, 1fr); gap: 9px; }
+          .sgx-maptile { padding: 7px 7px 6px; }
+          .sgx-mapnum  { font-size: 8.5px; }
+          .sgx-mapname { font-size: 9.5px; line-height: 1.25; }
+          .sgx-mapopen { display: none; }
+        }
+        @media (max-width: 380px) {
+          .sgx-mapgrid { gap: 7px; }
+          .sgx-mapname { font-size: 9px; }
+        }
         @media (prefers-reduced-motion: reduce) {
           html { scroll-behavior: auto; }
           * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
