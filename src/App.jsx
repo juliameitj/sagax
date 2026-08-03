@@ -40,6 +40,22 @@ const F = {
 // ═══════════════════════════════════════════════════════════════════════════════
 // MICRO-COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+// MARK — Split Cell. A 2x2 of possible outcomes; the one that lands is divided
+// between the two parties. Drawn without a plate for use on the dark page.
+// ═══════════════════════════════════════════════════════════════════════════════
+const SagaxMark = ({ size = 20, opacity = 1 }) => (
+  <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden="true"
+    style={{ display: "block", flexShrink: 0, opacity }}>
+    <path d="M16 16 H25 V25 Z" fill={C.amber} />
+    <g stroke={C.amber} strokeWidth="2.2" opacity="0.85" fill="none">
+      <rect x="7" y="7" width="18" height="18" />
+      <line x1="16" y1="7" x2="16" y2="25" />
+      <line x1="7" y1="16" x2="25" y2="16" />
+    </g>
+  </svg>
+);
+
 const Pill = ({ children, active, color, onClick }) => (
   <button onClick={onClick} style={{
     padding: "5px 14px", borderRadius: "100px", fontSize: "12px", fontFamily: F.label, cursor: "pointer", letterSpacing: "0.02em",
@@ -4153,6 +4169,7 @@ function Home({ onNav, subscribed, setSubscribed }) {
       {/* ── Hero ── */}
       <div style={{ marginBottom: "56px" }}>
         <div style={{ maxWidth: "540px", marginBottom: "18px" }}>
+          <div style={{ marginBottom: "18px" }}><SagaxMark size={40} /></div>
           <h1 style={{ fontSize: "38px", fontFamily: F.display, fontWeight: 600, color: C.text, margin: "0 0 14px", letterSpacing: "0.16em", textTransform: "uppercase", lineHeight: 1.05 }}>
             Sagax
           </h1>
@@ -4215,7 +4232,7 @@ function Home({ onNav, subscribed, setSubscribed }) {
             <div style={{ fontSize: "13px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "9px" }}>Use these in your own work</div>
             <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 14px", lineHeight: 1.62, maxWidth: "520px" }}>
               Learn how to apply these models to your business, your projects, and the decisions you make every week.
-              We will not spam you.
+              No spam. Every email has a one-click unsubscribe link.
             </p>
             <SubscribeForm onDone={() => setSubscribed(true)} />
           </>
@@ -4312,8 +4329,10 @@ export default function Sagax() {
         borderBottom: `1px solid ${scrolled ? C.border : "transparent"}`,
         transition: "background 0.25s, border-color 0.25s",
       }}>
-        <nav style={{ maxWidth: "880px", margin: "0 auto", padding: "17px 24px", display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "18px" }}>
-          <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", display: "flex", alignItems: "baseline", minWidth: 0 }}>
+        <nav style={{ maxWidth: "880px", margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "18px" }}>
+          <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", display: "flex", alignItems: "center", gap: "11px", minWidth: 0 }}>
+            <SagaxMark size={19} />
+            <span style={{ display: "flex", alignItems: "baseline", minWidth: 0 }}>
             <span style={{ fontSize: "17px", fontFamily: F.display, color: C.text, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", whiteSpace: "nowrap" }}>Sagax</span>
             <span style={{ fontSize: "11px", color: C.textMut, marginLeft: "9px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.label, whiteSpace: "nowrap" }}>
               /ˈsa.gaks/
@@ -4322,19 +4341,21 @@ export default function Sagax() {
               <em style={{ fontStyle: "italic", marginRight: "5px" }}>adj.</em>
               keen-scented; quick to perceive
             </span>
+            </span>
           </button>
 
-          <div style={{ display: "flex", gap: "16px", alignItems: "baseline", flexShrink: 0 }}>
-            {/* The hero tagline scrolls away, so it takes up residence here */}
-            <span className="sgx-tagline" style={{
+          <div style={{ display: "flex", gap: "16px", alignItems: "center", flexShrink: 0 }}>
+            {/* The hero tagline scrolls away on the home page, so it moves up here.
+                On a model page there is no hero, so there is nothing to carry over. */}
+            {page === "home" && <span className="sgx-tagline" style={{
               fontSize: "10px", color: C.amber, fontFamily: F.label, fontWeight: 600,
               textTransform: "uppercase", letterSpacing: "0.11em", whiteSpace: "nowrap",
               opacity: scrolled ? 1 : 0, transition: "opacity 0.35s",
             }}>
               Applied Game Theory for Finance and Negotiation
-            </span>
+            </span>}
             {page !== "home" && (
-              <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>Library</button>
+              <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>Home</button>
             )}
           </div>
         </nav>
@@ -4408,7 +4429,7 @@ export default function Sagax() {
               Want to use these in your own business, projects, or everyday decisions?
             </div>
             <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "3px" }}>
-              We will not spam you.
+              No spam. Every email has a one-click unsubscribe link.
             </div>
           </div>
           <div style={{ flexShrink: 0 }}>
