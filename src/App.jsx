@@ -26,14 +26,23 @@ const CARD_BG_HOVER = "linear-gradient(180deg, #302C29 0%, #221F1D 100%)";
 const CARD_SHADOW = "inset 0 1px 0 rgba(234,229,219,0.06), 0 2px 10px rgba(0,0,0,0.45)";
 const CARD_SHADOW_HOVER = "inset 0 1px 0 rgba(220,175,93,0.16), 0 8px 24px rgba(0,0,0,0.55)";
 
-const F = { display: "Georgia, 'Times New Roman', serif", body: "system-ui, -apple-system, sans-serif", mono: "'SF Mono', 'Cascadia Code', Consolas, monospace" };
+// Terminal Hybrid: anything that is a label, name, number or control is monospaced.
+// Anything that is a full sentence is not. That is how a terminal is actually built.
+const PLEX_MONO = "'IBM Plex Mono', 'SF Mono', Consolas, monospace";
+const F = {
+  display: PLEX_MONO,                                  // wordmark, model titles
+  head: PLEX_MONO,                                     // card titles, subheads
+  label: PLEX_MONO,                                    // uppercase chrome, controls
+  mono: PLEX_MONO,                                     // figures
+  body: "'IBM Plex Sans', system-ui, -apple-system, sans-serif",  // prose only
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MICRO-COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 const Pill = ({ children, active, color, onClick }) => (
   <button onClick={onClick} style={{
-    padding: "5px 14px", borderRadius: "100px", fontSize: "13px", fontFamily: F.body, cursor: "pointer",
+    padding: "5px 14px", borderRadius: "100px", fontSize: "12px", fontFamily: F.label, cursor: "pointer", letterSpacing: "0.02em",
     border: active ? `1.5px solid ${color || C.amber}` : `1.5px solid ${C.border}`,
     background: active ? (color || C.amber) + "18" : "transparent",
     color: active ? (color || C.amber) : C.textMut, fontWeight: active ? 500 : 400, transition: "all 0.12s",
@@ -43,7 +52,7 @@ const Pill = ({ children, active, color, onClick }) => (
 const Tag = ({ children, color }) => (
   <span style={{
     display: "inline-block", padding: "3px 10px", borderRadius: "100px", fontSize: "12px",
-    fontFamily: F.body, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 600,
+    fontFamily: F.label, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 600,
     color: color || C.textMut,
     background: color ? color + "16" : "transparent",
     border: `1px solid ${color ? color + "3A" : C.border}`,
@@ -51,22 +60,23 @@ const Tag = ({ children, color }) => (
 );
 
 const Label = ({ children }) => (
-  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontFamily: F.body, fontWeight: 600, marginBottom: "10px" }}>{children}</div>
+  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontFamily: F.label, fontWeight: 600, marginBottom: "10px" }}>{children}</div>
 );
 
 const Stat = ({ label, value, color = C.text, sub = null }) => (
   <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "12px 18px" }}>
-    <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, marginBottom: "3px" }}>{label}</div>
+    <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.label, marginBottom: "3px" }}>{label}</div>
     <div style={{ fontSize: "24px", fontFamily: F.mono, color, fontWeight: 600 }}>{value}{sub && <span style={{ fontSize: "14px", color: C.textMut }}>{sub}</span>}</div>
   </div>
 );
 
 const Btn = ({ children, onClick, color = C.amber, textColor, disabled, outline, style = {} }) => (
   <button onClick={disabled ? undefined : onClick} style={{
-    padding: "8px 18px", borderRadius: "3px", fontSize: "14px", fontFamily: F.body, fontWeight: 500,
+    padding: "8px 18px", borderRadius: "3px", fontSize: "13px", fontFamily: F.label, fontWeight: 600,
+    textTransform: "uppercase", letterSpacing: "0.08em",
     cursor: disabled ? "default" : "pointer", transition: "all 0.12s", opacity: disabled ? 0.35 : 1,
     background: outline ? "transparent" : color, color: outline ? C.textSec : (textColor || "#111"),
-    border: outline ? `1.5px solid ${C.border}` : "none", letterSpacing: "0.01em", ...style,
+    border: outline ? `1.5px solid ${C.border}` : "none", ...style,
   }}>{children}</button>
 );
 
@@ -184,12 +194,12 @@ function PrisonersDilemma({ onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
         <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Prisoner's Dilemma</h2>
         <Tag>Repeated Games</Tag>
       </div>
-      <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px", fontFamily: F.body }}>
+      <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "8px 0 20px", maxWidth: "600px", fontFamily: F.body }}>
         Two firms independently choose pricing. Both hold → both profit. One undercuts → they capture the market. Both undercut → margins collapse. Play {ROUNDS} rounds against six strategies.
       </p>
 
@@ -199,7 +209,7 @@ function PrisonersDilemma({ onBack }) {
         <div style={{ display: "inline-block", border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden" }}>
           <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13.5px" }}>
             <thead><tr>
-              <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontWeight: 400, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, fontFamily: F.body, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase" }}>You \ Them</th>
+              <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontWeight: 400, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, fontFamily: F.label, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase" }}>You \ Them</th>
               <th style={{ padding: "7px 16px", background: C.surface, color: C.green, fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, fontSize: "12px" }}>Hold Price</th>
               <th style={{ padding: "7px 16px", background: C.surface, color: C.red, fontWeight: 500, borderBottom: `1px solid ${C.border}`, fontSize: "12px" }}>Undercut</th>
             </tr></thead>
@@ -256,17 +266,17 @@ function PrisonersDilemma({ onBack }) {
       {note && !over && (
         <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "18px", padding: "9px 14px", background: C.surface, borderLeft: `2px solid ${note.c}`, borderRadius: "2px" }}>
           <span style={{ color: note.c, fontFamily: F.mono, fontSize: "13px", flexShrink: 0 }}>&rsaquo;</span>
-          <span style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6 }}>{note.t}</span>
+          <span style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.55 }}>{note.t}</span>
         </div>
       )}
 
       {/* Insight */}
       {over && (
         <div style={{ background: scores.p > scores.o ? C.greenMuted : scores.p < scores.o ? C.redMuted : C.amberMuted, border: `1px solid ${scores.p > scores.o ? C.green : scores.p < scores.o ? C.red : C.amber}30`, borderRadius: "3px", padding: "14px 18px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "15px", color: C.text, fontFamily: F.body, fontWeight: 500, marginBottom: "6px" }}>
+          <div style={{ fontSize: "14.5px", color: C.text, fontFamily: F.head, fontWeight: 600, marginBottom: "7px", letterSpacing: "0.01em" }}>
             {scores.p > scores.o ? "You won." : scores.p < scores.o ? `${s.n} won.` : "Draw."}
           </div>
-          <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65 }}>
+          <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.58 }}>
             {INSIGHTS[opp](scores.p >= scores.o, hist.some(r => r.p === "D"))}
           </div>
         </div>
@@ -282,7 +292,7 @@ function PrisonersDilemma({ onBack }) {
             <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ position: "sticky", top: 0, background: C.surface }}>
                 {["#", "You", "Them", "+You", "+Them"].map(h => (
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.label, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -348,12 +358,12 @@ function SealedBidAuction({ onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
         <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sealed-Bid Auction</h2>
         <Tag>Winner's Curse</Tag>
       </div>
-      <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px" }}>
+      <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "8px 0 20px", maxWidth: "600px" }}>
         An asset has an unknown true value. You receive a noisy private estimate and submit a sealed bid against {numAI} competitors. Highest bid wins and pays their bid. The winner is usually the one who overestimated the most.
       </p>
 
@@ -372,12 +382,12 @@ function SealedBidAuction({ onBack }) {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Your Signal</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Your Signal</div>
               <div style={{ fontSize: "38px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{round.sig}</div>
               <div style={{ fontSize: "12px", color: C.textMut, marginTop: "2px" }}>True value = signal ± 30</div>
             </div>
             <div style={{ flex: 1, minWidth: "170px" }}>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>Your Bid</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>Your Bid</div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input type="number" value={bid} onChange={e => setBid(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} placeholder="Enter bid..."
                   style={{ flex: 1, padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "17px", outline: "none", maxWidth: "150px" }} />
@@ -414,7 +424,7 @@ function SealedBidAuction({ onBack }) {
             })}
           </div>
           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "13px 16px", marginBottom: "14px" }}>
-            <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65 }}>
+            <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.58 }}>
               {results.won && results.profit < 0 && `Winner's curse. You paid ${Math.round(results.playerBid)} for an asset worth ${results.tv}, losing ${Math.abs(Math.round(results.profit))}. Winning a common-value auction is Bayesian bad news: your signal was the highest overestimate. With ${numAI + 1} bidders, bid ~${Math.round(68 - numAI)}% of your signal to compensate.`}
               {results.won && results.profit >= 0 && `Solid bid. You paid ${Math.round(results.playerBid)} for an asset worth ${results.tv}. Bid as if your signal is the highest in the room, because if you win, it was.`}
               {!results.won && `You lost. The winner bid ${Math.round(results.all[0].bid)} for an asset worth ${results.tv}${results.all[0].bid > results.tv ? ` and overpaid by ${Math.round(results.all[0].bid) - results.tv}. The curse strikes.` : `.`} Losing a common-value auction is often the right outcome.`}
@@ -452,12 +462,12 @@ function SealedBidAuction({ onBack }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 const SimHeader = ({ onBack, title, tag, tagColor, children }) => (
   <>
-    <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, padding: 0, marginBottom: "14px" }}>← Back</button>
+    <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
     <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
       <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>{title}</h2>
       <Tag color={tagColor}>{tag}</Tag>
     </div>
-    <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.65, margin: "8px 0 20px", maxWidth: "600px" }}>{children}</p>
+    <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "8px 0 20px", maxWidth: "600px" }}>{children}</p>
   </>
 );
 
@@ -466,8 +476,8 @@ const Insight = ({ tone = "neutral", title, children }) => {
   const [bg, bd] = map[tone];
   return (
     <div style={{ background: bg, border: `1px solid ${bd}30`, borderRadius: "3px", padding: "14px 18px", marginBottom: "18px" }}>
-      {title && <div style={{ fontSize: "15px", color: C.text, fontWeight: 500, marginBottom: "6px" }}>{title}</div>}
-      <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65 }}>{children}</div>
+      {title && <div style={{ fontSize: "14.5px", color: C.text, fontFamily: F.head, fontWeight: 600, marginBottom: "7px", letterSpacing: "0.01em" }}>{title}</div>}
+      <div style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.58 }}>{children}</div>
     </div>
   );
 };
@@ -475,7 +485,7 @@ const Insight = ({ tone = "neutral", title, children }) => {
 const Slider = ({ label, value, onChange, min, max, step = 1, suffix = "", hint }) => (
   <div style={{ marginBottom: "14px" }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
-      <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>{label}</span>
       <span style={{ fontSize: "15px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{value}{suffix}</span>
     </div>
     <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))}
@@ -781,7 +791,7 @@ const MODELS = {
 // MOTION — navigation aids only. Nothing here dramatises a game outcome, because
 // the insight in these models comes from patterns rather than suspense.
 // ═══════════════════════════════════════════════════════════════════════════════
-const NAV_H = 62;
+const NAV_H = 57;   // bar 1: 17px padding + 22px line + 17px padding + 1px rule
 
 function useReveal() {
   const ref = useRef(null);
@@ -796,6 +806,32 @@ function useReveal() {
     return () => io.disconnect();
   }, []);
   return [ref, seen];
+}
+
+// Which category is currently under the nav. Replaces per-section sticky headers,
+// which need long sections to be legible and these are not.
+function useActiveCategory(on) {
+  const [cat, setCat] = useState(null);
+  useEffect(() => {
+    if (!on) { setCat(null); return; }
+    const f = () => {
+      let cur = null;
+      document.querySelectorAll("[data-cathead]").forEach(el => {
+        const top = el.getBoundingClientRect().top;
+        // Dissolve over the last 48px of travel so the in-page header is gone by
+        // the moment the fixed strip takes over at the same x-position.
+        el.style.opacity = String(Math.max(0, Math.min(1, (top - NAV_H) / 48)));
+        if (top <= NAV_H + 4)
+          cur = { label: el.getAttribute("data-cat"), blurb: el.getAttribute("data-blurb") };
+      });
+      // Only re-render when the label actually changes
+      setCat(prev => (prev?.label === cur?.label ? prev : cur));
+    };
+    window.addEventListener("scroll", f, { passive: true });
+    f();
+    return () => window.removeEventListener("scroll", f);
+  }, [on]);
+  return cat;
 }
 
 function useScrolled(px = 8) {
@@ -823,7 +859,7 @@ function ScrollProgress() {
     return () => { window.removeEventListener("scroll", f); window.removeEventListener("resize", f); };
   }, []);
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "2px", zIndex: 100, pointerEvents: "none" }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "4px", zIndex: 100, pointerEvents: "none" }}>
       <div style={{ height: "100%", width: `${p}%`, background: C.amber, opacity: p > 0.5 ? 0.85 : 0, transition: "width 0.08s linear, opacity 0.2s" }} />
     </div>
   );
@@ -831,17 +867,17 @@ function ScrollProgress() {
 
 const Goal = ({ children }) => (
   <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "18px", padding: "10px 14px", background: C.surface, borderLeft: `2px solid ${C.amber}`, borderRadius: "2px", flexWrap: "wrap" }}>
-    <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.amber, fontWeight: 600, whiteSpace: "nowrap" }}>Your goal</span>
-    <span style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6 }}>{children}</span>
+    <span style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.amber, fontWeight: 600, whiteSpace: "nowrap" }}>Your goal</span>
+    <span style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.55 }}>{children}</span>
   </div>
 );
 
 const TryThis = ({ items }) => (
   <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderLeft: `2px solid ${C.steel}`, borderRadius: "2px", padding: "14px 18px", marginBottom: "18px" }}>
-    <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "9px" }}>Try this next</div>
+    <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "9px" }}>Try this next</div>
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       {items.map((t, i) => (
-        <div key={i} style={{ display: "flex", gap: "9px", fontSize: "13.5px", color: C.textSec, lineHeight: 1.6 }}>
+        <div key={i} style={{ display: "flex", gap: "9px", fontSize: "13.5px", color: C.textSec, lineHeight: 1.55 }}>
           <span style={{ color: C.textFaint, fontFamily: F.mono, flexShrink: 0 }}>&rarr;</span>
           <span>{t}</span>
         </div>
@@ -942,12 +978,12 @@ function NashBargaining({ onBack }) {
           <Label>Benchmarks</Label>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "10px 14px" }}>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut }}>Nash Solution</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.08em", color: C.textMut }}>Nash Solution</div>
               <div style={{ fontSize: "19px", fontFamily: F.mono, color: C.textSec, fontWeight: 600 }}>{nbs}</div>
               <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic" }}>Split the surplus evenly above both BATNAs.</div>
             </div>
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "10px 14px" }}>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut }}>Rubinstein (first mover)</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.08em", color: C.textMut }}>Rubinstein (first mover)</div>
               <div style={{ fontSize: "19px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{rubinstein}</div>
               <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic" }}>Moving first is worth more when patience is low.</div>
             </div>
@@ -959,12 +995,12 @@ function NashBargaining({ onBack }) {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Pie This Round</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Pie This Round</div>
               <div style={{ fontSize: "36px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{pie}</div>
               <div style={{ fontSize: "12px", color: C.textMut, marginTop: "2px" }}>Round {round} of {MAX_ROUNDS}</div>
             </div>
             <div style={{ flex: 1, minWidth: "180px" }}>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>You Keep</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>You Keep</div>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <input type="number" value={offer} onChange={e => setOffer(e.target.value)} onKeyDown={e => e.key === "Enter" && propose()} placeholder="0"
                   style={{ width: "110px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "17px", outline: "none" }} />
@@ -1028,7 +1064,7 @@ function NashBargaining({ onBack }) {
             <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ background: C.surface }}>
                 {["Rnd", "By", "You", "Them", "Result"].map(h => (
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.label, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1119,7 +1155,7 @@ function BankRun({ onBack }) {
           <div style={{ border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden", display: "inline-block" }}>
             <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr>
-                <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.body, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Your move</th>
+                <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.label, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Your move</th>
                 <th style={{ padding: "7px 14px", background: C.surface, color: C.green, fontSize: "12px", fontWeight: 500, borderBottom: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>Bank holds</th>
                 <th style={{ padding: "7px 14px", background: C.surface, color: C.red, fontSize: "12px", fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>Bank fails</th>
               </tr></thead>
@@ -1161,7 +1197,7 @@ function BankRun({ onBack }) {
               width: "34px", height: "34px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center",
               background: result.myMove === "withdraw" ? C.redMuted : C.greenMuted,
               border: `1.5px solid ${result.myMove === "withdraw" ? C.red : C.green}`,
-              fontSize: "10px", fontFamily: F.body, color: result.myMove === "withdraw" ? C.red : C.green, fontWeight: 600,
+              fontSize: "9.5px", fontFamily: F.label, letterSpacing: "0.06em", color: result.myMove === "withdraw" ? C.red : C.green, fontWeight: 600,
             }}>YOU</div>
             {result.others.map((w, i) => (
               <div key={i} style={{
@@ -1172,7 +1208,7 @@ function BankRun({ onBack }) {
               }}>{w ? "↓" : "•"}</div>
             ))}
           </div>
-          <div style={{ fontSize: "12px", color: C.textMut, marginBottom: "16px", fontFamily: F.body }}>
+          <div style={{ fontSize: "11.5px", color: C.textMut, marginBottom: "16px", fontFamily: F.label, letterSpacing: "0.03em" }}>
             ↓ withdrew · • waited · Bank fails above {result.failThreshold} withdrawals
           </div>
 
@@ -1435,7 +1471,7 @@ function JobMarketSignaling({ onBack }) {
             <div style={{ fontSize: "14px", color: separates ? C.green : C.red, fontWeight: 500, marginBottom: "5px" }}>
               {separates ? "Separating equilibrium" : threshold <= lowBreakeven ? "Pooling equilibrium" : "Nobody signals"}
             </div>
-            <div style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.65, fontFamily: F.mono }}>
+            <div style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.58, fontFamily: F.mono }}>
               Low type mimics below {lowBreakeven.toFixed(1)} yrs<br />
               High type signals below {highBreakeven.toFixed(1)} yrs<br />
               Threshold set at {threshold} yrs
@@ -1447,7 +1483,7 @@ function JobMarketSignaling({ onBack }) {
       {!result && (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-            <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>Your Type</span>
+            <span style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.textMut, fontWeight: 600 }}>Your Type</span>
             <Tag color={myType === "high" ? C.green : C.red}>{myType === "high" ? "High Ability" : "Low Ability"}</Tag>
             <span style={{ fontSize: "12.5px", color: C.textMut, fontFamily: F.mono }}>education costs you {myCost.toFixed(1)}/yr</span>
           </div>
@@ -1497,7 +1533,7 @@ function JobMarketSignaling({ onBack }) {
             <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ background: C.surface }}>
                 {["#", "Type", "Educ", "Wage", "Net"].map(h => (
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.label, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1569,7 +1605,7 @@ function EntryDeterrence({ onBack }) {
     return (
       <div style={{ flex: 1, minWidth: "180px", background: C.surface, border: `1px solid ${invested === cap ? C.amber : C.border}`, borderRadius: "3px", padding: "14px" }}>
         <div style={{ fontSize: "13px", color: C.text, fontWeight: 500, marginBottom: "8px" }}>{label}</div>
-        <div style={{ fontSize: "12px", color: C.textMut, fontFamily: F.mono, lineHeight: 1.7 }}>
+        <div style={{ fontSize: "12px", color: C.textMut, fontFamily: F.mono, lineHeight: 1.62 }}>
           Investment cost: −{ic}<br />
           Entrant would: <span style={{ color: enters ? C.red : C.green }}>{enters ? "enter" : "stay out"}</span><br />
           Your gross: {g}<br />
@@ -1780,7 +1816,7 @@ function UltimatumGame({ onBack }) {
             <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ background: C.surface }}>
                 {["#", "Offered", "Result", "You Kept"].map(h => (
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.label, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1818,17 +1854,17 @@ function ModelBrief({ id }) {
       </div>
 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderLeft: `2px solid ${C.amber}`, borderRadius: "2px", padding: "18px 20px", marginBottom: "14px" }}>
-        <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.amber, fontWeight: 600, marginBottom: "9px" }}>Where this shows up in your business</div>
-        <p style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.7, margin: 0 }}>{m.own}</p>
+        <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.amber, fontWeight: 600, marginBottom: "9px" }}>Where this shows up in your business</div>
+        <p style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.62, margin: 0 }}>{m.own}</p>
       </div>
 
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "22px" }}>
         <div style={{ flex: "1 1 260px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
-          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Key insight</div>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Key insight</div>
           <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6, margin: 0 }}>{m.key}</p>
         </div>
         <div style={{ flex: "1 1 260px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
-          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "7px" }}>Ask yourself</div>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "7px" }}>Ask yourself</div>
           <p style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>{m.diag}</p>
         </div>
       </div>
@@ -1838,7 +1874,7 @@ function ModelBrief({ id }) {
         {m.cases.map((cs, i) => (
           <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: "9px", marginBottom: "6px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "14px", color: C.text, fontWeight: 500 }}>{cs.t}</span>
+              <span style={{ fontSize: "13.5px", color: C.text, fontWeight: 600, fontFamily: F.head, letterSpacing: "0.01em" }}>{cs.t}</span>
               <span style={{ fontSize: "12px", color: C.textFaint, fontFamily: F.mono }}>{cs.y}</span>
             </div>
             <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6, margin: 0 }}>{cs.b}</p>
@@ -1862,12 +1898,19 @@ function ModelBrief({ id }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // DIAGRAMS — one schematic per model. Plain, structural, readable in three seconds.
 // ═══════════════════════════════════════════════════════════════════════════════
-const DG = { w: 600, mono: F.mono, body: F.body };
+// Diagram annotations are labels, so they take the mono face. Captions stay in prose.
+const DG = { w: 600, mono: F.mono, body: F.label };
 
 function Diagram({ children, h = 190, caption }) {
+  const [ref, seen] = useReveal();
   return (
-    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "18px 20px 14px", marginBottom: "18px" }}>
-      <svg viewBox={`0 0 ${DG.w} ${h}`} style={{ width: "100%", maxWidth: `${DG.w}px`, display: "block", margin: "0 auto" }}>
+    <div ref={ref} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "18px 20px 14px", marginBottom: "18px" }}>
+      <svg viewBox={`0 0 ${DG.w} ${h}`} style={{
+        width: "100%", maxWidth: `${DG.w}px`, display: "block", margin: "0 auto",
+        clipPath: seen ? "inset(0 0 0 0)" : "inset(0 100% 0 0)",
+        opacity: seen ? 1 : 0,
+        transition: "clip-path 0.85s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease",
+      }}>
         {children}
       </svg>
       {caption && <div style={{ fontSize: "12.5px", color: C.textMut, textAlign: "center", marginTop: "10px", lineHeight: 1.5, fontFamily: F.body }}>{caption}</div>}
@@ -1910,12 +1953,18 @@ function ModelDiagram({ id }) {
   switch (id) {
 
     case "pd": return (
-      <Diagram h={200} caption="Both of you do better at 3,3. Each of you individually does better by stepping away from it. That is the trap.">
-        <Grid2x2 rowL={["Hold", "Undercut"]} colL={["Hold", "Undercut"]} cells={["3, 3", "0, 5", "5, 0", "1, 1"]} hi={[3]} />
-        <path d="M 280 55 L 320 55" stroke={C.red} strokeWidth="1.5" markerEnd="url(#ar)" />
-        <path d="M 215 78 L 215 110" stroke={C.red} strokeWidth="1.5" markerEnd="url(#ar)" />
-        <defs><marker id="ar" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={C.red} /></marker></defs>
-        {TX(300, 165, "Each arrow is one side chasing +2. Follow both and you land on 1,1.", C.textFaint, 10)}
+      <Diagram h={200} caption="While rounds remain, cooperating is worth more than the one-off gain from undercutting. On the last round it is not, which is why deals break at the end.">
+        {AX(60, 152, 545, 152)}{AX(60, 24, 60, 152)}
+        <path d="M 60 42 L 360 58 L 452 92 L 512 134" stroke={C.green} strokeWidth="2.4" fill="none" />
+        <line x1={60} y1={112} x2={545} y2={112} stroke={C.red} strokeWidth="2" strokeDasharray="5 3" />
+        {TX(205, 36, "value of keeping cooperation alive", C.green, 10)}
+        {TX(160, 106, "one-off gain from undercutting", C.red, 10)}
+        <circle cx={470} cy={112} r={5} fill={C.amber} />
+        <line x1={470} y1={112} x2={470} y2={160} stroke={C.amber} strokeWidth="1" strokeDasharray="2 2" />
+        {TX(470, 176, "cooperation stops paying here", C.amber, 9.5)}
+        {TX(64, 176, "20 rounds left", C.textFaint, 9.5, "start")}
+        {TX(542, 176, "final round", C.textFaint, 9.5, "end")}
+        {TX(300, 194, "Shorten the horizon and the same players stop cooperating.", C.textMut, 10)}
       </Diagram>
     );
 
@@ -1979,10 +2028,19 @@ function ModelDiagram({ id }) {
     );
 
     case "chicken": return (
-      <Diagram h={200} caption="Two stable outcomes, and in both of them someone yielded. The advantage goes to whoever cannot.">
-        <Grid2x2 rowL={["Back down", "Hold firm"]} colL={["Back down", "Hold firm"]} cells={["0, 0", "−2, 6", "6, −2", "−10, −10"]} hi={[1, 2]} />
-        {TX(300, 155, "The two amber cells are the equilibria. Neither is the fair one.", C.amber, 10)}
-        {TX(300, 174, "Bottom right is what happens when both sides commit.", C.red, 10)}
+      <Diagram h={195} caption="The winning move is removing your own ability to move. That is why negotiators appoint counsel with no discretion.">
+        {[["Both stay flexible", "someone yields, at random", "0 / 0", C.textMut],
+          ["You commit first", "they have to yield", "+6 / −2", C.green],
+          ["Both commit", "neither can stop", "−10 / −10", C.red]].map(([t, d, v, c], i) => (
+          <g key={i}>
+            <rect x={22 + i * 188} y={28} width={172} height={104} fill={c + "12"} stroke={c + "55"} strokeWidth="1.2" />
+            <text x={108 + i * 188} y={52} textAnchor="middle" fontSize="11" fill={c} fontFamily={DG.body} fontWeight="600">{t}</text>
+            <text x={108 + i * 188} y={72} textAnchor="middle" fontSize="10" fill={C.textMut} fontFamily={DG.body}>{d}</text>
+            <text x={108 + i * 188} y={106} textAnchor="middle" fontSize="17" fill={c} fontFamily={DG.mono} fontWeight="600">{v}</text>
+          </g>
+        ))}
+        {TX(300, 158, "Flexibility is the liability. Whoever can least afford to back down collects.", C.textSec, 10.5)}
+        {TX(300, 178, "The middle case is the only one either side actually wants.", C.textFaint, 10)}
       </Diagram>
     );
 
@@ -2039,20 +2097,20 @@ function ModelDiagram({ id }) {
     );
 
     case "lemons": return (
-      <Diagram h={190} caption="Your price picks your sellers. Lower it and the good ones leave, which lowers what the pool is worth, which lowers the price.">
-        {AX(55, 120, 545, 120)}
-        <rect x={55} y={52} width={235} height={68} fill={C.amber + "28"} stroke={C.amber} strokeWidth="1.2" />
-        <rect x={290} y={52} width={255} height={68} fill="none" stroke={C.border} strokeWidth="1" strokeDasharray="4 3" />
-        {TX(172, 82, "ACCEPT YOUR PRICE", C.amber, 10)}
-        {TX(172, 98, "worth less than you paid", C.textMut, 9)}
-        {TX(418, 82, "WITHDRAW", C.textMut, 10)}
-        {TX(418, 98, "the inventory you wanted", C.textFaint, 9)}
-        {TX(60, 138, "low quality", C.textFaint, 9.5, "start")}
-        {TX(540, 138, "high quality", C.textFaint, 9.5, "end")}
-        <path d="M 290 42 L 215 42" stroke={C.red} strokeWidth="1.6" markerEnd="url(#ar2)" />
-        <defs><marker id="ar2" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={C.red} /></marker></defs>
-        {TX(300, 32, "each round of repricing pushes this line left", C.red, 9.5, "start")}
-        {TX(300, 168, "Verification is the only thing that stops the slide.", C.textMut, 10)}
+      <Diagram h={200} caption="Every repricing drives out the best remaining sellers, which lowers the average again. The spiral runs one way.">
+        {[["You offer 70", "best sellers withdraw", 40, 34],
+          ["Average falls to 58", "you cut to 55", 150, 68],
+          ["Next tier withdraws", "average falls to 44", 260, 102],
+          ["You cut to 40", "only the worst remain", 370, 136]].map(([a, b, x, y], i) => (
+          <g key={i}>
+            <rect x={x} y={y} width={170} height={40} fill={C.amber + (i === 3 ? "22" : "12")} stroke={C.amber + (i === 3 ? "70" : "40")} />
+            <text x={x + 12} y={y + 17} fontSize="10.5" fill={C.text} fontFamily={DG.body} fontWeight="500">{a}</text>
+            <text x={x + 12} y={y + 32} fontSize="9.5" fill={C.textMut} fontFamily={DG.body}>{b}</text>
+            {i < 3 && <path d={`M ${x + 110} ${y + 42} L ${x + 118} ${y + 32 + 34}`} stroke={C.red} strokeWidth="1.4" markerEnd="url(#lm)" />}
+          </g>
+        ))}
+        <defs><marker id="lm" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill={C.red} /></marker></defs>
+        {TX(300, 192, "Verification is the only thing that stops the descent.", C.textSec, 10.5)}
       </Diagram>
     );
 
@@ -2101,22 +2159,19 @@ function ModelDiagram({ id }) {
     );
 
     case "cascade": return (
-      <Diagram h={175} caption="After the second person, private information stops entering the pool. The queue grows and the evidence does not.">
-        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
-          const x = 58 + i * 62, own = i < 2;
-          return (
-            <g key={i}>
-              <circle cx={x} cy={62} r={19} fill={own ? C.steelMuted : C.bg} stroke={own ? C.steel : C.borderStrong} strokeWidth={own ? 1.6 : 1} />
-              <text x={x} y={67} textAnchor="middle" fontSize="13" fill={own ? C.steel : C.textMut} fontFamily={DG.mono} fontWeight="600">A</text>
-              {i > 0 && <path d={`M ${x - 43} 62 L ${x - 22} 62`} stroke={C.textFaint} strokeWidth="1" />}
-            </g>
-          );
-        })}
-        <rect x={38} y={96} width={122} height={20} fill={C.steelMuted} />
-        {TX(99, 110, "used own signal", C.steel, 9.5)}
-        <rect x={168} y={96} width={382} height={20} fill={C.red + "18"} />
-        {TX(359, 110, "copied the queue · own signal never used", C.red, 9.5)}
-        {TX(300, 150, "The consensus looks unanimous. It contains two opinions.", C.textMut, 10)}
+      <Diagram h={185} caption="The queue keeps growing. The evidence behind it stops after the second person.">
+        {AX(55, 130, 545, 130)}{AX(55, 24, 55, 130)}
+        {[92, 60, 6, 2, 1, 0, 0, 0].map((h, i) => (
+          <g key={i}>
+            <rect x={72 + i * 60} y={130 - h} width={34} height={h || 1.5}
+              fill={i < 2 ? C.steel + "90" : C.red + "45"} />
+            <text x={89 + i * 60} y={146} textAnchor="middle" fontSize="9.5" fill={C.textFaint} fontFamily={DG.mono}>{i + 1}</text>
+          </g>
+        ))}
+        {TX(120, 30, "own signal used", C.steel, 10)}
+        {TX(390, 46, "own signal never enters the pool", C.red, 10)}
+        <line x1={190} y1={24} x2={190} y2={134} stroke={C.borderStrong} strokeWidth="1" strokeDasharray="3 3" />
+        {TX(300, 166, "Position eight looks like eight opinions. It contains two.", C.textSec, 10.5)}
       </Diagram>
     );
 
@@ -2152,12 +2207,19 @@ function ModelDiagram({ id }) {
     );
 
     case "stag": return (
-      <Diagram h={200} caption="Two stable outcomes and no temptation to cheat in either. The only thing between you and 8,8 is doubt.">
-        <Grid2x2 rowL={["Commit", "Go alone"]} colL={["Commit", "Go alone"]} cells={["8, 8", "0, 3", "3, 0", "3, 3"]} hi={[0, 3]} />
-        {TX(215, 155, "best outcome", C.green, 10)}
-        {TX(215, 170, "needs trust", C.textMut, 9.5)}
-        {TX(410, 155, "safe outcome", C.amber, 10)}
-        {TX(410, 170, "needs nothing", C.textMut, 9.5)}
+      <Diagram h={195} caption="Commit once you believe there is better than a 38% chance the other side will too. Below that the safe option is correct, which is why so many good partnerships never start.">
+        {AX(60, 150, 545, 150)}{AX(60, 24, 60, 150)}
+        <line x1={60} y1={104} x2={545} y2={104} stroke={C.amber} strokeWidth="2" strokeDasharray="5 3" />
+        {TX(486, 98, "go it alone: 3", C.amber, 10)}
+        <path d="M 60 150 L 545 32" stroke={C.green} strokeWidth="2.4" />
+        {TX(300, 58, "commit jointly: 8 × your belief", C.green, 10)}
+        <circle cx={242} cy={104} r={5} fill={C.text} />
+        <line x1={242} y1={104} x2={242} y2={158} stroke={C.text} strokeWidth="1" strokeDasharray="2 2" />
+        {TX(242, 174, "38%", C.text, 11, "middle", DG.mono)}
+        <rect x={60} y={148} width={182} height={4} fill={C.amber + "60"} />
+        <rect x={242} y={148} width={303} height={4} fill={C.green + "60"} />
+        {TX(150, 190, "take the safe option", C.amber, 9.5)}
+        {TX(395, 190, "commit", C.green, 9.5)}
       </Diagram>
     );
 
@@ -2256,21 +2318,20 @@ function ModelDiagram({ id }) {
     );
 
     case "cheaptalk": return (
-      <Diagram h={175} caption="The statement carries no information of its own. Its weight comes entirely from where the speaker sits on this line.">
-        <defs><linearGradient id="ct" x1="0" x2="1"><stop offset="0" stopColor={C.red} /><stop offset="0.5" stopColor={C.amber} /><stop offset="1" stopColor={C.green} /></linearGradient></defs>
-        <rect x={60} y={62} width={480} height={22} fill="url(#ct)" opacity="0.32" />
-        <rect x={60} y={62} width={480} height={22} fill="none" stroke={C.border} />
-        {TX(60, 104, "interests oppose yours", C.red, 10, "start")}
-        {TX(540, 104, "interests match yours", C.green, 10, "end")}
-        {TX(120, 44, "discount to zero", C.red, 10)}
-        {TX(480, 44, "worth acting on", C.green, 10)}
-        {[[112, "broker", C.red], [225, "founder", C.amber], [470, "6-year supplier", C.green]].map(([x, l, c], i) => (
-          <g key={i}>
-            <line x1={x} y1={58} x2={x} y2={88} stroke={c} strokeWidth="1.6" />
-            <text x={x} y={130} textAnchor="middle" fontSize="9.5" fill={c} fontFamily={DG.body}>{l}</text>
-          </g>
-        ))}
-        {TX(300, 158, "Would they say the same thing if the opposite were true?", C.text, 10.5)}
+      <Diagram h={180} caption="One question settles every assurance you are given.">
+        <rect x={110} y={22} width={380} height={38} fill={C.surface} stroke={C.borderStrong} rx="3" />
+        {TX(300, 46, "Would they say the same thing if the opposite were true?", C.text, 11.5)}
+        <path d="M 220 62 L 160 92" stroke={C.borderStrong} strokeWidth="1.3" />
+        <path d="M 380 62 L 440 92" stroke={C.borderStrong} strokeWidth="1.3" />
+        {TX(168, 82, "yes", C.red, 10, "end")}
+        {TX(432, 82, "no", C.green, 10, "start")}
+        <rect x={45} y={96} width={220} height={52} fill={C.redMuted} stroke={C.red + "50"} rx="3" />
+        {TX(155, 118, "CHEAP TALK", C.red, 11)}
+        {TX(155, 136, "carries no information", C.textMut, 10)}
+        <rect x={335} y={96} width={220} height={52} fill={C.greenMuted} stroke={C.green + "50"} rx="3" />
+        {TX(445, 118, "COSTLY SIGNAL", C.green, 11)}
+        {TX(445, 136, "worth acting on", C.textMut, 10)}
+        {TX(300, 170, "Confidence, seniority and detail change nothing. Only the speaker's stake does.", C.textFaint, 10)}
       </Diagram>
     );
 
@@ -2311,10 +2372,10 @@ function ModelNav({ id }) {
         e.currentTarget.style.boxShadow = CARD_SHADOW;
         e.currentTarget.style.transform = "translateY(0)";
       }}>
-      <div style={{ fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.13em", color: C.textMut, fontWeight: 600, marginBottom: "6px" }}>
+      <div style={{ fontSize: "10.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.13em", color: C.textMut, fontWeight: 600, marginBottom: "6px" }}>
         {dir === "prev" ? "\u2190 Previous" : "Next \u2192"}
       </div>
-      <div style={{ fontSize: "14.5px", color: C.text, lineHeight: 1.4 }}>
+      <div style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.4, fontFamily: F.head, fontWeight: 600, letterSpacing: "0.005em" }}>
         <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint, marginRight: "7px" }}>
           {String(MODELS[sim.id].n).padStart(2, "0")}
         </span>
@@ -2330,7 +2391,7 @@ function ModelNav({ id }) {
         {next ? <Side sim={next} dir="next" /> : <div style={{ flex: "1 1 210px" }} />}
       </div>
       <div style={{ textAlign: "center" }}>
-        <button onClick={() => go("home")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12.5px", color: C.textMut, fontFamily: F.body, textDecoration: "underline", textUnderlineOffset: "3px", padding: "6px 10px" }}>
+        <button onClick={() => go("home")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11.5px", color: C.textMut, fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "4px", padding: "6px 10px" }}>
           All 22 models
         </button>
       </div>
@@ -2372,7 +2433,7 @@ function MatrixGame({ onBack, id, title, tag, tagColor, blurb, goal, la, lb, pay
       <div style={{ display: "inline-block", border: `1px solid ${C.border}`, borderRadius: "3px", overflow: "hidden", marginBottom: "18px" }}>
         <table style={{ borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13.5px" }}>
           <thead><tr>
-            <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.body, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>You \ Them</th>
+            <th style={{ padding: "7px 14px", background: C.surface, color: C.textMut, fontFamily: F.label, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>You \ Them</th>
             <th style={{ padding: "7px 16px", background: C.surface, color: C.green, fontSize: "12px", fontWeight: 500, borderRight: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>{la}</th>
             <th style={{ padding: "7px 16px", background: C.surface, color: C.red, fontSize: "12px", fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{lb}</th>
           </tr></thead>
@@ -2641,12 +2702,12 @@ function VickreyAuction({ onBack }) {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "20px", marginBottom: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "28px", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Worth to You</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.1em", color: C.textMut, marginBottom: "3px" }}>Worth to You</div>
               <div style={{ fontSize: "36px", fontFamily: F.mono, color: C.amber, fontWeight: 600 }}>{myVal}</div>
               <div style={{ fontSize: "12px", color: C.textMut }}>Known exactly. No uncertainty here.</div>
             </div>
             <div style={{ flex: 1, minWidth: "170px" }}>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>Your Bid</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.1em", color: C.textMut, marginBottom: "6px" }}>Your Bid</div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input type="number" value={bid} onChange={e => setBid(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} placeholder="0"
                   style={{ width: "130px", padding: "10px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "17px", outline: "none" }} />
@@ -2769,8 +2830,8 @@ function Lemons({ onBack }) {
           <div style={{ position: "relative", height: "42px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: "3px", marginBottom: "6px", overflow: "hidden" }}>
             <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${Math.min(100, last.offer / 0.65)}%`, background: C.amber + "18" }} />
             <div style={{ position: "absolute", left: `${Math.min(100, last.offer / 0.65)}%`, top: 0, bottom: 0, width: "2px", background: C.amber }} />
-            <div style={{ position: "absolute", left: "6px", top: "12px", fontSize: "11.5px", color: C.amber, fontFamily: F.body }}>accepted (lower quality)</div>
-            <div style={{ position: "absolute", right: "6px", top: "12px", fontSize: "11.5px", color: C.textMut, fontFamily: F.body }}>withdrew (higher quality)</div>
+            <div style={{ position: "absolute", left: "6px", top: "12px", fontSize: "10.5px", color: C.amber, fontFamily: F.label, letterSpacing: "0.05em" }}>accepted (lower quality)</div>
+            <div style={{ position: "absolute", right: "6px", top: "12px", fontSize: "10.5px", color: C.textMut, fontFamily: F.label, letterSpacing: "0.05em" }}>withdrew (higher quality)</div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: C.textFaint, fontFamily: F.mono, marginBottom: "16px" }}>
             <span>quality 20</span><span>quality 100</span>
@@ -2801,7 +2862,7 @@ function Lemons({ onBack }) {
             <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.mono, fontSize: "13px" }}>
               <thead><tr style={{ background: C.surface }}>
                 {["#", "Price", "Verify", "Entered", "Avg Qual", "Surplus"].map(h =>
-                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.body, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>)}
+                  <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.textMut, fontFamily: F.label, fontWeight: 500, borderBottom: `1px solid ${C.border}` }}>{h}</th>)}
               </tr></thead>
               <tbody>
                 {rounds.map(x => (
@@ -2987,7 +3048,7 @@ function Cascades({ onBack }) {
           {round.priors.map((p, i) => (
             <div key={i} style={{ width: "38px", height: "38px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F.mono, fontSize: "16px", fontWeight: 600, background: p === "A" ? C.steelMuted : C.amberMuted, border: `1px solid ${p === "A" ? C.steel : C.amber}50`, color: p === "A" ? C.steel : C.amber }}>{p}</div>
           ))}
-          <div style={{ width: "38px", height: "38px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontFamily: F.body, border: `1.5px dashed ${C.borderStrong}`, color: C.textMut }}>YOU</div>
+          <div style={{ width: "38px", height: "38px", borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontFamily: F.label, letterSpacing: "0.06em", fontWeight: 600, border: `1.5px dashed ${C.borderStrong}`, color: C.textMut }}>YOU</div>
         </div>
 
         <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "16px" }}>
@@ -3086,13 +3147,13 @@ function ProspectTheory({ onBack }) {
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Decision {i + 1} of {PT_ITEMS.length}</div>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Decision {i + 1} of {PT_ITEMS.length}</div>
           <p style={{ fontSize: "15px", color: C.text, lineHeight: 1.6, margin: "0 0 18px" }}>{item.q}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {[["a", item.a], ["b", item.b]].map(([k, txt]) => (
               <button key={k} onClick={() => pick(k)} style={{
                 textAlign: "left", padding: "14px 16px", background: C.bg, border: `1px solid ${C.borderStrong}`,
-                borderRadius: "3px", color: C.textSec, fontSize: "14px", fontFamily: F.body, cursor: "pointer",
+                borderRadius: "3px", color: C.textSec, fontSize: "13.5px", fontFamily: F.body, cursor: "pointer",
                 lineHeight: 1.5, transition: "all 0.12s",
               }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = C.amber; e.currentTarget.style.color = C.text; }}
@@ -3545,14 +3606,14 @@ function Schelling({ onBack }) {
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Problem {i + 1} of {SCHELLING.length}</div>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Problem {i + 1} of {SCHELLING.length}</div>
           <p style={{ fontSize: "15px", color: C.text, lineHeight: 1.6, margin: "0 0 18px" }}>{item.q}</p>
           {!picked ? (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {item.opts.map((o, n) => (
                 <button key={n} onClick={() => pick(n)} style={{
                   padding: "12px 18px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px",
-                  color: C.textSec, fontSize: "14px", fontFamily: F.body, cursor: "pointer", transition: "all 0.12s",
+                  color: C.textSec, fontSize: "13px", fontFamily: F.label, letterSpacing: "0.02em", cursor: "pointer", transition: "all 0.12s",
                 }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = C.amber; e.currentTarget.style.color = C.text; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = C.borderStrong; e.currentTarget.style.color = C.textSec; }}>{o}</button>
@@ -3635,12 +3696,12 @@ function CheapTalk({ onBack }) {
 
       {!done ? (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "22px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Statement {i + 1} of {TALK.length}</div>
+          <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "10px" }}>Statement {i + 1} of {TALK.length}</div>
           <div style={{ fontSize: "13px", color: C.textMut, marginBottom: "8px" }}>{item.who}</div>
           <p style={{ fontSize: "16px", color: C.text, lineHeight: 1.6, margin: "0 0 8px", fontStyle: "italic", paddingLeft: "14px", borderLeft: `2px solid ${C.borderStrong}` }}>{item.msg}</p>
 
           <div style={{ marginTop: "18px", marginBottom: "18px" }}>
-            <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Interest alignment with you</div>
+            <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Interest alignment with you</div>
             <div style={{ height: "8px", background: C.bg, borderRadius: "4px", overflow: "hidden", maxWidth: "260px", border: `1px solid ${C.border}` }}>
               <div style={{ height: "100%", width: `${item.align * 100}%`, background: item.align > 0.6 ? C.green : item.align > 0.3 ? C.amber : C.red }} />
             </div>
@@ -3704,7 +3765,7 @@ function BoardTexture() {
     <div aria-hidden="true" style={{
       position: "fixed", right: "-5vw", bottom: "-7vh",
       width: "min(560px, 74vw)", height: "min(560px, 74vw)",
-      pointerEvents: "none", userSelect: "none", zIndex: -1,
+      pointerEvents: "none", userSelect: "none", zIndex: -1, overflow: "hidden",
     }}>
       <svg viewBox={`0 0 ${W} ${W}`} width="100%" height="100%" style={{ transform: "rotate(-7deg)", display: "block" }}>
         <defs>
@@ -3732,13 +3793,13 @@ function BoardTexture() {
 function Terms({ onBack }) {
   const S = ({ h, children }) => (
     <div style={{ marginBottom: "26px" }}>
-      <div style={{ fontSize: "12.5px", textTransform: "uppercase", letterSpacing: "0.13em", color: C.text, fontWeight: 600, marginBottom: "9px" }}>{h}</div>
-      <div style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.7 }}>{children}</div>
+      <div style={{ fontSize: "12.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.13em", color: C.text, fontWeight: 600, marginBottom: "9px" }}>{h}</div>
+      <div style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.62 }}>{children}</div>
     </div>
   );
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, padding: 0, marginBottom: "16px" }}>&larr; Back</button>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "18px" }}>&larr; Back</button>
       <h2 style={{ margin: "0 0 6px", fontSize: "24px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Terms of Use</h2>
       <p style={{ fontSize: "12.5px", color: C.textMut, margin: "0 0 32px", fontFamily: F.mono }}>Last updated August 2026</p>
 
@@ -3804,15 +3865,15 @@ function HeroGame({ onGoDeeper }) {
     <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "4px", padding: "24px", maxWidth: "400px" }}>
       {!move ? (
         <>
-          <div style={{ fontSize: "14px", color: C.textSec, marginBottom: "14px", lineHeight: 1.6 }}>
+          <div style={{ fontSize: "14px", color: C.textSec, marginBottom: "14px", lineHeight: 1.55 }}>
             You're pricing against a competitor. They're deciding at the same time.
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
-            <button onClick={() => play("C")} style={{ flex: 1, padding: "14px", background: C.greenMuted, border: `1.5px solid ${C.green}40`, borderRadius: "3px", color: C.green, fontSize: "15px", fontFamily: F.body, fontWeight: 500, cursor: "pointer", transition: "all 0.1s" }}
+            <button onClick={() => play("C")} style={{ flex: 1, padding: "14px", background: C.greenMuted, border: `1.5px solid ${C.green}40`, borderRadius: "3px", color: C.green, fontSize: "13px", fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", transition: "all 0.1s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.green} onMouseLeave={e => e.currentTarget.style.borderColor = C.green + "40"}>
               Hold Price
             </button>
-            <button onClick={() => play("D")} style={{ flex: 1, padding: "14px", background: C.redMuted, border: `1.5px solid ${C.red}40`, borderRadius: "3px", color: C.red, fontSize: "15px", fontFamily: F.body, fontWeight: 500, cursor: "pointer", transition: "all 0.1s" }}
+            <button onClick={() => play("D")} style={{ flex: 1, padding: "14px", background: C.redMuted, border: `1.5px solid ${C.red}40`, borderRadius: "3px", color: C.red, fontSize: "13px", fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", transition: "all 0.1s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.red} onMouseLeave={e => e.currentTarget.style.borderColor = C.red + "40"}>
               Undercut
             </button>
@@ -3822,27 +3883,27 @@ function HeroGame({ onGoDeeper }) {
         <>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
             <div>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "2px" }}>You</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.1em", color: C.textMut, marginBottom: "2px" }}>You</div>
               <div style={{ fontSize: "17px", fontFamily: F.mono, color: move === "C" ? C.green : C.red, fontWeight: 600 }}>{FL[move]}</div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: C.textMut, marginBottom: "2px" }}>Opponent</div>
+              <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.1em", color: C.textMut, marginBottom: "2px" }}>Opponent</div>
               <div style={{ fontSize: "17px", fontFamily: F.mono, color: opp === "C" ? C.green : C.red, fontWeight: 600 }}>{FL[opp]}</div>
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "center", gap: "20px", padding: "10px 0 14px", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, marginBottom: "12px" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "11px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase" }}>Your payoff</div>
+              <div style={{ fontSize: "11px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.label }}>Your payoff</div>
               <div style={{ fontSize: "28px", fontFamily: F.mono, color: result[0] >= 3 ? C.green : result[0] === 0 ? C.red : C.amber, fontWeight: 600 }}>{result[0]}</div>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "11px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase" }}>Their payoff</div>
+              <div style={{ fontSize: "11px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.label }}>Their payoff</div>
               <div style={{ fontSize: "28px", fontFamily: F.mono, color: result[1] >= 3 ? C.green : result[1] === 0 ? C.red : C.amber, fontWeight: 600 }}>{result[1]}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={reset} style={{ flex: 1, padding: "8px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: "3px", color: C.textSec, fontSize: "13px", fontFamily: F.body, cursor: "pointer" }}>Again</button>
-            <button onClick={onGoDeeper} style={{ flex: 1, padding: "8px", background: C.amber, border: "none", borderRadius: "3px", color: "#111", fontSize: "13px", fontFamily: F.body, fontWeight: 500, cursor: "pointer" }}>Play 20 rounds →</button>
+            <button onClick={reset} style={{ flex: 1, padding: "8px", background: "transparent", border: `1px solid ${C.border}`, borderRadius: "3px", color: C.textSec, fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 600, cursor: "pointer" }}>Again</button>
+            <button onClick={onGoDeeper} style={{ flex: 1, padding: "8px", background: C.amber, border: "none", borderRadius: "3px", color: "#111", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 600, cursor: "pointer" }}>Play 20 rounds →</button>
           </div>
         </>
       )}
@@ -3886,35 +3947,52 @@ const SIMS = [
 
 function SimCard({ sim, i, onNav }) {
   const [ref, seen] = useReveal();
+  const [tilt, setTilt] = useState(null);
+
+  // Subtle parallax tilt. Max 4 degrees, so it registers as weight rather than a trick.
+  const onMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    setTilt({ x: (-py * 4).toFixed(2), y: (px * 4).toFixed(2) });
+  };
+
+  const lifted = tilt
+    ? `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(-2px)`
+    : "translateY(0)";
+
   return (
-    <div ref={ref} onClick={() => onNav(sim.id)}
+    <div ref={ref} onClick={() => onNav(sim.id)} onMouseMove={onMove}
       style={{
         background: CARD_BG, border: `1px solid ${C.border}`, borderRadius: "3px",
         padding: "20px", cursor: "pointer", boxShadow: CARD_SHADOW,
         opacity: seen ? 1 : 0,
-        transform: seen ? "translateY(0)" : "translateY(10px)",
-        transition: `opacity 0.4s ease ${i * 45}ms, transform 0.4s cubic-bezier(0.22,1,0.36,1) ${i * 45}ms, background 0.15s, border-color 0.15s, box-shadow 0.15s`,
+        transform: seen ? lifted : "translateY(10px)",
+        transformStyle: "preserve-3d",
+        willChange: tilt ? "transform" : "auto",
+        transition: tilt
+          ? "background 0.15s, border-color 0.15s, box-shadow 0.15s"
+          : `opacity 0.4s ease ${i * 45}ms, transform 0.4s cubic-bezier(0.22,1,0.36,1) ${i * 45}ms, background 0.15s, border-color 0.15s, box-shadow 0.15s`,
       }}
       onMouseEnter={e => {
         e.currentTarget.style.background = CARD_BG_HOVER;
         e.currentTarget.style.borderColor = C.borderStrong;
         e.currentTarget.style.boxShadow = CARD_SHADOW_HOVER;
-        e.currentTarget.style.transform = "translateY(-2px)";
       }}
       onMouseLeave={e => {
+        setTilt(null);
         e.currentTarget.style.background = CARD_BG;
         e.currentTarget.style.borderColor = C.border;
         e.currentTarget.style.boxShadow = CARD_SHADOW;
-        e.currentTarget.style.transform = "translateY(0)";
       }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", flexWrap: "wrap" }}>
         <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
-        <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
+        <span style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
         {sim.id === "pd" && <Tag color={C.amber}>Start here</Tag>}
       </div>
-      <h3 style={{ fontSize: "16px", fontFamily: F.body, fontWeight: 500, color: C.text, margin: "0 0 7px" }}>{sim.name} &rarr;</h3>
-      <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65, margin: "0 0 8px" }}>{sim.desc}</p>
-      <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic" }}>{sim.finance}</div>
+      <h3 style={{ fontSize: "15px", fontFamily: F.head, fontWeight: 600, color: C.text, margin: "0 0 8px", letterSpacing: "0.005em", lineHeight: 1.35 }}>{sim.name} &rarr;</h3>
+      <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.58, margin: "0 0 8px" }}>{sim.desc}</p>
+      <div style={{ fontSize: "11.5px", color: C.textMut, fontFamily: F.label, letterSpacing: "0.04em" }}>{sim.finance}</div>
     </div>
   );
 }
@@ -3958,16 +4036,16 @@ function Home({ onNav }) {
       {/* ── Hero ── */}
       <div style={{ marginBottom: "56px" }}>
         <div style={{ maxWidth: "540px", marginBottom: "18px" }}>
-          <h1 style={{ fontSize: "36px", fontFamily: F.display, fontWeight: 400, color: C.text, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+          <h1 style={{ fontSize: "38px", fontFamily: F.display, fontWeight: 600, color: C.text, margin: "0 0 14px", letterSpacing: "0.16em", textTransform: "uppercase", lineHeight: 1.05 }}>
             Sagax
           </h1>
-          <p style={{ fontSize: "14px", color: C.amber, fontFamily: F.body, letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 20px", fontWeight: 500 }}>
+          <p style={{ fontSize: "13px", color: C.amber, fontFamily: F.label, letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 24px", fontWeight: 600, lineHeight: 1.5 }}>
             Applied Game Theory for Finance and Negotiation
           </p>
-          <p style={{ fontSize: "16px", color: C.textSec, lineHeight: 1.7, margin: "0 0 8px", maxWidth: "440px" }}>
+          <p style={{ fontSize: "16px", color: C.textSec, lineHeight: 1.62, margin: "0 0 8px", maxWidth: "440px" }}>
             Interactive simulators for strategic interactions in financial markets: auctions, negotiations, competitive dynamics, coordination failures. Each one uses a real finance scenario and teaches through play.
           </p>
-          <p style={{ fontSize: "14px", color: C.textMut, lineHeight: 1.6, margin: "14px 0 0", maxWidth: "440px" }}>
+          <p style={{ fontSize: "11.5px", color: C.textMut, fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, lineHeight: 1.6, margin: "18px 0 0", maxWidth: "440px" }}>
             Make a move. ↓
           </p>
         </div>
@@ -3980,14 +4058,13 @@ function Home({ onNav }) {
         if (!items.length) return null;
         return (
           <div key={ck} style={{ marginBottom: "40px", paddingTop: "24px", borderTop: `1px solid ${C.border}` }}>
-            <div style={{
-              position: "sticky", top: `${NAV_H}px`, zIndex: 20,
-              display: "flex", alignItems: "baseline", gap: "14px", flexWrap: "wrap",
-              padding: "11px 0 12px", marginBottom: "6px",
-              background: "rgba(14,13,11,0.9)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-            }}>
-              <span style={{ fontSize: "12.5px", textTransform: "uppercase", letterSpacing: "0.14em", color: C.text, fontWeight: 600 }}>{cat.label}</span>
-              <span className="sgx-blurb" style={{ fontSize: "13px", color: C.textMut }}>{cat.blurb}</span>
+            {/* Geometry and type here are identical to the fixed strip, so as this
+                dissolves at the top of the viewport the fixed copy reads as the
+                same element carrying on rather than a second one appearing. */}
+            <div data-cathead data-cat={cat.label} data-blurb={cat.blurb}
+              style={{ display: "flex", alignItems: "baseline", gap: "14px", flexWrap: "wrap", marginBottom: "16px", willChange: "opacity" }}>
+              <span style={{ fontSize: "12.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.14em", color: C.text, fontWeight: 600 }}>{cat.label}</span>
+              <span className="sgx-blurb" style={{ fontSize: "13px", color: C.textMut, fontFamily: F.body }}>{cat.blurb}</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(268px, 1fr))", gap: "10px" }}>
               {items.map((sim, i) => <SimCard key={sim.id} sim={sim} i={i} onNav={onNav} />)}
@@ -4007,8 +4084,8 @@ function Home({ onNav }) {
             ["Brief debrief", "After each game, one paragraph explains the result. Theory follows experience."],
           ].map(([t, d]) => (
             <div key={t}>
-              <div style={{ fontSize: "14px", color: C.text, fontWeight: 500, marginBottom: "5px" }}>{t}</div>
-              <div style={{ fontSize: "13px", color: C.textMut, lineHeight: 1.65 }}>{d}</div>
+              <div style={{ fontSize: "12px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "7px" }}>{t}</div>
+              <div style={{ fontSize: "13px", color: C.textMut, lineHeight: 1.58 }}>{d}</div>
             </div>
           ))}
         </div>
@@ -4018,19 +4095,19 @@ function Home({ onNav }) {
       <div style={{ marginBottom: "40px", padding: "24px", background: C.amberMuted, border: `1px solid ${C.amber}25`, borderRadius: "3px" }}>
         {!subscribed ? (
           <>
-            <div style={{ fontSize: "16px", color: C.text, fontWeight: 500, marginBottom: "4px" }}>New simulator every month</div>
-            <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 12px", lineHeight: 1.6 }}>
+            <div style={{ fontSize: "13px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "8px" }}>New simulator every month</div>
+            <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 12px", lineHeight: 1.55 }}>
               One email when a new simulator drops. Game theory applied to finance.
             </p>
             <div style={{ display: "flex", gap: "8px", maxWidth: "380px" }}>
               <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }} onKeyDown={e => e.key === "Enter" && handleSubscribe()} placeholder="you@example.com"
-                style={{ flex: 1, padding: "9px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.body, fontSize: "14px", outline: "none" }} />
+                style={{ flex: 1, padding: "9px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "13px", outline: "none" }} />
               <Btn onClick={handleSubscribe} disabled={loading || !email.includes("@")}>Subscribe</Btn>
             </div>
-            {error && <p style={{ fontSize: "13px", color: C.red, margin: "8px 0 0", lineHeight: 1.6 }}>{error}</p>}
+            {error && <p style={{ fontSize: "13px", color: C.red, margin: "8px 0 0", lineHeight: 1.55 }}>{error}</p>}
           </>
         ) : (
-          <div style={{ fontSize: "15px", color: C.amber }}>✓ You're in. First email when Nash Bargaining ships.</div>
+          <div style={{ fontSize: "12.5px", color: C.amber, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>✓ You're in. First email when Nash Bargaining ships.</div>
         )}
       </div>
     </div>
@@ -4061,6 +4138,7 @@ export default function Sagax() {
   }, []);
 
   const scrolled = useScrolled();
+  const activeCat = useActiveCategory(page === "home");
 
   // Arrow keys step between models. Skipped while a field or slider has focus.
   useEffect(() => {
@@ -4087,9 +4165,16 @@ export default function Sagax() {
   }, [page]);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body, position: "relative", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body, position: "relative" }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
         html { scroll-behavior: smooth; }
+        @keyframes sgxFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes sgxEnter {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 940px) { .sgx-tagline { display: none; } }
         @media (max-width: 660px) {
           .sgx-gloss { display: none; }
           .sgx-blurb { display: none; }
@@ -4102,38 +4187,68 @@ export default function Sagax() {
       <ScrollProgress />
       <BoardTexture />
       <div style={{ position: "relative", zIndex: 1 }}>
-      {/* ── Nav ── */}
-      <nav style={{
+      {/* ── Bar 1 · brand, always fixed ── */}
+      <div style={{
         position: "sticky", top: 0, zIndex: 40,
-        padding: "19px 24px", display: "flex", alignItems: "baseline", justifyContent: "space-between",
-        maxWidth: "880px", margin: "0 auto",
-        background: scrolled ? "rgba(14,13,11,0.82)" : "transparent",
-        backdropFilter: scrolled ? "blur(14px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
+        background: scrolled ? "rgba(14,13,11,0.88)" : "transparent",
+        backdropFilter: scrolled ? "blur(16px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(16px)" : "none",
         borderBottom: `1px solid ${scrolled ? C.border : "transparent"}`,
         transition: "background 0.25s, border-color 0.25s",
       }}>
-        {/* Lexical entry, not a tagline. The gloss is the literal root rather than a
-            flattering triplet, and it drops out on narrow screens. */}
-        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}>
-          <span style={{ fontSize: "19px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sagax</span>
-          <span style={{ fontSize: "11px", color: C.textMut, marginLeft: "8px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.body }}>
-            /ˈsa.gaks/
-          </span>
-          <span className="sgx-gloss" style={{ fontSize: "11.5px", color: C.textFaint, marginLeft: "10px", fontFamily: F.body }}>
-            <em style={{ fontStyle: "italic", marginRight: "5px" }}>adj.</em>
-            keen-scented; quick to perceive
-          </span>
-        </button>
-        <div style={{ display: "flex", gap: "16px" }}>
-          {page !== "home" && (
-            <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "13px", fontFamily: F.body, letterSpacing: "0.04em" }}>Library</button>
-          )}
+        <nav style={{ maxWidth: "880px", margin: "0 auto", padding: "17px 24px", display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "18px" }}>
+          <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", display: "flex", alignItems: "baseline", minWidth: 0 }}>
+            <span style={{ fontSize: "17px", fontFamily: F.display, color: C.text, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", whiteSpace: "nowrap" }}>Sagax</span>
+            <span style={{ fontSize: "11px", color: C.textMut, marginLeft: "9px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.label, whiteSpace: "nowrap" }}>
+              /ˈsa.gaks/
+            </span>
+            <span className="sgx-gloss" style={{ fontSize: "11.5px", color: C.textFaint, marginLeft: "11px", fontFamily: F.body, whiteSpace: "nowrap" }}>
+              <em style={{ fontStyle: "italic", marginRight: "5px" }}>adj.</em>
+              keen-scented; quick to perceive
+            </span>
+          </button>
+
+          <div style={{ display: "flex", gap: "16px", alignItems: "baseline", flexShrink: 0 }}>
+            {/* The hero tagline scrolls away, so it takes up residence here */}
+            <span className="sgx-tagline" style={{
+              fontSize: "10px", color: C.amber, fontFamily: F.label, fontWeight: 600,
+              textTransform: "uppercase", letterSpacing: "0.11em", whiteSpace: "nowrap",
+              opacity: scrolled ? 1 : 0, transition: "opacity 0.35s",
+            }}>
+              Applied Game Theory for Finance and Negotiation
+            </span>
+            {page !== "home" && (
+              <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>Library</button>
+            )}
+          </div>
+        </nav>
+      </div>
+
+      {/* ── Bar 2 · current section, parked directly under bar 1 ── */}
+      {/* Fixed rather than sticky so it never reserves space in the flow. */}
+      {page === "home" && (
+        <div style={{
+          position: "fixed", top: `${NAV_H - 1}px`, left: 0, right: 0, zIndex: 30,
+          background: "rgba(14,13,11,0.88)",
+          backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+          borderBottom: `1px solid ${activeCat && scrolled ? C.border : "transparent"}`,
+          opacity: activeCat && scrolled ? 1 : 0,
+          pointerEvents: "none",
+          transition: "opacity 0.12s linear, border-color 0.2s",
+        }}>
+          <div style={{ maxWidth: "880px", margin: "0 auto", padding: "11px 24px 12px", display: "flex", alignItems: "baseline", gap: "14px" }}>
+            <span style={{ fontSize: "12.5px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", whiteSpace: "nowrap" }}>
+              {activeCat ? activeCat.label : ""}
+            </span>
+            <span className="sgx-blurb" style={{ fontSize: "13px", color: C.textMut, fontFamily: F.body, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {activeCat ? activeCat.blurb : ""}
+            </span>
+          </div>
         </div>
-      </nav>
+      )}
 
       {/* ── Content ── */}
-      <main style={{ maxWidth: "880px", margin: "0 auto", padding: "8px 24px 60px" }}>
+      <main key={page} style={{ maxWidth: "880px", margin: "0 auto", padding: "8px 24px 60px", animation: "sgxEnter 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
         {page === "home" && <Home onNav={setPage} />}
         {page === "pd" && <PrisonersDilemma onBack={() => setPage("home")} />}
         {page === "auction" && <SealedBidAuction onBack={() => setPage("home")} />}
@@ -4163,10 +4278,10 @@ export default function Sagax() {
       {/* ── Footer ── */}
       <footer style={{ borderTop: `1px solid ${C.border}`, maxWidth: "880px", margin: "0 auto", padding: "14px 24px 22px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "6px 14px" }}>
-          <span style={{ fontSize: "10.5px", color: C.textFaint, lineHeight: 1.6 }}>
+          <span style={{ fontSize: "10.5px", color: C.textFaint, lineHeight: 1.55 }}>
             &copy; 2026 Julia Mei. All rights reserved. For education only, and not investment advice.
           </span>
-          <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.body, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+          <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
             Terms of Use
           </button>
         </div>
