@@ -874,7 +874,24 @@ const MODELS = {
 // MOTION — navigation aids only. Nothing here dramatises a game outcome, because
 // the insight in these models comes from patterns rather than suspense.
 // ═══════════════════════════════════════════════════════════════════════════════
-const NAV_H = 57;   // bar 1: 17px padding + 22px line + 17px padding + 1px rule
+const NAV_H = 57;   // fallback only; the live value is measured from the bar itself
+
+// Measures bar 1 and re-measures after webfonts land, since a font swap changes the
+// line box and therefore the bar height.
+function useBarHeight(ref) {
+  const [h, setH] = useState(NAV_H);
+  useEffect(() => {
+    const measure = () => { if (ref.current) setH(ref.current.offsetHeight); };
+    measure();
+    window.addEventListener("resize", measure);
+    if (typeof document !== "undefined" && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(measure);
+    }
+    const t = setTimeout(measure, 400);
+    return () => { window.removeEventListener("resize", measure); clearTimeout(t); };
+  }, [ref]);
+  return h;
+}
 
 function useReveal() {
   const ref = useRef(null);
@@ -893,7 +910,7 @@ function useReveal() {
 
 // Which category is currently under the nav. Replaces per-section sticky headers,
 // which need long sections to be legible and these are not.
-function useActiveCategory(on) {
+function useActiveCategory(on, navH = NAV_H) {
   const [cat, setCat] = useState(null);
   useEffect(() => {
     if (!on) { setCat(null); return; }
@@ -903,8 +920,8 @@ function useActiveCategory(on) {
         const top = el.getBoundingClientRect().top;
         // Dissolve over the last 48px of travel so the in-page header is gone by
         // the moment the fixed strip takes over at the same x-position.
-        el.style.opacity = String(Math.max(0, Math.min(1, (top - NAV_H) / 48)));
-        if (top <= NAV_H + 4)
+        el.style.opacity = String(Math.max(0, Math.min(1, (top - navH) / 48)));
+        if (top <= navH + 4)
           cur = { label: el.getAttribute("data-cat"), blurb: el.getAttribute("data-blurb") };
       });
       // Only re-render when the label actually changes
@@ -913,7 +930,7 @@ function useActiveCategory(on) {
     window.addEventListener("scroll", f, { passive: true });
     f();
     return () => window.removeEventListener("scroll", f);
-  }, [on]);
+  }, [on, navH]);
   return cat;
 }
 
@@ -4271,7 +4288,9 @@ export default function Sagax() {
   const [subscribed, setSubscribed] = useState(false);
   const [floatOff, setFloatOff] = useState(false);
   const showFloat = useFloat(floatOff || subscribed);
-  const activeCat = useActiveCategory(page === "home");
+  const navRef = useRef(null);
+  const navH = useBarHeight(navRef);
+  const activeCat = useActiveCategory(page === "home", navH);
 
   // Arrow keys step between models. Skipped while a field or slider has focus.
   useEffect(() => {
@@ -4321,7 +4340,7 @@ export default function Sagax() {
       <BoardTexture />
       <div style={{ position: "relative", zIndex: 1 }}>
       {/* ── Bar 1 · brand, always fixed ── */}
-      <div style={{
+      <div ref={navRef} style={{
         position: "sticky", top: 0, zIndex: 40,
         background: scrolled ? "rgba(14,13,11,0.88)" : "transparent",
         backdropFilter: scrolled ? "blur(16px)" : "none",
@@ -4365,7 +4384,7 @@ export default function Sagax() {
       {/* Fixed rather than sticky so it never reserves space in the flow. */}
       {page === "home" && (
         <div style={{
-          position: "fixed", top: `${NAV_H - 1}px`, left: 0, right: 0, zIndex: 30,
+          position: "fixed", top: `${navH - 2}px`, left: 0, right: 0, zIndex: 30,
           background: "rgba(14,13,11,0.88)",
           backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
           borderBottom: `1px solid ${activeCat && scrolled ? C.border : "transparent"}`,
