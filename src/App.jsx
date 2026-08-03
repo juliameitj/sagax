@@ -4215,7 +4215,7 @@ function Home({ onNav, subscribed, setSubscribed }) {
             <div style={{ fontSize: "13px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "9px" }}>Use these in your own work</div>
             <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 14px", lineHeight: 1.62, maxWidth: "520px" }}>
               Learn how to apply these models to your business, your projects, and the decisions you make every week.
-              No spam. Every email has a one-click unsubscribe link.
+              We will not spam you.
             </p>
             <SubscribeForm onDone={() => setSubscribed(true)} />
           </>
@@ -4408,7 +4408,7 @@ export default function Sagax() {
               Want to use these in your own business, projects, or everyday decisions?
             </div>
             <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "3px" }}>
-              No spam. Every email has a one-click unsubscribe link.
+              We will not spam you.
             </div>
           </div>
           <div style={{ flexShrink: 0 }}>
