@@ -210,12 +210,8 @@ function PrisonersDilemma({ onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
-        <ModelGlyph id="pd" width="44px" style={{ flexShrink: 0 }} />
-        <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Prisoner's Dilemma</h2>
-        <Tag>Repeated Games</Tag>
-      </div>
+      <BackLink onClick={onBack} />
+      <ModelBar title="Prisoner's Dilemma" tag="Repeated Games" gid="pd" />
       <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "8px 0 20px", maxWidth: "600px", fontFamily: F.body }}>
         Two firms independently choose pricing. Both hold → both profit. One undercuts → they capture the market. Both undercut → margins collapse. Play {ROUNDS} rounds against six strategies.
       </p>
@@ -375,12 +371,8 @@ function SealedBidAuction({ onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
-        <ModelGlyph id="auction" width="44px" style={{ flexShrink: 0 }} />
-        <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>Sealed-Bid Auction</h2>
-        <Tag>Winner's Curse</Tag>
-      </div>
+      <BackLink onClick={onBack} />
+      <ModelBar title="Sealed-Bid Auction" tag="Winner's Curse" gid="auction" />
       <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "8px 0 20px", maxWidth: "600px" }}>
         An asset has an unknown true value. You receive a noisy private estimate and submit a sealed bid against {numAI} competitors. Highest bid wins and pays their bid. The winner is usually the one who overestimated the most.
       </p>
@@ -477,16 +469,34 @@ function SealedBidAuction({ onBack }) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SHARED — simulator header
+// The identity row sticks under the brand bar, so the model you are inside stays
+// named while you scroll. top uses --nav-h, which the shell measures at runtime.
 // ═══════════════════════════════════════════════════════════════════════════════
+const ModelBar = ({ title, tag, gid }) => (
+  <div style={{
+    // Pulled 6px under the brand bar, with padding added back, so rounding can
+    // never open a gap between the two fixed bars.
+    position: "sticky", top: "calc(var(--nav-h, 57px) - 6px)", zIndex: 25,
+    display: "flex", alignItems: "center", gap: "11px", flexWrap: "wrap",
+    padding: "17px 0 12px", marginBottom: "6px",
+    background: "rgba(14,13,11,0.92)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+    borderBottom: `1px solid ${C.border}`,
+  }}>
+    {gid && <ModelGlyph id={gid} width="40px" style={{ flexShrink: 0 }} />}
+    <h2 style={{ margin: 0, fontSize: "20px", fontFamily: F.display, color: C.text, fontWeight: 600, letterSpacing: "0.01em" }}>{title}</h2>
+    <Tag>{tag}</Tag>
+  </div>
+);
+
+const BackLink = ({ onClick }) => (
+  <button onClick={onClick} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "14px" }}>&larr; Back</button>
+);
+
 const SimHeader = ({ onBack, title, tag, tagColor, gid, children }) => (
   <>
-    <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "16px" }}>← Back</button>
-    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
-      {gid && <ModelGlyph id={gid} width="44px" style={{ flexShrink: 0 }} />}
-      <h2 style={{ margin: 0, fontSize: "22px", fontFamily: F.display, color: C.text, fontWeight: 400 }}>{title}</h2>
-      <Tag color={tagColor}>{tag}</Tag>
-    </div>
-    <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "8px 0 20px", maxWidth: "600px" }}>{children}</p>
+    <BackLink onClick={onBack} />
+    <ModelBar title={title} tag={tag} gid={gid} />
+    <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "14px 0 20px", maxWidth: "600px" }}>{children}</p>
   </>
 );
 
@@ -587,6 +597,7 @@ const MODELS = {
     takeaway: "Before any negotiation, improve your alternative. Your ask is close to irrelevant and your walk-away is close to everything, so building an option pays better than sharpening a pitch. The strongest argument in the room loses to the strongest outside option.",
     diag: "For my three largest counterparties, what actually happens to me on the day the relationship ends? If I cannot answer in numbers, I am negotiating blind.",
     cases: [
+      { t: "Writers Guild strike", y: "2023", b: "The gap was narrow: the WGA valued its proposals at $429m a year against the studios' $86m. What moved it was not the argument. It was 148 days of stopped production, which was the union's outside option made credible. Economists put the cost to California at roughly $5bn. The writers won most of the gap because they could survive without the studios longer than the studios could survive without scripts.", s: "Deadline; Milken Institute via BBC", u: "https://deadline.com/2023/09/writers-strike-deal-wga-studios-1235551531/" },
       { t: "Customer concentration in supplier contracts", y: "general", b: "Suppliers with a single dominant buyer routinely accept terms far below the value they create. The gap measures how different the two walk-away options are rather than how well anyone negotiated, which is why diversification of the customer base raises realised prices without any change in the sales approach." },
       { t: "Competing offers in compensation", y: "general", b: "The reliable mechanism for a material pay increase is a credible external offer, not a performance argument. This is Nash bargaining working exactly as specified: the surplus moves toward whoever can most credibly walk." },
     ],
@@ -613,6 +624,7 @@ const MODELS = {
     takeaway: "Test every threat with one question: after I enter, would they actually spend money to fight me? If they would accommodate, the threat is empty. Deterrence needs commitment that is costly, visible and irreversible, because a bluff that gets called publishes your weakness.",
     diag: "If a well-funded competitor entered my main market next quarter, what have I already sunk that would make fighting them rational rather than merely satisfying?",
     cases: [
+      { t: "Ride-hailing losses as a moat", y: "2019", b: "The most useful read on Uber and Lyft's combined $13bn of losses is that they worked as deterrence. Any new entrant had to believe it could out-burn two incumbents already funded to lose money indefinitely, which is why nobody tried the same model at scale. The commitment was credible because the money was already gone.", s: "Associated Press via CBS News", u: "https://www.cbsnews.com/sanfrancisco/news/losing-billions-uber-lyft-hold-off-competitors/" },
       { t: "Persistent low-margin operation as a deterrent", y: "general", b: "A firm that runs on thin margins for years signals an unusually long payback tolerance. Potential entrants must assume the incumbent will not blink, because the incumbent has already demonstrated it for a decade. The signal is credible because it has been expensive for a long time." },
       { t: "Defensive patent portfolios", y: "general", b: "Large defensive portfolios often generate little licensing revenue, which looks like waste until you read them as entry deterrence. The portfolio raises the legal cost of entry, and the money already spent filing it is the sunk commitment that makes the threat credible." },
     ],
@@ -626,6 +638,7 @@ const MODELS = {
     takeaway: "Commit publicly before the other side does. The advantage goes to whoever can most credibly appear unable to yield, which makes removing your own options a strategy. If you cannot commit first, price what losing costs into whether you play at all.",
     diag: "In my current standoff, who has more room to quietly climb down? That party will, and both sides already know it.",
     cases: [
+      { t: "US debt ceiling standoff", y: "2011", b: "Both sides committed publicly and neither could retreat without visible defeat. The deal landed at the deadline. Standard and Poor's stripped the US of its AAA rating on 5 August, citing political brinkmanship, and the GAO later estimated the delay added roughly $1.3bn to Treasury borrowing costs in that year alone. Nobody swerved, and the collision was expensive.", s: "GAO, via PBS NewsHour", u: "https://www.pbs.org/newshour/politics/debt-ceiling-1" },
       { t: "Poison pills and takeover defence", y: "general", b: "A shareholder rights plan is a commitment device. It removes the board's ability to accept a hostile bid cheaply, and that removal is the point. The defence works by making it expensive to give in, rather than just unappealing." },
       { t: "Public positions in negotiation", y: "general", b: "Parties who state a red line publicly are deliberately raising their own cost of retreat. The statement destroys an option in front of witnesses, so the other side has to price it." },
     ],
@@ -717,6 +730,7 @@ const MODELS = {
     takeaway: "In consensus-driven markets, read the crowd first and the asset second. Reflexivity is how any market works when participants differ and fundamentals are uncertain, so it is permanent.",
     diag: "Am I positioning for what customers value, or for what customers believe other customers value? In most categories the second one prices the first.",
     cases: [
+      { t: "GameStop", y: "2021", b: "GME went from about $17 to an intraday $483 in three weeks. The SEC's own staff review concluded that what sustained the run was positive sentiment, and that short covering and options hedging were not the main drivers. Whether buyers believed in the fundamentals or simply believed others would keep buying, the price was set by the second question rather than the first.", s: "SEC staff report on market structure, October 2021", u: "https://www.sec.gov/files/staff-report-equity-options-market-struction-conditions-early-2021.pdf" },
       { t: "Momentum and crowded trades", y: "general", b: "Momentum persists because participants buy what they expect others to buy. The strategy requires no view on fundamental value at all, only a view about the next layer of belief, which is the beauty contest running as a business model." },
       { t: "Bubble dynamics", y: "general", b: "Bubbles reach their late stage when most participants privately believe the asset is overpriced and continue buying because they expect others to keep buying. The consensus on value and the consensus on price come apart entirely." },
     ],
@@ -782,7 +796,7 @@ const MODELS = {
     takeaway: "The middle ground is where value gets destroyed. Exit early or escalate decisively. In an even fight the contest consumes the prize, and sunk costs justify nothing even though they make exit feel impossible.",
     diag: "If I entered this fight today knowing only what it will cost from here, would I enter? If not, the money already spent is not a reason to continue.",
     cases: [
-      { t: "Subsidised growth races", y: "2010s", b: "Ride-hailing and delivery platforms subsidised below cost for years in winner-take-most markets, each waiting for competitors to exhaust funding. The accumulated subsidy across all participants exceeded the value of the market position that was eventually won." },
+      { t: "Uber against Lyft", y: "2014 to 2023", b: "Both priced below cost for a decade waiting for the other to run out of money. By their 2019 IPOs the pair had lost a combined $13bn, and Uber alone burned roughly $31bn before reporting a profit. Neither knocked the other out. The prize was a duopoly they now share, and the fight cost more than the position was worth to either of them.", s: "Associated Press via CBS News", u: "https://www.cbsnews.com/sanfrancisco/news/losing-billions-uber-lyft-hold-off-competitors/" },
       { t: "Patent litigation between resourced firms", y: "general", b: "Both sides continue funding legal costs until one calculates that further spending exceeds the patent's value. Settlements typically arrive after most of the disputed value has already been consumed by the process." },
     ],
   },
@@ -834,7 +848,7 @@ const MODELS = {
     takeaway: "If you are setting a standard or a default, obviousness beats technical superiority. Focal points hold their power through mutual expectation, so nothing about them needs to be optimal for them to be extremely stable.",
     diag: "Which conventions in my industry does everyone follow without being able to explain why? Each one is either an opportunity to deviate or an opportunity to set the next one.",
     cases: [
-      { t: "Benchmark rate persistence", y: "general", b: "A reference rate embedded in enough contracts becomes self-reinforcing regardless of whether it is the best available measure, because coordinated switching is costly even when unilateral switching is cheap. Replacing one requires deliberate coordination, not merely a better alternative." },
+      { t: "Replacing LIBOR with SOFR", y: "2017 to 2023", b: "LIBOR was known to be manipulable and everyone agreed a better rate existed. It still took six years, roughly $200 trillion of contracts, a dedicated Federal Reserve committee, and an Act of Congress to move off it. The New York Fed's own closing report calls it one of the most complicated changes to financial market infrastructure ever required. A focal point does not yield to a better idea. It yields to coordinated force.", s: "ARRC Closing Report, Federal Reserve Bank of New York", u: "https://www.newyorkfed.org/medialibrary/Microsites/arrc/files/2023/ARRC-Closing-Report.pdf" },
       { t: "Round-number anchoring", y: "general", b: "Offers cluster at round numbers because those numbers are obvious to both sides. Accuracy has nothing to do with it. Deliberately pricing off the focal point can shift the whole negotiation range." },
     ],
   },
@@ -847,6 +861,7 @@ const MODELS = {
     takeaway: "Ask what happens to the speaker if the claim turns out to be false. If the answer is nothing, discount it to near zero. Costless communication only carries information where interests partially align. Credibility tracks consequences.",
     diag: "For the last three assurances I acted on: what did the speaker lose if they were wrong? If nothing, I treated cheap talk as information.",
     cases: [
+      { t: "Musk's \"funding secured\" tweet", y: "2018", b: "Musk posted that he had funding secured to take Tesla private at $420 a share. No deal existed. Trading was halted, the price swung for weeks, and the SEC charged him with securities fraud. He and Tesla each paid $20m and he gave up the chairmanship. The words cost nothing to type, which is precisely why a market should have discounted them.", s: "SEC press release", u: "https://www.sec.gov/news/press-release/2018-226" },
       { t: "Forward guidance", y: "general", b: "Management projections cost nothing to issue and cannot be verified in advance, which is why markets weight them by track record rather than content. Firms with a history of missing are discounted regardless of how the current guidance is worded." },
       { t: "Sell-side price targets", y: "general", b: "Targets carry reputational consequences but no direct cost, and structural incentives push them upward. The persistent optimistic bias is a predictable output of misaligned interests rather than a failure of analysis." },
     ],
@@ -3763,8 +3778,8 @@ function Schelling({ onBack }) {
 
   return (
     <div>
-      <SimHeader onBack={onBack} gid="schelling" title="Schelling Focal Points" tag="Convention" tagColor={undefined}>
-        Four coordination problems with no communication allowed. You win by matching what the other person independently chooses. There is no correct answer in any objective sense. There is only the answer everyone expects everyone else to give.
+      <SimHeader onBack={onBack} gid="schelling" title="Focal Points" tag="Convention" tagColor={undefined}>
+        Four coordination problems with no communication allowed. You win by matching what the other person independently chooses. There is no correct answer in any objective sense. There is only the answer everyone expects everyone else to give. Thomas Schelling named these points in 1960, which is why they are also called Schelling points.
       </SimHeader>
       <Goal>Match what the other party independently picks.</Goal>
       <ModelDiagram id="schelling" />
@@ -4483,7 +4498,8 @@ function SimCard({ sim, i, onNav }) {
     <div ref={ref} onClick={() => onNav(sim.id)} onMouseMove={onMove}
       style={{
         background: CARD_BG, border: `1px solid ${C.border}`, borderRadius: "3px",
-        padding: "20px", cursor: "pointer", boxShadow: CARD_SHADOW,
+        padding: "16px 18px", cursor: "pointer", boxShadow: CARD_SHADOW,
+        display: "flex", gap: "15px", alignItems: "flex-start",
         opacity: seen ? 1 : 0,
         transform: seen ? lifted : "translateY(10px)",
         transformStyle: "preserve-3d",
@@ -4503,16 +4519,20 @@ function SimCard({ sim, i, onNav }) {
         e.currentTarget.style.borderColor = C.border;
         e.currentTarget.style.boxShadow = CARD_SHADOW;
       }}>
-      <div style={{ background: C.bg, borderRadius: "2px", padding: "5px 3px", marginBottom: "13px" }}>
+      {/* Glyph fixed at 132px on the left, so a 200:116 diagram cannot consume the
+          full card width. It reads as an identifier here and at 46px in prev/next. */}
+      <div style={{ background: C.bg, borderRadius: "2px", padding: "4px 2px", width: "132px", flexShrink: 0 }}>
         <ModelGlyph id={sim.id} />
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", flexWrap: "wrap" }}>
-        <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
-        <span style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px", flexWrap: "wrap" }}>
+          <span style={{ fontFamily: F.mono, fontSize: "11px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
+          <span style={{ fontSize: "10.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
+        </div>
+        <h3 style={{ fontSize: "14.5px", fontFamily: F.head, fontWeight: 600, color: C.text, margin: "0 0 6px", letterSpacing: "0.005em", lineHeight: 1.35 }}>{sim.name} &rarr;</h3>
+        <p style={{ fontSize: "13px", color: C.textSec, lineHeight: 1.58, margin: "0 0 7px" }}>{sim.desc}</p>
+        <div style={{ fontSize: "11.5px", color: C.textMut, fontFamily: F.label, letterSpacing: "0.04em" }}>{sim.finance}</div>
       </div>
-      <h3 style={{ fontSize: "15px", fontFamily: F.head, fontWeight: 600, color: C.text, margin: "0 0 8px", letterSpacing: "0.005em", lineHeight: 1.35 }}>{sim.name} &rarr;</h3>
-      <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.58, margin: "0 0 8px" }}>{sim.desc}</p>
-      <div style={{ fontSize: "11.5px", color: C.textMut, fontFamily: F.label, letterSpacing: "0.04em" }}>{sim.finance}</div>
     </div>
   );
 }
@@ -4645,7 +4665,7 @@ export default function Sagax() {
   }, [page]);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body, position: "relative" }}>
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body, position: "relative", "--nav-h": `${navH}px` }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
         html { scroll-behavior: smooth; }
