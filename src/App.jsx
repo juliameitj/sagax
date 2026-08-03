@@ -4058,19 +4058,34 @@ function ModelMap({ onNav, onBack }) {
         if (!a || !b) return null;
         const vx = b.cx - a.cx, vy = b.cy - a.cy;
         const len = Math.hypot(vx, vy) || 1;
-        // Bow harder on short hops, since neighbouring tiles leave no straight
-        // line to see once both ends are clipped to their borders.
-        const bow = Math.max(46, Math.min(120, len * 0.3));
-        const px = -vy / len, py = vx / len;
+        const dx = vx / len, dy = vy / len;
+
+        // Straight first. Every edge shares the selected tile, so straight lines
+        // form a star and cannot cross each other. Bowing is what made them cross.
+        const [sx1, sy1] = clip(a.cx, a.cy, a.w, a.h, dx, dy, 4);
+        const [sx2, sy2] = clip(b.cx, b.cy, b.w, b.h, -dx, -dy, 10);
+        const visible = Math.hypot(sx2 - sx1, sy2 - sy1);
+
+        if (visible > 46) {
+          return { ...r, d: `M ${sx1} ${sy1} L ${sx2} ${sy2}`,
+                   mx: (sx1 + sx2) / 2, my: (sy1 + sy2) / 2 };
+        }
+
+        // Neighbouring tiles leave no straight line to see, so arc over them.
+        // The bow has to exceed half the tile in the perpendicular direction or
+        // the curve never clears the cards.
+        const horiz = Math.abs(vx) > Math.abs(vy);
+        const clearance = horiz ? Math.max(a.h, b.h) : Math.max(a.w, b.w);
+        const bow = clearance * 0.62 + 22;
+        let px = -dy, py = dx;
+        if (horiz ? py > 0 : px > 0) { px = -px; py = -py; }   // bow up, or left
         const qx = (a.cx + b.cx) / 2 + px * bow, qy = (a.cy + b.cy) / 2 + py * bow;
-        // Tangents at each end point toward the control point
         const ta = Math.hypot(qx - a.cx, qy - a.cy) || 1;
         const tb = Math.hypot(qx - b.cx, qy - b.cy) || 1;
         const [x1, y1] = clip(a.cx, a.cy, a.w, a.h, (qx - a.cx) / ta, (qy - a.cy) / ta, 4);
         const [x2, y2] = clip(b.cx, b.cy, b.w, b.h, (qx - b.cx) / tb, (qy - b.cy) / tb, 10);
-        // Quadratic midpoint, where the label sits
-        const mx = (x1 + 2 * qx + x2) / 4, my = (y1 + 2 * qy + y2) / 4;
-        return { ...r, d: `M ${x1} ${y1} Q ${qx} ${qy} ${x2} ${y2}`, mx, my };
+        return { ...r, d: `M ${x1} ${y1} Q ${qx} ${qy} ${x2} ${y2}`,
+                 mx: (x1 + 2 * qx + x2) / 4, my: (y1 + 2 * qy + y2) / 4 };
       }).filter(Boolean));
     };
     draw();
@@ -4088,7 +4103,10 @@ function ModelMap({ onNav, onBack }) {
   return (
     <div>
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "18px" }}>&larr; Back</button>
-      <h2 style={{ margin: "0 0 22px", fontSize: "26px", fontFamily: F.display, color: C.text, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Model Map</h2>
+      <h2 style={{ margin: "0 0 8px", fontSize: "26px", fontFamily: F.display, color: C.text, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Model Map</h2>
+      <p style={{ fontSize: "14px", color: C.textSec, lineHeight: 1.6, margin: "0 0 22px", maxWidth: "560px" }}>
+        Explore the relationships connecting each game.
+      </p>
 
       <Label>Key</Label>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(158px, 1fr))", gap: "4px 14px", marginBottom: "16px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "13px 16px" }}>
@@ -4262,7 +4280,7 @@ function About({ onBack }) {
       </S>
 
       <S h="Get in touch">
-        If I got something wrong, tell me. If you want to use this for teaching, please do. Reach me at{" "}
+        If you want to use this for teaching, please feel free. If you spot an error or have suggestions, reach me at{" "}
         <A href="mailto:hello@sagaxlab.com">hello@sagaxlab.com</A> or on{" "}
         <A href="https://www.linkedin.com/in/julia-tjmei/">LinkedIn</A>.
       </S>
@@ -4591,7 +4609,7 @@ function Home({ onNav, subscribed, setSubscribed }) {
           <>
             <div style={{ fontSize: "13px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "9px" }}>Use these in your own work</div>
             <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 14px", lineHeight: 1.62, maxWidth: "520px" }}>
-              Learn how to apply these models to your business, your projects, and the decisions you make every month.
+              Learn how to apply these models to your business, your projects, and the decisions you make every living second.
             </p>
             <SubscribeForm onDone={() => setSubscribed(true)} />
           </>
@@ -4700,14 +4718,20 @@ export default function Sagax() {
           <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", display: "flex", alignItems: "center", gap: "11px", minWidth: 0 }}>
             <SagaxMark size={19} />
             <span style={{ display: "flex", alignItems: "baseline", minWidth: 0 }}>
-            <span style={{ fontSize: "17px", fontFamily: F.display, color: C.text, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", whiteSpace: "nowrap" }}>Sagax</span>
-            <span style={{ fontSize: "11px", color: C.textMut, marginLeft: "9px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.label, whiteSpace: "nowrap" }}>
-              /ˈsa.gaks/
-            </span>
-            <span className="sgx-gloss" style={{ fontSize: "11.5px", color: C.textFaint, marginLeft: "11px", fontFamily: F.body, whiteSpace: "nowrap" }}>
-              <em style={{ fontStyle: "italic", marginRight: "5px" }}>adj.</em>
-              keen-scented; quick to perceive
-            </span>
+              <span style={{ fontSize: "17px", fontFamily: F.display, color: C.text, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", whiteSpace: "nowrap" }}>Sagax</span>
+              {/* The lexical entry holds the bar until you scroll, then collapses
+                  its own width so the tagline has room to arrive. */}
+              <span className="sgx-gloss" style={{
+                display: "inline-block", whiteSpace: "nowrap", overflow: "hidden",
+                opacity: scrolled ? 0 : 1,
+                maxWidth: scrolled ? "0px" : "340px",
+                transition: "opacity 0.22s ease, max-width 0.36s cubic-bezier(0.22,1,0.36,1)",
+              }}>
+                <span style={{ fontSize: "11px", color: C.textMut, marginLeft: "10px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.label }}>/ˈsa.gaks/</span>
+                <span style={{ fontSize: "11.5px", color: C.textFaint, marginLeft: "11px", fontFamily: F.body }}>
+                  <em style={{ fontStyle: "italic", marginRight: "5px" }}>adj.</em>keen-scented; quick to perceive
+                </span>
+              </span>
             </span>
           </button>
 
@@ -4717,7 +4741,10 @@ export default function Sagax() {
             {page === "home" && <span className="sgx-tagline" style={{
               fontSize: "10px", color: C.amber, fontFamily: F.label, fontWeight: 600,
               textTransform: "uppercase", letterSpacing: "0.11em", whiteSpace: "nowrap",
-              opacity: scrolled ? 1 : 0, transition: "opacity 0.35s",
+              display: "inline-block", overflow: "hidden",
+              opacity: scrolled ? 1 : 0,
+              maxWidth: scrolled ? "400px" : "0px",
+              transition: "opacity 0.3s ease 0.08s, max-width 0.36s cubic-bezier(0.22,1,0.36,1)",
             }}>
               Applied Game Theory for Finance and Negotiation
             </span>}
@@ -4817,17 +4844,9 @@ export default function Sagax() {
           <span style={{ fontSize: "10.5px", color: C.textFaint, lineHeight: 1.55 }}>
             &copy; 2026 Julia Mei. All rights reserved. For education only, and not investment advice.
           </span>
-          <div style={{ display: "flex", gap: "16px" }}>
-            <button onClick={() => setPage("map")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
-              Model Map
-            </button>
-            <button onClick={() => setPage("about")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
-              About
-            </button>
-            <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
-              Terms of Use
-            </button>
-          </div>
+          <button onClick={() => setPage("terms")} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, letterSpacing: "0.06em", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+            Terms of Use
+          </button>
         </div>
       </footer>
       </div>
