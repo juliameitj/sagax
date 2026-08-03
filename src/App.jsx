@@ -533,20 +533,24 @@ function go(page) {
 // `cases` cite only sources that have been verified; `url` is omitted otherwise.
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Sorted by where you are in a deal rather than by academic family. A reader does not
+// think "I have an information asymmetry problem"; they think "I am about to sign this".
 const CATS = {
-  strategic: { label: "Strategic Interaction", blurb: "Who moves, who responds, and what the response costs." },
-  auctions:  { label: "Auctions & Pricing",    blurb: "What to bid, and why winning is often the bad outcome." },
-  info:      { label: "Information & Signaling", blurb: "Who knows what, who can prove it, and how that distorts behaviour." },
-  coord:     { label: "Coordination & Herding", blurb: "Failures that happen without anyone acting against you." },
-  behave:    { label: "Behavioural",           blurb: "Where real people reliably depart from the theory." },
-  commit:    { label: "Commitment & Attrition", blurb: "What you have sunk, and what that buys you." },
-  meta:      { label: "Design & Meta-Strategy", blurb: "Changing the rules instead of playing them better." },
+  landscape: { label: "1 · Landscape Assessment",     blurb: "What kind of market am I looking at, and what is already in motion?" },
+  entry:     { label: "2 · Positioning and Entry",    blurb: "How do I enter, signal my value, and read other people's signals?" },
+  negotiate: { label: "3 · Negotiation and Structure", blurb: "How do I divide the value, and what constrains the split?" },
+  commit:    { label: "4 · Commitment and Investment", blurb: "How do I deploy capital without overpaying or creating a vulnerability?" },
+  manage:    { label: "5 · Ongoing Management",       blurb: "How do I sustain cooperation, design incentives, and know when a fight is over?" },
+  exit:      { label: "6 · Exit and Resolution",      blurb: "What distorts my timing at the end, and what can accelerate a failure?" },
 };
 
 const MODELS = {
   pd: {
-    n: 1, cat: "strategic", sim: true,
+    n: 17, cat: "manage", sim: true,
     own: "You are in a repeated game with every supplier, every anchor client, and every competitor in your market. The only question is whether they know it. A procurement team that squeezes a supplier for three points this quarter has traded a permanent relationship for a temporary margin, and the supplier prices that risk into every future quote. What decides whether cooperation holds is the discount rate each side applies to the future. Goodwill has very little to do with it.",
+    mistake: "Defecting in a relationship that has more rounds left, or cooperating in one that does not.",
+    control: "Your strategy across rounds, and your read on how many rounds remain.",
+    takeaway: "The variable that matters most is whether the relationship continues. In ongoing ones, cooperate and retaliate proportionally. In terminal ones, structure for defection.",
     key: "Cooperation survives on the shadow of the future. When the horizon shortens, it collapses on schedule. A CEO nearing exit. A firm nearing distress. A contract in its final year.",
     diag: "Which of my counterparties believes this relationship has an endpoint, and what is that belief already costing me?",
     cases: [
@@ -556,8 +560,11 @@ const MODELS = {
   },
 
   nash: {
-    n: 2, cat: "strategic", sim: true,
+    n: 9, cat: "negotiate", sim: true,
     own: "Every renewal, every raise, every vendor contract and every term sheet is this game. Most people spend their prep time building arguments. Arguments move almost nothing. What moves the split is what happens to each side if the talk fails. If your largest customer is 40% of revenue and you are 3% of their spend, you can be entirely right about the value you deliver and still lose the negotiation, because the model does not price who is right.",
+    mistake: "Spending eighty per cent of your preparation on arguments and twenty on improving your walk-away, when the effective ratio is the reverse.",
+    control: "Your BATNA, and the other side's perception of it.",
+    takeaway: "Before any negotiation, improve your alternative. The strongest argument in the room loses to the strongest outside option.",
     key: "Your ask is close to irrelevant. Your walk-away option is close to everything. Building an alternative is a higher-return activity than sharpening a pitch.",
     diag: "For my three largest counterparties, what actually happens to me on the day the relationship ends? If I cannot answer in numbers, I am negotiating blind.",
     cases: [
@@ -567,8 +574,11 @@ const MODELS = {
   },
 
   cournot: {
-    n: 3, cat: "strategic", sim: true,
+    n: 1, cat: "landscape", sim: true,
     own: "Before you decide whether to add a production line, cut price, or invest in differentiation, you need to know which game your industry is actually playing. If you compete on capacity in a commodity, adding a line lowers the market price for everyone including you. If you compete on price in a differentiated category, even modest differentiation restores pricing power. Most strategic errors are the right move played in the wrong industry structure.",
+    mistake: "Building a strategy around the wrong competitive dimension, then discovering your margin model assumes a game nobody else is playing.",
+    control: "Your choice of competitive dimension, and whether you can shift the market toward differentiation.",
+    takeaway: "Work out whether this market rewards scale or uniqueness before you commit capital to either.",
     key: "In quantity competition, capacity destroys industry margin. In price competition, differentiation creates it. Diagnose which one you are in before choosing a lever.",
     diag: "When my nearest competitor adds capacity, does my price fall? If yes, I am in a Cournot world and my capacity decisions are pricing decisions.",
     cases: [
@@ -578,8 +588,11 @@ const MODELS = {
   },
 
   entry: {
-    n: 4, cat: "strategic", sim: true,
+    n: 5, cat: "entry", sim: true,
     own: "Every moat you claim to have is a commitment claim, and it is only worth something if it is sunk, visible, and painful to reverse. A stated intention to defend a market is worth nothing, because the entrant knows you can quietly change your mind. Capital already spent, capacity already built, contracts already signed and channels already locked are worth something, because they change what you would rationally do on the day entry happens.",
+    mistake: "Being deterred by a threat the incumbent would lose money executing, or making threats you would not follow through on yourself.",
+    control: "Whether your commitments, and your reading of theirs, are irreversible and visible.",
+    takeaway: "Test every deterrence threat with one question: after I enter, would they actually spend money to fight me? If they would accommodate, the threat is empty.",
     key: "Deterrence requires costly, observable, irreversible commitment. A bluff that gets called is worse than no bluff, because it publishes your weakness.",
     diag: "If a well-funded competitor entered my main market next quarter, what have I already sunk that would make fighting them rational rather than merely satisfying?",
     cases: [
@@ -589,8 +602,11 @@ const MODELS = {
   },
 
   chicken: {
-    n: 5, cat: "strategic", sim: true,
+    n: 11, cat: "negotiate", sim: true,
     own: "This is the structure of every standoff you have been in where both sides said the deal was dead. Hostile bids, union negotiations, litigation brinkmanship, and any renegotiation where both parties have threatened to walk. The counterintuitive result is that flexibility is a liability here. The party who can most credibly destroy their own ability to back down captures the surplus, which is why negotiators hire counsel with no discretion and boards adopt provisions they cannot quietly reverse.",
+    mistake: "Entering brinkmanship with no pre-committed position, then yielding to a counterparty who has one.",
+    control: "Your ability to make a commitment visible and irreversible before escalation peaks.",
+    takeaway: "If you play chicken, commit publicly before the other side does. If you cannot commit first, price what losing costs into whether you play at all.",
     key: "Rationality requires that someone yields. The advantage goes to whoever can most credibly appear unable to yield, which makes removing your own options a strategy rather than a mistake.",
     diag: "In my current standoff, who has more room to quietly climb down? That party will, and both sides already know it.",
     cases: [
@@ -600,8 +616,11 @@ const MODELS = {
   },
 
   auction: {
-    n: 6, cat: "auctions", sim: true,
+    n: 13, cat: "commit", sim: true,
     own: "Any competitive process where the asset's value is uncertain and roughly the same for everyone puts you here: acquiring a company, bidding for a contract, competing for a scarce hire. Your valuation is fine on average. It is wrong on the occasions you win, because you only win when your estimate sits at the top of the range. That is the problem, and it gets worse as the field grows. Most acquirers never make the adjustment because it feels like bidding to lose.",
+    mistake: "Treating an auction win as validation of your valuation, when it is statistical evidence that you were the highest estimator in the room.",
+    control: "Your pre-auction walk-away price, and the discount you apply as the field grows.",
+    takeaway: "Set your ceiling before bidding opens. The more bidders, the harder you shade. Deals lost is a discipline metric rather than a failure metric.",
     key: "This is structural, not a bias. Even fully rational bidders must shade downward, and the correct discount increases with the number of competitors.",
     diag: "In our last competitive process, did we adjust our number for the fact that winning would itself be evidence we were the most optimistic party in the room?",
     cases: [
@@ -611,8 +630,11 @@ const MODELS = {
   },
 
   vickrey: {
-    n: 7, cat: "auctions", sim: true,
+    n: 12, cat: "negotiate", sim: true,
     own: "If you run any allocation process, you are choosing an auction format. Procurement, capital budgeting, splitting a bonus pool, assigning territories whether you realise it or not, and the format you choose determines whether people tell you the truth. Under first-price rules, everyone shades and you receive strategic numbers. Under second-price rules, truthful reporting becomes the dominant strategy and the numbers you receive are usable.",
+    mistake: "Designing a procurement, allocation or bidding process that rewards gaming over honest value revelation.",
+    control: "The rules of the process: who pays what, what information is visible, and how the winner is chosen.",
+    takeaway: "When you need people to reveal true valuations, restructure the payment so honesty becomes the self-interested move.",
     key: "The format of the game changes behaviour more reliably than instruction does. If participants are gaming you, redesign the rules before blaming the people.",
     diag: "Does my budgeting process reward division heads for accurate forecasts, or for inflated ones that survive the haircut I am known to apply?",
     cases: [
@@ -622,8 +644,11 @@ const MODELS = {
   },
 
   signal: {
-    n: 8, cat: "info", sim: true,
+    n: 6, cat: "entry", sim: true,
     own: "You cannot prove quality directly, so you spend money to prove it indirectly, and so does everyone selling to you. Your certifications, your office, your client list, your audit, your buyback, your dividend. Each one works only while it stays too expensive for a weaker firm to copy. The moment a signal becomes cheap enough for anyone to send, it stops carrying information and you are paying for something that no longer separates you from anyone.",
+    mistake: "Relying on signals that are equally available to worse competitors, which means they carry no separating information at all.",
+    control: "Your choice of signal. The test: could someone worse than me send this just as easily?",
+    takeaway: "Every credential, track record and upfront cost you cite should be harder for a weaker player to replicate. If it is equally easy, it is decoration.",
     key: "A signal works only if it is differentially costly. When a credential gets easy to obtain, its value collapses and a costlier one replaces it.",
     diag: "Which of my quality signals could a materially worse competitor buy this year for the same price I paid? Those have already stopped working.",
     cases: [
@@ -633,8 +658,11 @@ const MODELS = {
   },
 
   lemons: {
-    n: 9, cat: "info", sim: true,
+    n: 3, cat: "landscape", sim: true,
     own: "If your buyers cannot tell your quality apart from your worst competitor's, you are priced at the average of the category and your best work is subsidising someone else's worst. This is why good firms leave undifferentiated markets. They can compete. They just cannot get paid for it. The entire industry of warranties, ratings, audits, guarantees and diligence exists to solve exactly this, and every one of them exists to close the information gap.",
+    mistake: "Entering a market as a quality seller with no verification mechanism, then being pooled with everyone worse than you.",
+    control: "Whether you build or find a quality-signalling channel before you enter, or accept being priced at the market average.",
+    takeaway: "If the market has no way to observe quality, either create one or expect to be undervalued.",
     key: "Information asymmetry can unravel a market completely, and the high-quality participants leave first.",
     diag: "What can a buyer verify about my quality before purchase? If the honest answer is nothing, I am being priced as the average of my category.",
     cases: [
@@ -644,8 +672,11 @@ const MODELS = {
   },
 
   hazard: {
-    n: 10, cat: "info", sim: true,
+    n: 18, cat: "manage", sim: true,
     own: "Anyone acting on your behalf whose effort you cannot fully observe is running this game on you: sales staff, fund managers, contractors, franchisees, executives. The failure mode is a contract where they hold the upside and you hold the downside. They responded to it rationally. Every compensation scheme you have ever written is an answer to this problem, whether or not you were thinking about it when you wrote it.",
+    mistake: "Designing compensation, delegation or insurance that decouples risk-taking from consequences, then being surprised by the risk-taking.",
+    control: "The incentive structure: co-investment, clawbacks, deductibles and anything that recouples downside exposure.",
+    takeaway: "Before blaming the agent, audit the contract. If the structure rewards upside and absorbs downside, the behaviour you are seeing is the behaviour you designed.",
     key: "Moral hazard is a contract design problem. Clawbacks, deferral, co-investment and monitoring all work by forcing the agent to hold some of the downside.",
     diag: "For each person acting on my behalf: if this goes badly, what do they personally lose? If the answer is nothing, I have written an option and given it away.",
     cases: [
@@ -655,8 +686,11 @@ const MODELS = {
   },
 
   bank: {
-    n: 11, cat: "coord", sim: true,
+    n: 22, cat: "exit", sim: true,
     own: "Any business funded by money that can leave quickly is exposed to this, and it has nothing to do with whether you are solvent. Confidence-sensitive funding, a concentrated customer base that talks to each other, a supplier who can demand cash terms, a credit line reviewed annually. The run does not require anyone to believe you are failing. It only requires each party to believe the others might move first.",
+    mistake: "Underinvesting in liquidity and confidence management because the fundamentals are sound, then finding that solvency does not survive a coordination failure.",
+    control: "Liquidity reserves, how you communicate under stress, and structural features that prevent simultaneous withdrawal.",
+    takeaway: "Solvency is necessary and insufficient. Anything that runs on rolling confidence needs a structural defence against everyone rationally running at once.",
     key: "Solvency is not sufficient. Liquidity, maturity mismatch, and the coordination problem among your creditors can destroy a solvent business.",
     diag: "Who can withdraw from me fastest, do they talk to each other, and how many of them moving at once would break me?",
     cases: [
@@ -666,8 +700,11 @@ const MODELS = {
   },
 
   beauty: {
-    n: 12, cat: "coord", sim: true,
+    n: 2, cat: "landscape", sim: true,
     own: "Pricing, hiring, positioning and timing are all partly beauty contests. You are not choosing what is best. You are choosing what your market will treat as best, and your competitors are doing the same calculation about you. Any analysis that models fundamentals without modelling what other participants believe about those fundamentals has left out the variable that actually moves the outcome.",
+    mistake: "Running fundamental analysis in a market where price is set by crowd expectations, then being right and still losing money.",
+    control: "Which question you answer first: what is this worth, or what will the market pay.",
+    takeaway: "In consensus-driven markets, read the crowd first and the asset second.",
     key: "Reflexivity is how any market works when participants differ and fundamentals are uncertain. It is permanent, not a distortion.",
     diag: "Am I positioning for what customers value, or for what customers believe other customers value? In most categories the second one prices the first.",
     cases: [
@@ -677,8 +714,11 @@ const MODELS = {
   },
 
   cascade: {
-    n: 13, cat: "coord", sim: true,
+    n: 4, cat: "landscape", sim: true,
     own: "Your industry's consensus may be built on two early opinions and a long queue of people who deferred. When your peers, your board or your analysts all agree, you need to know whether that agreement represents independent judgements converging or a chain of people copying whoever moved first. From the outside those two look the same and are worth very different amounts. A cascade also means your own private information never enters the pool, so the group ends up confident and badly informed at once.",
+    mistake: "Treating market consensus as independently confirmed evidence when it may trace back to one or two original signals.",
+    control: "Whether you audit the independent evidence underneath a consensus before joining it.",
+    takeaway: "Count the independent data points behind any consensus. If the trail leads back to one or two sources, you are following rather than analysing.",
     key: "Cascades break easily. One credible contrarian signal can shatter a consensus that took years to build, because the consensus was never holding much weight.",
     diag: "When my industry agrees on something, how many people actually ran the analysis, and how many are standing behind whoever ran it first?",
     cases: [
@@ -688,8 +728,11 @@ const MODELS = {
   },
 
   prospect: {
-    n: 14, cat: "behave", sim: true,
+    n: 21, cat: "exit", sim: true,
     own: "Your customers, your staff and you evaluate every outcome against a reference point rather than in absolute terms, and losses weigh roughly twice as much as equivalent gains. It decides how you price, how you frame a concession, how you report performance, and how long you hold a failing project. The most expensive version in business is the one you run on yourself: people take bigger risks when they are already losing, which is what keeps doomed projects funded.",
+    mistake: "Holding losers to avoid realising the loss, selling winners early to lock in the gain, and anchoring to costs that are already gone.",
+    control: "Your awareness of the framing, and your willingness to assess a position from a clean slate.",
+    takeaway: "Replace should I exit with: if I held nothing, would I buy this today? If the answer is no, loss aversion is making the decision for you.",
     key: "The reference point is what moves people. Frame the same outcome as avoiding a loss instead of forgoing a gain and you get a different decision from the same person.",
     diag: "Which of my current commitments am I continuing because stopping would realise a loss rather than because continuing has positive expected value?",
     cases: [
@@ -699,8 +742,11 @@ const MODELS = {
   },
 
   ultimatum: {
-    n: 15, cat: "behave", sim: true,
+    n: 10, cat: "negotiate", sim: true,
     own: "You will lose deals that were profitable for both sides because the split felt insulting. This is not sentimentality and it does not go away with sophisticated counterparties. Fee structures, revenue shares, partner splits, redundancy terms and supplier pricing during scarcity all carry a fairness constraint that binds independently of the arithmetic. Any plan that assumes people will accept terms that are rational and unfair will underestimate the pushback.",
+    mistake: "Proposing a split that maximises extraction without accounting for the other side's willingness to reject it on fairness grounds.",
+    control: "The framing and perceived fairness of your offer, independent of its absolute value.",
+    takeaway: "An offer that captures ninety per cent and gets rejected is worth less than one that captures sixty and gets accepted. Price in the fairness floor.",
     key: "Fairness is a binding constraint, not a soft one. People punish perceived unfairness at real personal cost, and they do it reliably enough to plan around.",
     diag: "Would my counterparty describe our split as fair to a peer? If not, I am carrying rejection risk that does not appear anywhere in my model.",
     cases: [
@@ -712,6 +758,9 @@ const MODELS = {
   stag: {
     n: 16, cat: "commit", sim: true,
     own: "The most valuable projects in your business need someone else to commit alongside you: a co-investor, a channel partner, an industry standard, a joint bid. These die far more often from uncertainty than from betrayal. Nobody in a stag hunt wants to defect. They just cannot afford to be the only one who showed up. If your partnerships keep dying at the commitment stage, the problem is probably confidence rather than incentives, and those need completely different fixes.",
+    mistake: "Treating a coordination problem as an incentive problem, then changing payoffs when the actual fix is credible simultaneous commitment.",
+    control: "Commitment devices that make both sides visible and simultaneous: escrow, phased matching, public announcement.",
+    takeaway: "When incentives already align and action still stalls, the problem is trust. The fix is a structure that removes the option to wait and see.",
     key: "This is the trust game, and it is distinct from the prisoner's dilemma. There is no temptation to defect. The only barrier is uncertainty about the other side.",
     diag: "Is this partner failing to commit because the deal is bad for them, or because they cannot tell whether I will commit? Those need opposite responses.",
     cases: [
@@ -721,8 +770,11 @@ const MODELS = {
   },
 
   attrition: {
-    n: 17, cat: "commit", sim: true,
+    n: 20, cat: "manage", sim: true,
     own: "Price wars, litigation and subsidised customer acquisition all work this way, and the maths is brutal. In an even fight the expected value to both sides is roughly zero, because the fight eats the prize. Conceding early is usually right and almost nobody does it, because by the time the numbers are obvious you have spent enough that stopping feels like admitting the earlier spending was wasted. Spotting the structure before you are deep in it is the whole advantage.",
+    mistake: "Staying in a protracted fight past the point where cumulative cost has exceeded what winning is worth.",
+    control: "Your running assessment of cost against remaining prize, and your willingness to exit early or escalate hard enough to force resolution.",
+    takeaway: "The middle ground is where value gets destroyed. Exit early or escalate decisively. Continuing at the current burn without forcing resolution is the worst of the three.",
     key: "In an even war of attrition the fight consumes the prize. Sunk costs justify nothing. They reliably make exit feel impossible anyway.",
     diag: "If I entered this fight today knowing only what it will cost from here, would I enter? If not, the money already spent is not a reason to continue.",
     cases: [
@@ -732,8 +784,11 @@ const MODELS = {
   },
 
   holdup: {
-    n: 18, cat: "commit", sim: true,
+    n: 14, cat: "commit", sim: true,
     own: "The moment you invest in something that only has value inside one relationship, the other side can reopen the terms and you cannot credibly leave. Tooling for one client. Integration with one platform. A facility next to one buyer. Worse, the anticipation of this stops efficient investment before it happens. This is the real reason firms integrate vertically, and it explains why control rights are frequently worth more than price terms.",
+    mistake: "Front-loading relationship-specific investment with no contractual protection, then losing bargaining power because the sunk cost hands them leverage.",
+    control: "The staging of your commitments, and the protections you lock in before each tranche.",
+    takeaway: "Match every increment of specific investment with a protection that preserves your position. Stage it rather than front-loading it.",
     key: "Incomplete contracts cannot cover every contingency. Where they fail, the party with the more specific investment bears the risk, which is why control rights outrank price.",
     diag: "What have I built that is worth far less outside this one relationship, and what stops the counterparty from repricing me once they notice?",
     cases: [
@@ -743,8 +798,11 @@ const MODELS = {
   },
 
   mechanism: {
-    n: 19, cat: "meta", sim: true,
+    n: 19, cat: "manage", sim: true,
     own: "If people in your organisation are behaving in ways you dislike, the mechanism is the first suspect and the people are the last. Commission structures, bonus schemes, budget processes, promotion criteria and KPIs are all games you designed, and participants are playing them correctly. Pep talks, culture programmes and monitoring try to force a different result out of an incentive that was built to produce this one. That is why they rarely hold.",
+    mistake: "Setting a KPI or comp target and being surprised when people optimise for the metric at the expense of the outcome you wanted.",
+    control: "The choice of metric, the reward structure, and the override layer that catches divergence between the two.",
+    takeaway: "Assume intelligent agents. Design for the behaviour you want, and build a manual override for when the metric drifts from the objective.",
     key: "Inverse game theory: rather than analysing behaviour in a given game, design the game so that self-interested behaviour produces the outcome you want.",
     diag: "What is my compensation structure literally paying for, as opposed to what I intend it to reward? Where those differ, the structure wins.",
     cases: [
@@ -754,8 +812,11 @@ const MODELS = {
   },
 
   realopt: {
-    n: 20, cat: "meta", sim: true,
+    n: 15, cat: "commit", sim: true,
     own: "Standard investment analysis compares acting now against never acting. That is rarely the choice you face. You can almost always wait, stage the commitment, or buy the right to decide later. That right has value, and the value rises with uncertainty. If you have ever rejected a high-variance project on net present value, you probably undervalued it, because the model you used has no way to price the option to stop.",
+    mistake: "Treating invest now against never invest as the only two choices, when investing a little and deciding the rest later is often worth more than both.",
+    control: "Whether you structure investment as staged commitments with decision points, or as a single upfront bet.",
+    takeaway: "Under high uncertainty the option to wait is frequently worth more than the expected return of committing in full today. Structure for optionality.",
     key: "DCF systematically undervalues flexibility under uncertainty. The question shifts from whether the value is positive to what the option is worth and what information would change the decision.",
     diag: "Can I buy the right to decide this later instead of deciding now? What would that right cost, and what would it be worth once the uncertainty resolves?",
     cases: [
@@ -765,8 +826,11 @@ const MODELS = {
   },
 
   schelling: {
-    n: 21, cat: "meta", sim: true,
+    n: 8, cat: "entry", sim: true,
     own: "A large share of what looks like deliberate design in your industry is historical accident that persisted because everyone expected everyone else to keep following it. Payment terms, notice periods, pricing tiers, contract defaults, fiscal calendars. Seeing these as habits rather than good answers does two things: it stops you assuming the current convention is any good, and it shows you that setting one is something you can do on purpose.",
+    mistake: "Proposing a technically superior standard that loses adoption to a simpler, more obvious alternative.",
+    control: "Whether your proposed coordination point is intuitive enough that others land on it independently.",
+    takeaway: "If you are setting a standard or a default, obviousness beats technical superiority.",
     key: "Focal points have power from mutual expectation rather than from merit. Nothing about them needs to be optimal for them to be extremely stable.",
     diag: "Which conventions in my industry does everyone follow without being able to explain why? Each one is either an opportunity to deviate or an opportunity to set the next one.",
     cases: [
@@ -776,8 +840,11 @@ const MODELS = {
   },
 
   cheaptalk: {
-    n: 22, cat: "meta", sim: true,
+    n: 7, cat: "entry", sim: true,
     own: "Most of what you get told in business costs the speaker nothing and cannot be checked before you act. Guidance, projections, pipeline reports, letters of intent, and any assurance that a deal will close. Credibility depends on whether the speaker's interests line up with yours. Confidence and seniority tell you nothing. The test is short: would they say the same thing if the opposite were true?",
+    mistake: "Treating guidance, pitch projections or letters of intent as meaningful without checking what the speaker risks by being wrong.",
+    control: "Your filter for incoming claims. The question: what happens to this person if what they just said turns out to be false?",
+    takeaway: "If the answer is nothing, discount the claim to near zero. Credibility tracks consequences, not confidence.",
     key: "Costless, unverifiable communication is only credible where interests partially align. Where they diverge, a rational listener discounts the message to nothing.",
     diag: "For the last three assurances I acted on: what did the speaker lose if they were wrong? If nothing, I treated cheap talk as information.",
     cases: [
@@ -1868,26 +1935,41 @@ function ModelBrief({ id }) {
   const m = MODELS[id];
   if (!m) return null;
   const cat = CATS[m.cat];
+
+  // Persuasion order: recognise it in your own business, feel what it costs, see the
+  // lever you actually hold, take the action, then check yourself against real cases.
+  const Panel = ({ label, colour, children, strong }) => (
+    <div style={{
+      background: strong ? colour + "14" : C.surface,
+      border: `1px solid ${strong ? colour + "38" : C.border}`,
+      borderLeft: `2px solid ${colour}`, borderRadius: "2px",
+      padding: "17px 20px", marginBottom: "10px",
+    }}>
+      <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.13em", color: colour, fontFamily: F.label, fontWeight: 600, marginBottom: "9px" }}>{label}</div>
+      <p style={{ fontSize: "14px", color: strong ? C.text : C.textSec, lineHeight: 1.62, margin: 0 }}>{children}</p>
+    </div>
+  );
+
   return (
     <div style={{ marginTop: "40px", paddingTop: "28px", borderTop: `1px solid ${C.border}` }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
-        <span style={{ fontFamily: F.mono, fontSize: "12px", color: C.textFaint }}>MODEL {String(m.n).padStart(2, "0")}</span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "12px", marginBottom: "20px", flexWrap: "wrap" }}>
+        <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>MODEL {String(m.n).padStart(2, "0")}</span>
         <Tag>{cat.label}</Tag>
       </div>
 
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderLeft: `2px solid ${C.amber}`, borderRadius: "2px", padding: "18px 20px", marginBottom: "14px" }}>
-        <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.amber, fontWeight: 600, marginBottom: "9px" }}>Where this shows up in your business</div>
-        <p style={{ fontSize: "14.5px", color: C.textSec, lineHeight: 1.62, margin: 0 }}>{m.own}</p>
-      </div>
+      <Panel label="Where this shows up in your business" colour={C.amber}>{m.own}</Panel>
+      <Panel label="The mistake it prevents" colour={C.red}>{m.mistake}</Panel>
+      <Panel label="What you control" colour={C.steel}>{m.control}</Panel>
+      <Panel label="Takeaway" colour={C.amber} strong>{m.takeaway}</Panel>
 
-      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "22px" }}>
-        <div style={{ flex: "1 1 260px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
-          <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.textMut, fontWeight: 600, marginBottom: "7px" }}>Key insight</div>
-          <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6, margin: 0 }}>{m.key}</p>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", margin: "20px 0 24px" }}>
+        <div style={{ flex: "1 1 250px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "15px 18px" }}>
+          <div style={{ fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.13em", color: C.textMut, fontFamily: F.label, fontWeight: 600, marginBottom: "8px" }}>Ask yourself</div>
+          <p style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.58, margin: 0, fontStyle: "italic" }}>{m.diag}</p>
         </div>
-        <div style={{ flex: "1 1 260px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
-          <div style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.12em", color: C.steel, fontWeight: 600, marginBottom: "7px" }}>Ask yourself</div>
-          <p style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>{m.diag}</p>
+        <div style={{ flex: "1 1 250px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "15px 18px" }}>
+          <div style={{ fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.13em", color: C.textMut, fontFamily: F.label, fontWeight: 600, marginBottom: "8px" }}>The mechanism</div>
+          <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.58, margin: 0 }}>{m.key}</p>
         </div>
       </div>
 
@@ -1897,11 +1979,11 @@ function ModelBrief({ id }) {
           <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "2px", padding: "14px 18px" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: "9px", marginBottom: "6px", flexWrap: "wrap" }}>
               <span style={{ fontSize: "13.5px", color: C.text, fontWeight: 600, fontFamily: F.head, letterSpacing: "0.01em" }}>{cs.t}</span>
-              <span style={{ fontSize: "12px", color: C.textFaint, fontFamily: F.mono }}>{cs.y}</span>
+              <span style={{ fontSize: "11px", color: C.textFaint, fontFamily: F.mono }}>{cs.y}</span>
             </div>
-            <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.6, margin: 0 }}>{cs.b}</p>
+            <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.58, margin: 0 }}>{cs.b}</p>
             {cs.s && (
-              <div style={{ marginTop: "8px", fontSize: "12px", color: C.textMut }}>
+              <div style={{ marginTop: "8px", fontSize: "11px", color: C.textMut, fontFamily: F.label }}>
                 Source:{" "}
                 {cs.u
                   ? <a href={cs.u} target="_blank" rel="noopener noreferrer" style={{ color: C.steel, textDecoration: "underline", textUnderlineOffset: "2px" }}>{cs.s}</a>
@@ -3937,34 +4019,39 @@ function HeroGame({ onGoDeeper }) {
 // LIBRARY DATA
 // ═══════════════════════════════════════════════════════════════════════════════
 const SIMS = [
-  { id: "pd", tag: "Repeated Games",        name: "Prisoner's Dilemma",   desc: "Two firms, twenty rounds, six opponent strategies. Cooperation and retaliation over a relationship that does not end.", finance: "Price wars · Cartel stability · Supplier relationships" },
-  { id: "nash", tag: "Negotiation",      name: "Nash Bargaining",      desc: "Split a shrinking surplus with adjustable outside options. Your walk-away position sets the outcome, not your argument.", finance: "Salary · Vendor contracts · JV terms" },
-  { id: "cournot", tag: "Industry Structure",   name: "Cournot vs Bertrand",  desc: "Same industry, same costs, two competitive structures. In one, capacity destroys margin. In the other, differentiation creates it.", finance: "Oligopoly analysis · Capacity planning · Pricing strategy" },
-  { id: "entry", tag: "Competitive Moats",     name: "Entry Deterrence",     desc: "Commit capital to deter a rival. The threat only works if what you sank is visible and irreversible.", finance: "Moat analysis · Predatory pricing · Capacity investment" },
-  { id: "chicken", tag: "Brinkmanship",   name: "Chicken",              desc: "Two parties escalating. The winner is whoever can most credibly destroy their own ability to back down.", finance: "Hostile bids · Union talks · Litigation standoffs" },
+  // ── 1 · Landscape assessment ──
+  { id: "cournot",   tag: "Industry Structure",   name: "Cournot vs Bertrand",  desc: "Two identical industries with the same players and costs can produce completely different margins, depending on whether firms compete on capacity or on price.", finance: "Oligopoly analysis · Capacity planning · Pricing strategy" },
+  { id: "beauty",    tag: "Second-Order Thinking", name: "Beauty Contest",      desc: "Prices in momentum-driven markets reflect what participants expect other participants to value, which can diverge entirely from what a thing is actually worth.", finance: "Bubbles · Momentum · Market timing" },
+  { id: "lemons",    tag: "Adverse Selection",    name: "Market for Lemons",    desc: "When buyers cannot tell quality apart they price for the average, and the best sellers leave first because they are the most underpaid.", finance: "Insurance · Credit · Secondary private stakes" },
+  { id: "cascade",   tag: "Herding",              name: "Information Cascades", desc: "Once two or three participants have moved the same way, everyone after them rationally ignores their own information and follows.", finance: "Analyst herding · Follow-on rounds · Crowded trades" },
 
-  { id: "auction", tag: "Winner's Curse",   name: "Sealed-Bid Auction",       desc: "Bid on an asset of uncertain value. Winning is itself evidence that you were the most optimistic party in the room.", finance: "M&A · IPO allocation · Competitive tenders" },
-  { id: "vickrey", tag: "Truthful Bidding",   name: "Vickrey Auction",      desc: "Same bidders, two rulebooks. Changing who pays what flips the optimal strategy from shading to honesty.", finance: "Ad auctions · Procurement · Internal capital allocation" },
+  // ── 2 · Positioning and entry ──
+  { id: "entry",     tag: "Competitive Moats",    name: "Entry Deterrence",     desc: "A threat to fight only deters if carrying it out would still be in the incumbent's interest after entry has already happened.", finance: "Moat analysis · Predatory pricing · Capacity investment" },
+  { id: "signal",    tag: "Costly Signals",       name: "Spence Signalling",    desc: "You prove quality to a sceptical market by doing something a lower-quality version of you could not afford to do.", finance: "Credentials · Dividends · Buybacks · IPO underpricing" },
+  { id: "cheaptalk", tag: "Credibility",          name: "Cheap Talk",           desc: "A claim that costs the speaker nothing carries no information. Calibrate by what they stand to lose if it turns out to be false.", finance: "Guidance · Price targets · Letters of intent" },
+  { id: "schelling", tag: "Convention",           name: "Focal Points",         desc: "When people coordinate without communicating they converge on whatever is obvious, regardless of whether something better exists.", finance: "Benchmarks · Contract defaults · Round-number anchoring" },
 
-  { id: "signal", tag: "Costly Signals",    name: "Spence Signaling",     desc: "Prove quality you cannot demonstrate directly. The signal works only while it stays too expensive to fake.", finance: "Credentials · Dividends · Buybacks · IPO underpricing" },
-  { id: "lemons", tag: "Adverse Selection",    name: "Market for Lemons",    desc: "Set one price for sellers who know more than you. Watch the good ones leave and the market unravel.", finance: "Insurance · Credit · Secondary private stakes" },
-  { id: "hazard", tag: "Contract Design",    name: "Moral Hazard",         desc: "Design a contract for someone whose effort you cannot see. Whatever they do next, you designed it.", finance: "Executive comp · Fund incentives · Franchising" },
+  // ── 3 · Negotiation and structure ──
+  { id: "nash",      tag: "Negotiation",          name: "Nash Bargaining",      desc: "Your share of any negotiated surplus is set by the quality of your outside option, and almost nothing else.", finance: "Salary · Vendor contracts · JV terms" },
+  { id: "ultimatum", tag: "Fairness Constraint",  name: "Ultimatum Game",       desc: "People reject offers they read as unfair even when accepting would pay them, consistently enough to kill otherwise profitable deals.", finance: "Fee negotiation · Compensation · Scarcity pricing" },
+  { id: "chicken",   tag: "Brinkmanship",         name: "Chicken",              desc: "In an escalating standoff, the winner is whoever can most credibly destroy their own ability to back down.", finance: "Hostile bids · Union talks · Litigation standoffs" },
+  { id: "vickrey",   tag: "Truthful Bidding",     name: "Vickrey Auction",      desc: "Changing who pays what flips the optimal strategy from strategic shading to telling the truth.", finance: "Ad auctions · Procurement · Internal capital allocation" },
 
-  { id: "bank", tag: "Coordination Crisis",      name: "Bank Run",             desc: "Rational individual withdrawals cascade into failure. Solvency is not enough when creditors cannot coordinate.", finance: "SVB · Repo markets · Confidence-sensitive funding" },
-  { id: "beauty", tag: "Second-Order Thinking",    name: "Beauty Contest",       desc: "Guess two-thirds of the average guess. You are not choosing what is best, you are choosing what others will choose.", finance: "Bubbles · Momentum · Market timing" },
-  { id: "cascade", tag: "Herding",   name: "Information Cascades", desc: "Decide after watching others decide. Once two people lean the same way, everyone stops using their own information.", finance: "Analyst herding · Follow-on rounds · Crowded trades" },
+  // ── 4 · Commitment and investment ──
+  { id: "auction",   tag: "Winner's Curse",       name: "Sealed-Bid Auction",   desc: "In any competitive bid for something of uncertain value, the winner is by definition whoever was most optimistic about it.", finance: "M&A · IPO allocation · Competitive tenders" },
+  { id: "holdup",    tag: "Specific Investment",  name: "Hold-Up Problem",      desc: "Once you have sunk money into a relationship-specific asset, the other side can reopen terms because your exit now costs more than accepting worse ones.", finance: "Vertical integration · Supplier lock-in · Control rights" },
+  { id: "realopt",   tag: "Flexibility Value",    name: "Real Options",         desc: "The ability to defer, stage, expand or abandon an investment has real value that standard analysis sets to zero.", finance: "Stage-gate R&D · VC staging · Earn-outs" },
+  { id: "stag",      tag: "Trust",                name: "Stag Hunt",            desc: "Both sides prefer the joint outcome and neither is tempted to defect. The only barrier is fear that the other will not show up.", finance: "Syndicated lending · Standard-setting · Consortium R&D" },
 
-  { id: "prospect", tag: "Loss Aversion",  name: "Prospect Theory",      desc: "Four decisions. Two pairs are mathematically identical and worded differently. Find out which framings move you.", finance: "Disposition effect · Pricing anchors · Project escalation" },
-  { id: "ultimatum", tag: "Fairness Constraint", name: "Ultimatum Game",       desc: "Propose a split. Rejections that standard theory calls irrational will cost you profitable deals.", finance: "Fee negotiation · Compensation · Scarcity pricing" },
+  // ── 5 · Ongoing management ──
+  { id: "pd",        tag: "Repeated Games",       name: "Prisoner's Dilemma",   desc: "In any repeated relationship both sides do better cooperating over time, and each side does better cheating in any single round.", finance: "Price wars · Cartel stability · Supplier relationships" },
+  { id: "hazard",    tag: "Contract Design",      name: "Moral Hazard",         desc: "When effort is unobservable and someone else absorbs the downside, people rationally take more risk than you want.", finance: "Executive comp · Fund incentives · Franchising" },
+  { id: "mechanism", tag: "Rule Design",          name: "Mechanism Design",     desc: "People optimise for exactly what you measure, competently and without malice, so the metric is the most consequential thing you choose.", finance: "Comp structures · Budgeting · Auction format choice" },
+  { id: "attrition", tag: "Exit Timing",          name: "War of Attrition",     desc: "Two parties burn resources waiting for the other to quit, and the fight often costs more than the prize before either yields.", finance: "Price wars · Patent litigation · Subsidised growth" },
 
-  { id: "stag", tag: "Trust",      name: "Stag Hunt",            desc: "The joint opportunity pays far more and needs both of you. Nobody wants to defect. The only barrier is trust.", finance: "Syndicated lending · Standard-setting · Consortium R&D" },
-  { id: "attrition", tag: "Exit Timing", name: "War of Attrition",     desc: "Both sides burn cash waiting for the other to quit. The contest consumes the prize while you fight for it.", finance: "Price wars · Patent litigation · Subsidised growth" },
-  { id: "holdup", tag: "Specific Investment",    name: "Hold-Up Problem",      desc: "Invest in something that only has value inside one relationship, then watch the terms reopen.", finance: "Vertical integration · Supplier lock-in · Control rights" },
-
-  { id: "mechanism", tag: "Rule Design", name: "Mechanism Design",     desc: "Choose what to pay your team on. They will maximise exactly what you measure, competently and without malice.", finance: "Comp structures · Budgeting · Auction format choice" },
-  { id: "realopt", tag: "Flexibility Value",   name: "Real Options",         desc: "Invest now, wait, or stage it. Standard analysis compares acting now against never acting, which is not your actual choice.", finance: "Stage-gate R&D · VC staging · Earn-outs" },
-  { id: "schelling", tag: "Convention", name: "Schelling Focal Points", desc: "Coordinate without communicating. The winning answer is the obvious one, not the best one.", finance: "Benchmarks · Contract defaults · Round-number anchoring" },
-  { id: "cheaptalk", tag: "Credibility", name: "Cheap Talk",           desc: "Four statements that cost the speaker nothing. Decide which carry information and which are noise.", finance: "Guidance · Price targets · Letters of intent" },
+  // ── 6 · Exit and resolution ──
+  { id: "prospect",  tag: "Loss Aversion",        name: "Prospect Theory",      desc: "Losses feel about twice as painful as equivalent gains feel good, which systematically distorts when you sell, cut and hold.", finance: "Disposition effect · Pricing anchors · Project escalation" },
+  { id: "bank",      tag: "Coordination Crisis",  name: "Bank Run",             desc: "A solvent business fails when enough stakeholders demand liquidity at once, because withdrawing is rational even when everyone withdrawing is catastrophic.", finance: "SVB · Repo markets · Confidence-sensitive funding" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -4049,7 +4136,6 @@ function SimCard({ sim, i, onNav }) {
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", flexWrap: "wrap" }}>
         <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
         <span style={{ fontSize: "11px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
-        {sim.id === "pd" && <Tag color={C.amber}>Start here</Tag>}
       </div>
       <h3 style={{ fontSize: "15px", fontFamily: F.head, fontWeight: 600, color: C.text, margin: "0 0 8px", letterSpacing: "0.005em", lineHeight: 1.35 }}>{sim.name} &rarr;</h3>
       <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.58, margin: "0 0 8px" }}>{sim.desc}</p>
@@ -4077,7 +4163,7 @@ function Home({ onNav, subscribed, setSubscribed }) {
             Interactive simulators for strategic interactions in financial markets: auctions, negotiations, competitive dynamics, coordination failures. Each one uses a real finance scenario and teaches through play.
           </p>
           <p style={{ fontSize: "11.5px", color: C.textMut, fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, lineHeight: 1.6, margin: "18px 0 0", maxWidth: "440px" }}>
-            Make a move. ↓
+            Six stages of a deal, twenty-two models. Start at stage one, or jump to where you are.
           </p>
         </div>
         <HeroGame onGoDeeper={() => onNav("pd")} />
@@ -4129,7 +4215,7 @@ function Home({ onNav, subscribed, setSubscribed }) {
             <div style={{ fontSize: "13px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "9px" }}>Use these in your own work</div>
             <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 14px", lineHeight: 1.62, maxWidth: "520px" }}>
               Learn how to apply these models to your business, your projects, and the decisions you make every week.
-              No spam, and you can leave in one click.
+              No spam. Every email has a one-click unsubscribe link.
             </p>
             <SubscribeForm onDone={() => setSubscribed(true)} />
           </>
@@ -4322,7 +4408,7 @@ export default function Sagax() {
               Want to use these in your own business, projects, or everyday decisions?
             </div>
             <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "3px" }}>
-              We won&rsquo;t spam you, and you can leave in one click.
+              No spam. Every email has a one-click unsubscribe link.
             </div>
           </div>
           <div style={{ flexShrink: 0 }}>
