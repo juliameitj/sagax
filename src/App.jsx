@@ -4776,6 +4776,33 @@ export default function Sagax() {
   const showFloat = useFloat(floatOff || subscribed);
   const navRef = useRef(null);
   const navH = useBarHeight(navRef);
+
+  // Inline styles beat stylesheet rules, so the media-query hiding stopped working
+  // the moment the collapse animation added an inline display value. Measuring the
+  // space actually left in the bar is both the fix and more correct than a fixed
+  // breakpoint, since text width depends on which font has loaded.
+  const navInner = useRef(null), brandRef = useRef(null), linksRef = useRef(null);
+  const glossRef = useRef(null), tagRef = useRef(null);
+  const [fits, setFits] = useState({ gloss: false, tag: false });
+  useEffect(() => {
+    const check = () => {
+      const inner = navInner.current, brand = brandRef.current, links = linksRef.current;
+      if (!inner || !brand || !links) return;
+      // 48px of nav padding, 30px for flex gaps and breathing room
+      const avail = inner.clientWidth - 48 - brand.offsetWidth - links.offsetWidth - 30;
+      setFits({
+        gloss: !!glossRef.current && avail >= glossRef.current.scrollWidth,
+        tag: !!tagRef.current && avail >= tagRef.current.scrollWidth,
+      });
+    };
+    check();
+    window.addEventListener("resize", check);
+    if (typeof document !== "undefined" && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(check);
+    }
+    const t = setTimeout(check, 400);
+    return () => { window.removeEventListener("resize", check); clearTimeout(t); };
+  }, [page]);
   const activeCat = useActiveCategory(page === "home", navH);
 
   // Arrow keys step between models. Skipped while a field or slider has focus.
@@ -4814,11 +4841,7 @@ export default function Sagax() {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 1000px) { .sgx-tagline { display: none; } }
-        @media (max-width: 660px) {
-          .sgx-gloss { display: none; }
-          .sgx-blurb { display: none; }
-        }
+        @media (max-width: 660px) { .sgx-blurb { display: none; } }
         @media (prefers-reduced-motion: reduce) {
           html { scroll-behavior: auto; }
           * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
@@ -4836,45 +4859,49 @@ export default function Sagax() {
         borderBottom: `1px solid ${scrolled ? C.border : "transparent"}`,
         transition: "background 0.25s, border-color 0.25s",
       }}>
-        <nav style={{ maxWidth: "880px", margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "18px" }}>
-          <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", display: "flex", alignItems: "center", gap: "11px", minWidth: 0 }}>
-            <SagaxMark size={19} />
-            <span style={{ display: "flex", alignItems: "baseline", minWidth: 0 }}>
+        <nav ref={navInner} style={{ maxWidth: "880px", margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "18px" }}>
+          <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", display: "flex", alignItems: "center", minWidth: 0 }}>
+            <span ref={brandRef} style={{ display: "flex", alignItems: "center", gap: "11px", flexShrink: 0 }}>
+              <SagaxMark size={19} />
               <span style={{ fontSize: "17px", fontFamily: F.display, color: C.text, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.13em", whiteSpace: "nowrap" }}>Sagax</span>
-              {/* The lexical entry holds the bar until you scroll, then collapses
-                  its own width so the tagline has room to arrive. */}
-              <span className="sgx-gloss" style={{
+            </span>
+            {/* Shown only when the bar measurably has room for it */}
+            <span ref={glossRef} style={{
                 display: "inline-block", whiteSpace: "nowrap", overflow: "hidden",
-                opacity: scrolled ? 0 : 1,
-                maxWidth: scrolled ? "0px" : "340px",
+                opacity: !scrolled && fits.gloss ? 1 : 0,
+                maxWidth: !scrolled && fits.gloss ? "340px" : "0px",
                 transition: "opacity 0.22s ease, max-width 0.36s cubic-bezier(0.22,1,0.36,1)",
               }}>
                 <span style={{ fontSize: "11px", color: C.textMut, marginLeft: "10px", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: F.label }}>/ˈsa.gaks/</span>
                 <span style={{ fontSize: "11.5px", color: C.textFaint, marginLeft: "11px", fontFamily: F.body }}>
                   <em style={{ fontStyle: "italic", marginRight: "5px" }}>adj.</em>keen-scented; quick to perceive
                 </span>
-              </span>
             </span>
           </button>
 
           <div style={{ display: "flex", gap: "16px", alignItems: "center", flexShrink: 0 }}>
             {/* The hero tagline scrolls away on the home page, so it moves up here.
                 On a model page there is no hero, so there is nothing to carry over. */}
-            {page === "home" && <span className="sgx-tagline" style={{
+            {page === "home" && <span ref={tagRef} style={{
               fontSize: "10px", color: C.amber, fontFamily: F.label, fontWeight: 600,
               textTransform: "uppercase", letterSpacing: "0.11em", whiteSpace: "nowrap",
               display: "inline-block", overflow: "hidden",
-              opacity: scrolled ? 1 : 0,
-              maxWidth: scrolled ? "400px" : "0px",
+              opacity: scrolled && fits.tag ? 1 : 0,
+              maxWidth: scrolled && fits.tag ? "400px" : "0px",
               transition: "opacity 0.3s ease 0.08s, max-width 0.36s cubic-bezier(0.22,1,0.36,1)",
             }}>
               Applied Game Theory for Finance and Negotiation
             </span>}
+            {/* Measured on its own. The tagline sits outside this wrapper, because
+                including it would make its own width shrink the space it is being
+                tested against, and it would flicker on and off. */}
+            <div ref={linksRef} style={{ display: "flex", gap: "16px", alignItems: "center", flexShrink: 0 }}>
             {page !== "home" && (
               <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>Home</button>
             )}
             <button onClick={() => setPage("map")} className="sgx-navmap" style={{ background: "none", border: "none", color: page === "map" ? C.text : C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>Map</button>
             <button onClick={() => setPage("about")} style={{ background: "none", border: "none", color: page === "about" ? C.text : C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>About</button>
+            </div>
           </div>
         </nav>
       </div>
