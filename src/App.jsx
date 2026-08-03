@@ -3955,6 +3955,52 @@ function BoardTexture() {
 // MODEL MAP — all 22 at once, by shape. Someone with a live problem knows their
 // situation, not my model names. Shapes are faster to scan than titles.
 // ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+// RELATIONSHIPS — each pair gets the one framing most useful to a practitioner,
+// not every link that is technically true. Directional types draw a single arrow;
+// symmetric types draw arrowheads at both ends.
+// ═══════════════════════════════════════════════════════════════════════════════
+const REL = {
+  solves:      { c: C.green,   label: "Solves",      short: "SOLVES",      dir: true  },
+  root:        { c: C.steel,   label: "Same root",   short: "SAME ROOT",   dir: false },
+  confused:    { c: C.red,     label: "Confused",    short: "CONFUSED",    dir: false },
+  drives:      { c: C.amber,   label: "Drives",      short: "DRIVES",      dir: true  },
+  contradicts: { c: "#A98FD0", label: "Contradicts", short: "CONTRADICTS", dir: true  },
+};
+
+const EDGES = [
+  // X is the remedy for the problem Y describes
+  ["solves", "signal", "lemons",       "Costly signals are the remedy for adverse selection."],
+  ["solves", "mechanism", "hazard",    "Rule design is how you stop hidden action."],
+  ["solves", "mechanism", "bank",      "Deposit insurance removes the reason to move first."],
+  ["solves", "schelling", "stag",      "A convention removes the uncertainty that stalls commitment."],
+  ["solves", "realopt", "holdup",      "Staging the investment avoids the sunk-cost trap."],
+  ["solves", "vickrey", "auction",     "Change the payment rule and shading stops paying."],
+  // One underlying cause, showing up in two places
+  ["root", "lemons", "hazard",         "Both are information asymmetry. Hidden type before you contract, hidden action after."],
+  ["root", "auction", "lemons",        "Both are selection bias. The winner's curse is the bidder's side of it, Lemons is the market's."],
+  // Look alike, need opposite treatment
+  ["confused", "pd", "stag",           "Both look like failed cooperation. One has temptation, one has only doubt, and the fixes are opposite."],
+  ["confused", "pd", "chicken",        "Both end with everyone worse off. In one, defecting always pays. In the other, the disaster is mutual aggression."],
+  ["confused", "chicken", "entry",     "Both turn on commitment. Chicken is simultaneous, deterrence is sequential."],
+  ["confused", "cheaptalk", "signal",  "Both are messages. One costs nothing, one costs something. That is the whole test."],
+  ["confused", "cascade", "beauty",    "Both are crowd effects. One is following, one is predicting."],
+  // X causes or explains Y
+  ["drives", "prospect", "attrition",  "Risk-seeking in losses is the engine that keeps the fight running."],
+  ["drives", "prospect", "ultimatum",  "Loss aversion is why people reject offers that would pay them."],
+  ["drives", "cascade", "bank",        "A run is a cascade with money attached."],
+  ["drives", "cournot", "entry",       "Capacity competition is what makes a capacity threat credible."],
+  // X falsifies or undermines what Y prescribes
+  ["contradicts", "ultimatum", "nash",       "Nash predicts the split from outside options. People reject splits Nash says they should take."],
+  ["contradicts", "prospect", "realopt",     "Real Options says the right to abandon has value. Loss aversion is exactly why people refuse to use it."],
+  ["contradicts", "prospect", "mechanism",   "Mechanism Design assumes agents optimise the metric. Framing changes what they optimise."],
+  ["contradicts", "schelling", "vickrey",    "Vickrey is the better mechanism. First-price auctions persist anyway, because obvious beats optimal."],
+];
+
+const relsOf = (id) => EDGES
+  .filter(([, a, b]) => a === id || b === id)
+  .map(([t, a, b, why]) => ({ t, from: a, to: b, other: a === id ? b : a, why }));
+
 // The ten symbols, shown as a compact key at the top of the map
 const KEYS = [
   ["You", <circle cx={10} cy={8} r={5} fill={C.amber} />],
@@ -3970,16 +4016,67 @@ const KEYS = [
 ];
 
 function ModelMap({ onNav, onBack }) {
+  const [sel, setSel] = useState(null);
+  const [lines, setLines] = useState([]);
+  const wrapRef = useRef(null);
+  const tileRefs = useRef({});
+
+  // Clip a line to the edge of its tile so the arrowhead lands in the gap
+  const clip = (cx, cy, w, h, dx, dy, pad) => {
+    const tx = dx ? (w / 2 + pad) / Math.abs(dx) : Infinity;
+    const ty = dy ? (h / 2 + pad) / Math.abs(dy) : Infinity;
+    const t = Math.min(tx, ty);
+    return [cx + dx * t, cy + dy * t];
+  };
+
+  useEffect(() => {
+    if (!sel || !wrapRef.current) { setLines([]); return; }
+    const draw = () => {
+      const W = wrapRef.current?.getBoundingClientRect();
+      if (!W) return;
+      const box = (id) => {
+        const r = tileRefs.current[id]?.getBoundingClientRect();
+        return r && { cx: r.left - W.left + r.width / 2, cy: r.top - W.top + r.height / 2, w: r.width, h: r.height };
+      };
+      setLines(relsOf(sel).map(r => {
+        const a = box(r.from), b = box(r.to);
+        if (!a || !b) return null;
+        const vx = b.cx - a.cx, vy = b.cy - a.cy;
+        const len = Math.hypot(vx, vy) || 1;
+        // Bow harder on short hops, since neighbouring tiles leave no straight
+        // line to see once both ends are clipped to their borders.
+        const bow = Math.max(46, Math.min(120, len * 0.3));
+        const px = -vy / len, py = vx / len;
+        const qx = (a.cx + b.cx) / 2 + px * bow, qy = (a.cy + b.cy) / 2 + py * bow;
+        // Tangents at each end point toward the control point
+        const ta = Math.hypot(qx - a.cx, qy - a.cy) || 1;
+        const tb = Math.hypot(qx - b.cx, qy - b.cy) || 1;
+        const [x1, y1] = clip(a.cx, a.cy, a.w, a.h, (qx - a.cx) / ta, (qy - a.cy) / ta, 4);
+        const [x2, y2] = clip(b.cx, b.cy, b.w, b.h, (qx - b.cx) / tb, (qy - b.cy) / tb, 10);
+        // Quadratic midpoint, where the label sits
+        const mx = (x1 + 2 * qx + x2) / 4, my = (y1 + 2 * qy + y2) / 4;
+        return { ...r, d: `M ${x1} ${y1} Q ${qx} ${qy} ${x2} ${y2}`, mx, my };
+      }).filter(Boolean));
+    };
+    draw();
+    const ro = new ResizeObserver(draw);
+    ro.observe(wrapRef.current);
+    window.addEventListener("resize", draw);
+    return () => { ro.disconnect(); window.removeEventListener("resize", draw); };
+  }, [sel]);
+
+  const rels = sel ? relsOf(sel) : [];
+  const relOf = (id) => rels.find(r => r.other === id);
+  const nameOf = (id) => (SIMS.find(s => s.id === id) || {}).name || id;
+  const numOf = (id) => String(MODELS[id].n).padStart(2, "0");
+
   return (
     <div>
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "18px" }}>&larr; Back</button>
-      <h2 style={{ margin: "0 0 8px", fontSize: "26px", fontFamily: F.display, color: C.text, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Model Map</h2>
+      <h2 style={{ margin: "0 0 22px", fontSize: "26px", fontFamily: F.display, color: C.text, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Model Map</h2>
+
       <Label>Key</Label>
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(158px, 1fr))",
-        gap: "4px 14px", marginBottom: "30px",
-        background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "13px 16px",
-      }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(158px, 1fr))", gap: "4px 14px", marginBottom: "16px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "13px 16px" }}>
         <svg width="0" height="0" style={{ position: "absolute" }}>
           <defs>
             <marker id="kA" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L0,5 L5,2.5 z" fill={C.amber} /></marker>
@@ -3994,31 +4091,108 @@ function ModelMap({ onNav, onBack }) {
         ))}
       </div>
 
-      {Object.entries(CATS).map(([ck, cat]) => {
-        const items = SIMS.filter(s => MODELS[s.id] && MODELS[s.id].cat === ck);
-        if (!items.length) return null;
-        return (
-          <div key={ck} style={{ marginBottom: "30px", paddingTop: "20px", borderTop: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: "11.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.14em", color: C.text, fontWeight: 600, marginBottom: "14px" }}>{cat.label}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))", gap: "8px" }}>
-              {items.map(sim => (
-                <button key={sim.id} onClick={() => onNav(sim.id)}
-                  style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "11px 11px 10px", cursor: "pointer", textAlign: "left", transition: "border-color 0.14s, background 0.14s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderStrong; e.currentTarget.style.background = C.surfaceHover; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; }}>
+      <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center", marginBottom: "22px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "11px 16px" }}>
+        {Object.entries(REL).map(([k, v]) => (
+          <div key={k} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+            <div style={{ width: "17px", height: "3px", background: v.c, borderRadius: "2px" }} />
+            <span style={{ fontSize: "10.5px", fontFamily: F.label, color: C.textSec, letterSpacing: "0.04em", textTransform: "uppercase" }}>{v.label}</span>
+          </div>
+        ))}
+        <span style={{ fontSize: "10.5px", color: C.textFaint, fontFamily: F.label, marginLeft: "auto", letterSpacing: "0.04em" }}>
+          {sel ? "Click again to clear" : "Click a model to see what it connects to"}
+        </span>
+      </div>
+
+      {/* ── Grid with the relationship overlay ── */}
+      <div ref={wrapRef} style={{ position: "relative", marginBottom: "10px" }}>
+        {lines.length > 0 && (
+          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 6, overflow: "visible" }}>
+            <defs>
+              {Object.entries(REL).map(([k, v]) => (
+                <marker key={k} id={`rm-${k}`} markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L7,3 z" fill={v.c} />
+                </marker>
+              ))}
+              {Object.entries(REL).map(([k, v]) => (
+                <marker key={"s" + k} id={`rs-${k}`} markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
+                  <path d="M7,0 L7,6 L0,3 z" fill={v.c} />
+                </marker>
+              ))}
+            </defs>
+            {lines.map((l, i) => {
+              const r = REL[l.t];
+              return (
+                <g key={i}>
+                  <path d={l.d} fill="none" stroke={r.c} strokeWidth="1.9"
+                    markerEnd={`url(#rm-${l.t})`} markerStart={r.dir ? undefined : `url(#rs-${l.t})`} />
+                  <rect x={l.mx - r.short.length * 3.1 - 5} y={l.my - 8} width={r.short.length * 6.2 + 10} height={16}
+                    rx="3" fill={C.bg} stroke={r.c + "70"} strokeWidth="1" />
+                  <text x={l.mx} y={l.my + 3.5} textAnchor="middle" fontSize="8.5" fill={r.c}
+                    fontFamily={F.label} fontWeight="600" letterSpacing="0.09em">{r.short}</text>
+                </g>
+              );
+            })}
+          </svg>
+        )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "20px" }}>
+          {SIMS.map(sim => {
+            const isSel = sel === sim.id;
+            const r = relOf(sim.id);
+            const dim = sel && !isSel && !r;
+            const col = isSel ? C.amber : r ? REL[r.t].c : C.border;
+            return (
+              <div key={sim.id} ref={el => (tileRefs.current[sim.id] = el)}
+                style={{
+                  position: "relative", zIndex: isSel || r ? 4 : 1,
+                  background: isSel ? C.surfaceHover : C.surface,
+                  border: `1px solid ${col}`, borderRadius: "3px", padding: "12px 12px 10px",
+                  opacity: dim ? 0.15 : 1,
+                  boxShadow: isSel ? `0 0 0 1px ${C.amber}` : "none",
+                  transition: "opacity 0.22s, border-color 0.22s, background 0.22s",
+                }}>
+                <div onClick={() => setSel(isSel ? null : sim.id)} style={{ cursor: "pointer" }}>
                   <div style={{ background: C.bg, borderRadius: "2px", padding: "3px 1px", marginBottom: "9px" }}>
                     <ModelGlyph id={sim.id} />
                   </div>
                   <div style={{ display: "flex", gap: "6px", alignItems: "baseline" }}>
-                    <span style={{ fontFamily: F.mono, fontSize: "9.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
-                    <span style={{ fontSize: "11.5px", fontFamily: F.head, color: C.textSec, lineHeight: 1.32 }}>{sim.name}</span>
+                    <span style={{ fontFamily: F.mono, fontSize: "9.5px", color: C.textFaint }}>{numOf(sim.id)}</span>
+                    <span style={{ fontSize: "11.5px", fontFamily: F.head, color: isSel ? C.text : C.textSec, lineHeight: 1.32 }}>{sim.name}</span>
                   </div>
+                </div>
+                <button onClick={() => onNav(sim.id)} style={{ background: "none", border: "none", padding: "6px 0 0", cursor: "pointer", fontSize: "9.5px", fontFamily: F.label, color: C.textFaint, letterSpacing: "0.11em", textTransform: "uppercase", fontWeight: 600 }}>
+                  Open &rarr;
                 </button>
-              ))}
-            </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Detail strip ── */}
+      {sel && (
+        <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: "13.5px", fontFamily: F.head, fontWeight: 600, color: C.text, marginBottom: "12px" }}>
+            {numOf(sel)} {nameOf(sel)}
+            <span style={{ color: C.textMut, fontWeight: 400, marginLeft: "10px", fontSize: "12px" }}>
+              {rels.length} connection{rels.length === 1 ? "" : "s"}
+            </span>
           </div>
-        );
-      })}
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            {rels.map((r, i) => (
+              <div key={i} onClick={() => setSel(r.other)} style={{ display: "flex", gap: "12px", alignItems: "baseline", flexWrap: "wrap", background: C.surface, border: `1px solid ${C.border}`, borderLeft: `2px solid ${REL[r.t].c}`, borderRadius: "2px", padding: "10px 14px", cursor: "pointer" }}>
+                <span style={{ fontSize: "9.5px", fontFamily: F.label, fontWeight: 600, letterSpacing: "0.1em", color: REL[r.t].c, textTransform: "uppercase", minWidth: "92px" }}>
+                  {r.from === sel && REL[r.t].dir ? REL[r.t].short : r.to === sel && REL[r.t].dir ? REL[r.t].short + " IT" : REL[r.t].short}
+                </span>
+                <span style={{ fontSize: "12.5px", fontFamily: F.head, color: C.text, minWidth: "150px" }}>
+                  {numOf(r.other)} {nameOf(r.other)}
+                </span>
+                <span style={{ fontSize: "12.5px", color: C.textSec, lineHeight: 1.5, flex: "1 1 240px" }}>{r.why}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4383,7 +4557,7 @@ function Home({ onNav, subscribed, setSubscribed }) {
               <span style={{ fontSize: "12.5px", textTransform: "uppercase", fontFamily: F.label, letterSpacing: "0.14em", color: C.text, fontWeight: 600 }}>{cat.label}</span>
               <span className="sgx-blurb" style={{ fontSize: "13px", color: C.textMut, fontFamily: F.body }}>{cat.blurb}</span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(268px, 1fr))", gap: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "10px" }}>
               {items.map((sim, i) => <SimCard key={sim.id} sim={sim} i={i} onNav={onNav} />)}
             </div>
           </div>
