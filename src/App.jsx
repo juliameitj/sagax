@@ -215,6 +215,7 @@ function PrisonersDilemma({ onBack }) {
       <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "8px 0 20px", maxWidth: "600px", fontFamily: F.body }}>
         Two firms independently choose pricing. Both hold → both profit. One undercuts → they capture the market. Both undercut → margins collapse. Play {ROUNDS} rounds against six strategies.
       </p>
+      <FormStrip id="pd" />
 
       {/* Payoff matrix */}
       <div style={{ marginBottom: "20px" }}>
@@ -376,6 +377,7 @@ function SealedBidAuction({ onBack }) {
       <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "8px 0 20px", maxWidth: "600px" }}>
         An asset has an unknown true value. You receive a noisy private estimate and submit a sealed bid against {numAI} competitors. Highest bid wins and pays their bid. The winner is usually the one who overestimated the most.
       </p>
+      <FormStrip id="auction" />
 
       <Goal>Buy the asset for less than it turns out to be worth, and keep your cumulative P&amp;L positive across rounds.</Goal>
       <ModelDiagram id="auction" />
@@ -492,11 +494,34 @@ const BackLink = ({ onClick }) => (
   <button onClick={onClick} style={{ background: "none", border: "none", color: C.textMut, cursor: "pointer", fontSize: "11.5px", fontFamily: F.label, textTransform: "uppercase", letterSpacing: "0.11em", fontWeight: 600, padding: 0, marginBottom: "14px" }}>&larr; Back</button>
 );
 
+// Formal properties. "Cooperative" is the technical sense, meaning binding
+// agreements are available, and not "the players cooperate".
+const AXES = [["coop", "Cooperation"], ["timing", "Timing"], ["sum", "Sum"]];
+
+const FormStrip = ({ id }) => {
+  const m = MODELS[id];
+  if (!m || !m.coop) return null;
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+        {AXES.map(([k, label]) => (
+          <div key={k} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "8px 13px" }}>
+            <div style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.13em", color: C.textFaint, fontFamily: F.label, fontWeight: 600, marginBottom: "3px" }}>{label}</div>
+            <div style={{ fontSize: "12px", color: C.textSec, fontFamily: F.label, letterSpacing: "0.03em" }}>{m[k]}</div>
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize: "12.5px", color: C.textMut, lineHeight: 1.55, margin: 0, maxWidth: "600px" }}>{m.form}</p>
+    </div>
+  );
+};
+
 const SimHeader = ({ onBack, title, tag, tagColor, gid, children }) => (
   <>
     <BackLink onClick={onBack} />
     <ModelBar title={title} tag={tag} gid={gid} />
-    <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "14px 0 20px", maxWidth: "600px" }}>{children}</p>
+    <p style={{ color: C.textSec, fontSize: "14.5px", lineHeight: 1.58, margin: "14px 0 16px", maxWidth: "600px" }}>{children}</p>
+    {gid && <FormStrip id={gid} />}
   </>
 );
 
@@ -578,6 +603,8 @@ const CATS = {
 const MODELS = {
   pd: {
     n: 17, cat: "manage", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "The textbook non-zero-sum game. Three each beats one each, for both of you.",
     own: "You are in a repeated game with every supplier, every anchor client, and every competitor in your market. The only question is whether they know it. A procurement team that squeezes a supplier for three points this quarter has traded a permanent relationship for a temporary margin, and the supplier prices that risk into every future quote. What decides whether cooperation holds is the discount rate each side applies to the future. Goodwill has very little to do with it.",
     mistake: "Defecting in a relationship that has more rounds left, or cooperating in one that does not.",
     control: "Your strategy across rounds, and your read on how many rounds remain.",
@@ -591,6 +618,8 @@ const MODELS = {
 
   nash: {
     n: 9, cat: "negotiate", sim: true,
+    coop: "Cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "The Nash solution is axiomatic cooperative theory. Delay shrinks the pie.",
     own: "Every renewal, every raise, every vendor contract and every term sheet is this game. Most people spend their prep time building arguments. Arguments move almost nothing. What moves the split is what happens to each side if the talk fails. If your largest customer is 40% of revenue and you are 3% of their spend, you can be entirely right about the value you deliver and still lose the negotiation, because the model does not price who is right.",
     mistake: "Spending eighty per cent of your preparation on arguments and twenty on improving your walk-away, when the effective ratio is the reverse.",
     control: "Your BATNA, and the other side's perception of it.",
@@ -605,6 +634,8 @@ const MODELS = {
 
   cournot: {
     n: 1, cat: "landscape", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "Both pick quantity or price blind, and total industry profit changes with the outcome.",
     own: "Before you decide whether to add a production line, cut price, or invest in differentiation, you need to know which game your industry is actually playing. If you compete on capacity in a commodity, adding a line lowers the market price for everyone including you. If you compete on price in a differentiated category, even modest differentiation restores pricing power. Most strategic errors are the right move played in the wrong industry structure.",
     mistake: "Building a strategy around the wrong competitive dimension, then discovering your margin model assumes a game nobody else is playing.",
     control: "Your choice of competitive dimension, and whether you can shift the market toward differentiation.",
@@ -618,6 +649,8 @@ const MODELS = {
 
   entry: {
     n: 5, cat: "entry", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "Incumbent commits, entrant responds. A fight burns value for both.",
     own: "Every moat you claim to have is a commitment claim, and it is only worth something if it is sunk, visible, and painful to reverse. A stated intention to defend a market is worth nothing, because the entrant knows you can quietly change your mind. Capital already spent, capacity already built, contracts already signed and channels already locked are worth something, because they change what you would rationally do on the day entry happens.",
     mistake: "Being deterred by a threat the incumbent would lose money executing, or making threats you would not follow through on yourself.",
     control: "Whether your commitments, and your reading of theirs, are irreversible and visible.",
@@ -632,6 +665,8 @@ const MODELS = {
 
   chicken: {
     n: 11, cat: "negotiate", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "Both commit blind. Mutual aggression is worse than either yielding.",
     own: "This is the structure of every standoff you have been in where both sides said the deal was dead. Hostile bids, union negotiations, litigation brinkmanship, and any renegotiation where both parties have threatened to walk. The counterintuitive result is that flexibility is a liability here. The party who can most credibly destroy their own ability to back down captures the surplus, which is why negotiators hire counsel with no discretion and boards adopt provisions they cannot quietly reverse.",
     mistake: "Entering brinkmanship with no pre-committed position, then yielding to a counterparty who has one.",
     control: "Your ability to make a commitment visible and irreversible before escalation peaks.",
@@ -646,6 +681,8 @@ const MODELS = {
 
   auction: {
     n: 13, cat: "commit", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "Sealed bids arrive together. A cursed winner destroys value outright.",
     own: "Any competitive process where the asset's value is uncertain and roughly the same for everyone puts you here: acquiring a company, bidding for a contract, competing for a scarce hire. Your valuation is fine on average. It is wrong on the occasions you win, because you only win when your estimate sits at the top of the range. That is the problem, and it gets worse as the field grows. Most acquirers never make the adjustment because it feels like bidding to lose.",
     mistake: "Treating an auction win as validation of your valuation, when it is statistical evidence that you were the highest estimator in the room.",
     control: "Your pre-auction walk-away price, and the discount you apply as the field grows.",
@@ -659,6 +696,8 @@ const MODELS = {
 
   vickrey: {
     n: 12, cat: "negotiate", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "Sealed bids arrive together. Total surplus depends on who wins.",
     own: "If you run any allocation process, you are choosing an auction format. Procurement, capital budgeting, splitting a bonus pool, assigning territories whether you realise it or not, and the format you choose determines whether people tell you the truth. Under first-price rules, everyone shades and you receive strategic numbers. Under second-price rules, truthful reporting becomes the dominant strategy and the numbers you receive are usable.",
     mistake: "Designing a procurement, allocation or bidding process that rewards gaming over honest value revelation.",
     control: "The rules of the process: who pays what, what information is visible, and how the winner is chosen.",
@@ -672,6 +711,8 @@ const MODELS = {
 
   signal: {
     n: 6, cat: "entry", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "Worker educates, employer then pays. The signalling cost is deadweight.",
     own: "You cannot prove quality directly, so you spend money to prove it indirectly, and so does everyone selling to you. Your certifications, your office, your client list, your audit, your buyback, your dividend. Each one works only while it stays too expensive for a weaker firm to copy. The moment a signal becomes cheap enough for anyone to send, it stops carrying information and you are paying for something that no longer separates you from anyone.",
     mistake: "Relying on signals that are equally available to worse competitors, which means they carry no separating information at all.",
     control: "Your choice of signal. The test: could someone worse than me send this just as easily?",
@@ -685,6 +726,8 @@ const MODELS = {
 
   lemons: {
     n: 3, cat: "landscape", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "Buyer posts a price, sellers then choose. Unravelling destroys surplus.",
     own: "If your buyers cannot tell your quality apart from your worst competitor's, you are priced at the average of the category and your best work is subsidising someone else's worst. This is why good firms leave undifferentiated markets. They can compete. They just cannot get paid for it. The entire industry of warranties, ratings, audits, guarantees and diligence exists to solve exactly this, and every one of them exists to close the information gap.",
     mistake: "Entering a market as a quality seller with no verification mechanism, then being pooled with everyone worse than you.",
     control: "Whether you build or find a quality-signalling channel before you enter, or accept being priced at the market average.",
@@ -698,6 +741,8 @@ const MODELS = {
 
   hazard: {
     n: 18, cat: "manage", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "Contract first, hidden action after. Excess risk destroys expected value.",
     own: "Anyone acting on your behalf whose effort you cannot fully observe is running this game on you: sales staff, fund managers, contractors, franchisees, executives. The failure mode is a contract where they hold the upside and you hold the downside. They responded to it rationally. Every compensation scheme you have ever written is an answer to this problem, whether or not you were thinking about it when you wrote it.",
     mistake: "Designing compensation, delegation or insurance that decouples risk-taking from consequences, then being surprised by the risk-taking.",
     control: "The incentive structure: co-investment, clawbacks, deductibles and anything that recouples downside exposure.",
@@ -711,6 +756,8 @@ const MODELS = {
 
   bank: {
     n: 22, cat: "exit", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "Depositors act at once without observing each other. Failure destroys value.",
     own: "Any business funded by money that can leave quickly is exposed to this, and it has nothing to do with whether you are solvent. Confidence-sensitive funding, a concentrated customer base that talks to each other, a supplier who can demand cash terms, a credit line reviewed annually. The run does not require anyone to believe you are failing. It only requires each party to believe the others might move first.",
     mistake: "Underinvesting in liquidity and confidence management because the fundamentals are sound, then finding that solvency does not survive a coordination failure.",
     control: "Liquidity reserves, how you communicate under stress, and structural features that prevent simultaneous withdrawal.",
@@ -724,6 +771,8 @@ const MODELS = {
 
   beauty: {
     n: 2, cat: "landscape", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Zero-sum",
+    form: "One winner takes a fixed prize, so the payoffs sum to a constant.",
     own: "Pricing, hiring, positioning and timing are all partly beauty contests. You are not choosing what is best. You are choosing what your market will treat as best, and your competitors are doing the same calculation about you. Any analysis that models fundamentals without modelling what other participants believe about those fundamentals has left out the variable that actually moves the outcome.",
     mistake: "Running fundamental analysis in a market where price is set by crowd expectations, then being right and still losing money.",
     control: "Which question you answer first: what is this worth, or what will the market pay.",
@@ -738,6 +787,8 @@ const MODELS = {
 
   cascade: {
     n: 4, cat: "landscape", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "Order of play is the whole mechanism. Everyone can be wrong together.",
     own: "Your industry's consensus may be built on two early opinions and a long queue of people who deferred. When your peers, your board or your analysts all agree, you need to know whether that agreement represents independent judgements converging or a chain of people copying whoever moved first. From the outside those two look the same and are worth very different amounts. A cascade also means your own private information never enters the pool, so the group ends up confident and badly informed at once.",
     mistake: "Treating market consensus as independently confirmed evidence when it may trace back to one or two original signals.",
     control: "Whether you audit the independent evidence underneath a consensus before joining it.",
@@ -751,6 +802,8 @@ const MODELS = {
 
   prospect: {
     n: 21, cat: "exit", sim: true,
+    coop: "Decision theory", timing: "One-shot", sum: "Not applicable",
+    form: "A single choice under risk. No second player, so no strategic interaction.",
     own: "Your customers, your staff and you evaluate every outcome against a reference point rather than in absolute terms, and losses weigh roughly twice as much as equivalent gains. It decides how you price, how you frame a concession, how you report performance, and how long you hold a failing project. The most expensive version in business is the one you run on yourself: people take bigger risks when they are already losing, which is what keeps doomed projects funded.",
     mistake: "Holding losers to avoid realising the loss, selling winners early to lock in the gain, and anchoring to costs that are already gone.",
     control: "Your awareness of the framing, and your willingness to assess a position from a clean slate.",
@@ -764,6 +817,8 @@ const MODELS = {
 
   ultimatum: {
     n: 10, cat: "negotiate", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "Proposer then responder. Rejection pays nobody, so value can vanish.",
     own: "You will lose deals that were profitable for both sides because the split felt insulting. This is not sentimentality and it does not go away with sophisticated counterparties. Fee structures, revenue shares, partner splits, redundancy terms and supplier pricing during scarcity all carry a fairness constraint that binds independently of the arithmetic. Any plan that assumes people will accept terms that are rational and unfair will underestimate the pushback.",
     mistake: "Proposing a split that maximises extraction without accounting for the other side's willingness to reject it on fairness grounds.",
     control: "The framing and perceived fairness of your offer, independent of its absolute value.",
@@ -777,6 +832,8 @@ const MODELS = {
 
   stag: {
     n: 16, cat: "commit", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "No binding agreement is available, which is the entire problem.",
     own: "The most valuable projects in your business need someone else to commit alongside you: a co-investor, a channel partner, an industry standard, a joint bid. These die far more often from uncertainty than from betrayal. Nobody in a stag hunt wants to defect. They just cannot afford to be the only one who showed up. If your partnerships keep dying at the commitment stage, the problem is probably confidence rather than incentives, and those need completely different fixes.",
     mistake: "Treating a coordination problem as an incentive problem, then changing payoffs when the actual fix is credible simultaneous commitment.",
     control: "Commitment devices that make both sides visible and simultaneous: escrow, phased matching, public announcement.",
@@ -790,6 +847,8 @@ const MODELS = {
 
   attrition: {
     n: 20, cat: "manage", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "Both choose a stopping time blind. The contest consumes the prize.",
     own: "Price wars, litigation and subsidised customer acquisition all work this way, and the maths is brutal. In an even fight the expected value to both sides is roughly zero, because the fight eats the prize. Conceding early is usually right and almost nobody does it, because by the time the numbers are obvious you have spent enough that stopping feels like admitting the earlier spending was wasted. Spotting the structure before you are deep in it is the whole advantage.",
     mistake: "Staying in a protracted fight past the point where cumulative cost has exceeded what winning is worth.",
     control: "Your running assessment of cost against remaining prize, and your willingness to exit early or escalate hard enough to force resolution.",
@@ -803,6 +862,8 @@ const MODELS = {
 
   holdup: {
     n: 14, cat: "commit", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "You sink capital, they then renegotiate. Underinvestment destroys value.",
     own: "The moment you invest in something that only has value inside one relationship, the other side can reopen the terms and you cannot credibly leave. Tooling for one client. Integration with one platform. A facility next to one buyer. Worse, the anticipation of this stops efficient investment before it happens. This is the real reason firms integrate vertically, and it explains why control rights are frequently worth more than price terms.",
     mistake: "Front-loading relationship-specific investment with no contractual protection, then losing bargaining power because the sunk cost hands them leverage.",
     control: "The staging of your commitments, and the protections you lock in before each tranche.",
@@ -816,6 +877,8 @@ const MODELS = {
 
   mechanism: {
     n: 19, cat: "manage", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "Designer sets the rules, agents then play them non-cooperatively.",
     own: "If people in your organisation are behaving in ways you dislike, the mechanism is the first suspect and the people are the last. Commission structures, bonus schemes, budget processes, promotion criteria and KPIs are all games you designed, and participants are playing them correctly. Pep talks, culture programmes and monitoring try to force a different result out of an incentive that was built to produce this one. That is why they rarely hold.",
     mistake: "Setting a KPI or comp target and being surprised when people optimise for the metric at the expense of the outcome you wanted.",
     control: "The choice of metric, the reward structure, and the override layer that catches divergence between the two.",
@@ -829,6 +892,8 @@ const MODELS = {
 
   realopt: {
     n: 15, cat: "commit", sim: true,
+    coop: "Decision theory", timing: "Sequential", sum: "Not applicable",
+    form: "One decision maker against uncertainty. There is no opponent.",
     own: "Standard investment analysis compares acting now against never acting. That is rarely the choice you face. You can almost always wait, stage the commitment, or buy the right to decide later. That right has value, and the value rises with uncertainty. If you have ever rejected a high-variance project on net present value, you probably undervalued it, because the model you used has no way to price the option to stop.",
     mistake: "Treating invest now against never invest as the only two choices, when investing a little and deciding the rest later is often worth more than both.",
     control: "Whether you structure investment as staged commitments with decision points, or as a single upfront bet.",
@@ -842,6 +907,8 @@ const MODELS = {
 
   schelling: {
     n: 8, cat: "entry", sim: true,
+    coop: "Non-cooperative", timing: "Simultaneous", sum: "Non-zero-sum",
+    form: "Pure coordination with no communication. Both match or neither does.",
     own: "A large share of what looks like deliberate design in your industry is historical accident that persisted because everyone expected everyone else to keep following it. Payment terms, notice periods, pricing tiers, contract defaults, fiscal calendars. Seeing these as habits rather than good answers does two things: it stops you assuming the current convention is any good, and it shows you that setting one is something you can do on purpose.",
     mistake: "Proposing a technically superior standard that loses adoption to a simpler, more obvious alternative.",
     control: "Whether your proposed coordination point is intuitive enough that others land on it independently.",
@@ -855,6 +922,8 @@ const MODELS = {
 
   cheaptalk: {
     n: 7, cat: "entry", sim: true,
+    coop: "Non-cooperative", timing: "Sequential", sum: "Non-zero-sum",
+    form: "Sender speaks, receiver acts. Credible information helps both.",
     own: "Most of what you get told in business costs the speaker nothing and cannot be checked before you act. Guidance, projections, pipeline reports, letters of intent, and any assurance that a deal will close. Credibility depends on whether the speaker's interests line up with yours. Confidence and seniority tell you nothing. The test is short: would they say the same thing if the opposite were true?",
     mistake: "Treating guidance, pitch projections or letters of intent as meaningful without checking what the speaker risks by being wrong.",
     control: "Your filter for incoming claims. The question: what happens to this person if what they just said turns out to be false?",
@@ -4030,8 +4099,31 @@ const KEYS = [
   ["Might move", <line x1={1} y1={8} x2={15} y2={8} stroke={C.textMut} strokeWidth="1.8" strokeDasharray="3 2.5" markerEnd="url(#kG)" />],
 ];
 
+const FILTERS = [
+  ["coop",   "Cooperation", ["Non-cooperative", "Cooperative", "Decision theory"]],
+  ["timing", "Timing",      ["Simultaneous", "Sequential", "One-shot"]],
+  ["sum",    "Sum",         ["Non-zero-sum", "Zero-sum", "Not applicable"]],
+];
+
 function ModelMap({ onNav, onBack }) {
   const [sel, setSel] = useState(null);
+  // Filters and relationship selection are mutually exclusive. Running both at
+  // once produces a grid where dimming means two different things.
+  const [filt, setFilt] = useState({});
+  const toggle = (axis, val) => {
+    setSel(null);
+    setFilt(f => {
+      const cur = f[axis] || [];
+      const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];
+      const out = { ...f };
+      if (next.length) out[axis] = next; else delete out[axis];
+      return out;
+    });
+  };
+  const filterOn = Object.keys(filt).length > 0;
+  // AND across axes, OR within one axis
+  const matches = (id) => Object.entries(filt).every(([a, vals]) => vals.includes(MODELS[id][a]));
+  const hitCount = SIMS.filter(s => matches(s.id)).length;
   const [lines, setLines] = useState([]);
   const wrapRef = useRef(null);
   const tileRefs = useRef({});
@@ -4124,6 +4216,35 @@ function ModelMap({ onNav, onBack }) {
         ))}
       </div>
 
+      <Label>Filter by formal properties</Label>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "13px 16px", marginBottom: "10px" }}>
+        {FILTERS.map(([axis, label, vals]) => (
+          <div key={axis} style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "7px" }}>
+            <span style={{ fontSize: "9.5px", fontFamily: F.label, color: C.textFaint, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, width: "88px", flexShrink: 0 }}>{label}</span>
+            {vals.map(v => {
+              const on = (filt[axis] || []).includes(v);
+              const count = SIMS.filter(s => MODELS[s.id][axis] === v).length;
+              return (
+                <button key={v} onClick={() => toggle(axis, v)} style={{
+                  padding: "4px 11px", borderRadius: "100px", cursor: "pointer",
+                  fontSize: "10.5px", fontFamily: F.label, letterSpacing: "0.04em",
+                  border: `1.5px solid ${on ? C.amber : C.border}`,
+                  background: on ? C.amberMuted : "transparent",
+                  color: on ? C.amber : C.textMut, whiteSpace: "nowrap",
+                  transition: "all 0.14s",
+                }}>{v} <span style={{ color: on ? C.amber : C.textFaint, fontFamily: F.mono }}>{count}</span></button>
+              );
+            })}
+          </div>
+        ))}
+        {filterOn && (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px", paddingTop: "10px", borderTop: `1px solid ${C.border}` }}>
+            <span style={{ fontSize: "11px", color: C.amber, fontFamily: F.label, letterSpacing: "0.05em" }}>{hitCount} of 22 match</span>
+            <button onClick={() => setFilt({})} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "10.5px", color: C.textMut, fontFamily: F.label, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "3px" }}>Clear</button>
+          </div>
+        )}
+      </div>
+
       <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center", marginBottom: "22px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: "3px", padding: "11px 16px" }}>
         {Object.entries(REL).map(([k, v]) => (
           <div key={k} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
@@ -4172,19 +4293,20 @@ function ModelMap({ onNav, onBack }) {
           {SIMS.map(sim => {
             const isSel = sel === sim.id;
             const r = relOf(sim.id);
-            const dim = sel && !isSel && !r;
-            const col = isSel ? C.amber : r ? REL[r.t].c : C.border;
+            const hit = filterOn && matches(sim.id);
+            const dim = (sel && !isSel && !r) || (filterOn && !hit);
+            const col = isSel ? C.amber : r ? REL[r.t].c : hit ? C.amber : C.border;
             return (
               <div key={sim.id} ref={el => (tileRefs.current[sim.id] = el)}
                 style={{
                   position: "relative", zIndex: isSel || r ? 4 : 1,
-                  background: isSel ? C.surfaceHover : C.surface,
+                  background: isSel || hit ? C.surfaceHover : C.surface,
                   border: `1px solid ${col}`, borderRadius: "3px", padding: "12px 12px 10px",
                   opacity: dim ? 0.15 : 1,
-                  boxShadow: isSel ? `0 0 0 1px ${C.amber}` : "none",
+                  boxShadow: isSel || hit ? `0 0 0 1px ${C.amber}` : "none",
                   transition: "opacity 0.22s, border-color 0.22s, background 0.22s",
                 }}>
-                <div onClick={() => setSel(isSel ? null : sim.id)} style={{ cursor: "pointer" }}>
+                <div onClick={() => { setFilt({}); setSel(isSel ? null : sim.id); }} style={{ cursor: "pointer" }}>
                   <div style={{ background: C.bg, borderRadius: "2px", padding: "3px 1px", marginBottom: "9px" }}>
                     <ModelGlyph id={sim.id} />
                   </div>
