@@ -834,6 +834,28 @@ function useActiveCategory(on) {
   return cat;
 }
 
+// Show the float once someone is engaged, and stand down whenever the inline
+// block is already on screen so there is never a duplicate ask in view.
+function useFloat(off) {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (off) { setShow(false); return; }
+    const f = () => {
+      const deep = window.scrollY > 500;
+      const inline = document.querySelector("[data-subscribe]");
+      const inlineOnScreen = inline
+        ? inline.getBoundingClientRect().top < window.innerHeight - 40
+        : false;
+      setShow(deep && !inlineOnScreen);
+    };
+    window.addEventListener("scroll", f, { passive: true });
+    window.addEventListener("resize", f);
+    f();
+    return () => { window.removeEventListener("scroll", f); window.removeEventListener("resize", f); };
+  }, [off]);
+  return show;
+}
+
 function useScrolled(px = 8) {
   const [on, setOn] = useState(false);
   useEffect(() => {
@@ -3945,6 +3967,45 @@ const SIMS = [
   { id: "cheaptalk", tag: "Credibility", name: "Cheap Talk",           desc: "Four statements that cost the speaker nothing. Decide which carry information and which are noise.", finance: "Guidance · Price targets · Letters of intent" },
 ];
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUBSCRIBE — one form, rendered inline at the foot of the library and again in a
+// floating bar. Both write to the same endpoint and share the subscribed state.
+// ═══════════════════════════════════════════════════════════════════════════════
+function SubscribeForm({ compact, onDone }) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    if (!email.includes("@")) return;
+    setLoading(true); setError("");
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) onDone();
+      else { setError("Something went wrong. Try again."); }
+    } catch (e) { setError("Something went wrong. Try again."); }
+    setLoading(false);
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: "8px", maxWidth: compact ? "340px" : "380px" }}>
+        <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }}
+          onKeyDown={e => e.key === "Enter" && submit()} placeholder="you@example.com"
+          style={{ flex: 1, minWidth: 0, padding: compact ? "8px 12px" : "9px 14px", background: C.bg,
+            border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text,
+            fontFamily: F.mono, fontSize: "13px", outline: "none" }} />
+        <Btn onClick={submit} disabled={loading || !email.includes("@")}
+          style={compact ? { padding: "8px 14px", fontSize: "12px" } : {}}>Subscribe</Btn>
+      </div>
+      {error && <p style={{ fontSize: "12px", color: C.red, margin: "7px 0 0" }}>{error}</p>}
+    </div>
+  );
+}
+
 function SimCard({ sim, i, onNav }) {
   const [ref, seen] = useReveal();
   const [tilt, setTilt] = useState(null);
@@ -4000,37 +4061,7 @@ function SimCard({ sim, i, onNav }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // HOME PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
-function Home({ onNav }) {
-  
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubscribe = async () => {
-    if (!email.includes("@")) return;
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setSubscribed(true);
-      } else {
-        console.error("Subscribe failed:", res.status, data);
-        setError("Something went wrong. Try again.");
-      }
-    } catch (e) {
-      console.error("Subscribe error:", e);
-      setError("Something went wrong. Try again.");
-    }
-    setLoading(false);
-  };
-
+function Home({ onNav, subscribed, setSubscribed }) {
   return (
     <div>
       {/* ── Hero ── */}
@@ -4092,22 +4123,18 @@ function Home({ onNav }) {
       </div>
 
       {/* ── Newsletter ── */}
-      <div style={{ marginBottom: "40px", padding: "24px", background: C.amberMuted, border: `1px solid ${C.amber}25`, borderRadius: "3px" }}>
+      <div data-subscribe style={{ marginBottom: "40px", padding: "24px", background: C.amberMuted, border: `1px solid ${C.amber}25`, borderRadius: "3px" }}>
         {!subscribed ? (
           <>
-            <div style={{ fontSize: "13px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "8px" }}>New simulator every month</div>
-            <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 12px", lineHeight: 1.55 }}>
-              One email when a new simulator drops. Game theory applied to finance.
+            <div style={{ fontSize: "13px", color: C.text, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "9px" }}>Use these in your own work</div>
+            <p style={{ fontSize: "14px", color: C.textSec, margin: "0 0 14px", lineHeight: 1.62, maxWidth: "520px" }}>
+              Learn how to apply these models to your business, your projects, and the decisions you make every week.
+              No spam, and you can leave in one click.
             </p>
-            <div style={{ display: "flex", gap: "8px", maxWidth: "380px" }}>
-              <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }} onKeyDown={e => e.key === "Enter" && handleSubscribe()} placeholder="you@example.com"
-                style={{ flex: 1, padding: "9px 14px", background: C.bg, border: `1px solid ${C.borderStrong}`, borderRadius: "3px", color: C.text, fontFamily: F.mono, fontSize: "13px", outline: "none" }} />
-              <Btn onClick={handleSubscribe} disabled={loading || !email.includes("@")}>Subscribe</Btn>
-            </div>
-            {error && <p style={{ fontSize: "13px", color: C.red, margin: "8px 0 0", lineHeight: 1.55 }}>{error}</p>}
+            <SubscribeForm onDone={() => setSubscribed(true)} />
           </>
         ) : (
-          <div style={{ fontSize: "12.5px", color: C.amber, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>✓ You're in. First email when Nash Bargaining ships.</div>
+          <div style={{ fontSize: "12.5px", color: C.amber, fontFamily: F.label, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>✓ You're in. Speak soon.</div>
         )}
       </div>
     </div>
@@ -4138,6 +4165,9 @@ export default function Sagax() {
   }, []);
 
   const scrolled = useScrolled();
+  const [subscribed, setSubscribed] = useState(false);
+  const [floatOff, setFloatOff] = useState(false);
+  const showFloat = useFloat(floatOff || subscribed);
   const activeCat = useActiveCategory(page === "home");
 
   // Arrow keys step between models. Skipped while a field or slider has focus.
@@ -4249,7 +4279,7 @@ export default function Sagax() {
 
       {/* ── Content ── */}
       <main key={page} style={{ maxWidth: "880px", margin: "0 auto", padding: "8px 24px 60px", animation: "sgxEnter 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
-        {page === "home" && <Home onNav={setPage} />}
+        {page === "home" && <Home onNav={setPage} subscribed={subscribed} setSubscribed={setSubscribed} />}
         {page === "pd" && <PrisonersDilemma onBack={() => setPage("home")} />}
         {page === "auction" && <SealedBidAuction onBack={() => setPage("home")} />}
         {page === "nash" && <NashBargaining onBack={() => setPage("home")} />}
@@ -4274,6 +4304,36 @@ export default function Sagax() {
         {page === "cheaptalk" && <CheapTalk onBack={() => setPage("home")} />}
         {page === "terms" && <Terms onBack={() => setPage("home")} />}
       </main>
+
+      {/* ── Floating subscribe ── */}
+      <div style={{
+        position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 45,
+        background: "rgba(14,13,11,0.92)",
+        backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)",
+        borderTop: `1px solid ${C.border}`,
+        transform: showFloat ? "translateY(0)" : "translateY(110%)",
+        opacity: showFloat ? 1 : 0,
+        pointerEvents: showFloat ? "auto" : "none",
+        transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.3s",
+      }}>
+        <div style={{ maxWidth: "880px", margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", gap: "18px", flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 280px", minWidth: 0 }}>
+            <div style={{ fontSize: "13.5px", color: C.text, lineHeight: 1.5 }}>
+              Want to use these in your own business, projects, or everyday decisions?
+            </div>
+            <div style={{ fontSize: "11.5px", color: C.textMut, marginTop: "3px" }}>
+              We won&rsquo;t spam you, and you can leave in one click.
+            </div>
+          </div>
+          <div style={{ flexShrink: 0 }}>
+            <SubscribeForm compact onDone={() => setSubscribed(true)} />
+          </div>
+          <button onClick={() => setFloatOff(true)} aria-label="Dismiss"
+            style={{ background: "none", border: "none", color: C.textFaint, cursor: "pointer", fontSize: "18px", lineHeight: 1, padding: "4px 2px", fontFamily: F.label, flexShrink: 0 }}>
+            &times;
+          </button>
+        </div>
+      </div>
 
       {/* ── Footer ── */}
       <footer style={{ borderTop: `1px solid ${C.border}`, maxWidth: "880px", margin: "0 auto", padding: "14px 24px 22px" }}>
