@@ -514,7 +514,7 @@ function go(page) {
   if (typeof window === "undefined") return;
   window.history.pushState({ page }, "", pageToPath(page));
   window.dispatchEvent(new PopStateEvent("popstate"));
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, behavior: "instant" });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -776,6 +776,58 @@ const MODELS = {
     ],
   },
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MOTION — navigation aids only. Nothing here dramatises a game outcome, because
+// the insight in these models comes from patterns rather than suspense.
+// ═══════════════════════════════════════════════════════════════════════════════
+const NAV_H = 62;
+
+function useReveal() {
+  const ref = useRef(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") { setSeen(true); return; }
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setSeen(true); io.disconnect(); }
+    }, { rootMargin: "0px 0px -40px 0px", threshold: 0.05 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return [ref, seen];
+}
+
+function useScrolled(px = 8) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const f = () => setOn(window.scrollY > px);
+    window.addEventListener("scroll", f, { passive: true });
+    f();
+    return () => window.removeEventListener("scroll", f);
+  }, [px]);
+  return on;
+}
+
+// Thin progress rule. Model pages run long; this is orientation, not decoration.
+function ScrollProgress() {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    const f = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      setP(h > 40 ? Math.min(100, (window.scrollY / h) * 100) : 0);
+    };
+    window.addEventListener("scroll", f, { passive: true });
+    window.addEventListener("resize", f);
+    f();
+    return () => { window.removeEventListener("scroll", f); window.removeEventListener("resize", f); };
+  }, []);
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: "2px", zIndex: 100, pointerEvents: "none" }}>
+      <div style={{ height: "100%", width: `${p}%`, background: C.amber, opacity: p > 0.5 ? 0.85 : 0, transition: "width 0.08s linear, opacity 0.2s" }} />
+    </div>
+  );
+}
 
 const Goal = ({ children }) => (
   <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "18px", padding: "10px 14px", background: C.surface, borderLeft: `2px solid ${C.amber}`, borderRadius: "2px", flexWrap: "wrap" }}>
@@ -3652,7 +3704,7 @@ function BoardTexture() {
     <div aria-hidden="true" style={{
       position: "fixed", right: "-5vw", bottom: "-7vh",
       width: "min(560px, 74vw)", height: "min(560px, 74vw)",
-      pointerEvents: "none", userSelect: "none", zIndex: 0,
+      pointerEvents: "none", userSelect: "none", zIndex: -1,
     }}>
       <svg viewBox={`0 0 ${W} ${W}`} width="100%" height="100%" style={{ transform: "rotate(-7deg)", display: "block" }}>
         <defs>
@@ -3832,6 +3884,41 @@ const SIMS = [
   { id: "cheaptalk", tag: "Credibility", name: "Cheap Talk",           desc: "Four statements that cost the speaker nothing. Decide which carry information and which are noise.", finance: "Guidance · Price targets · Letters of intent" },
 ];
 
+function SimCard({ sim, i, onNav }) {
+  const [ref, seen] = useReveal();
+  return (
+    <div ref={ref} onClick={() => onNav(sim.id)}
+      style={{
+        background: CARD_BG, border: `1px solid ${C.border}`, borderRadius: "3px",
+        padding: "20px", cursor: "pointer", boxShadow: CARD_SHADOW,
+        opacity: seen ? 1 : 0,
+        transform: seen ? "translateY(0)" : "translateY(10px)",
+        transition: `opacity 0.4s ease ${i * 45}ms, transform 0.4s cubic-bezier(0.22,1,0.36,1) ${i * 45}ms, background 0.15s, border-color 0.15s, box-shadow 0.15s`,
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = CARD_BG_HOVER;
+        e.currentTarget.style.borderColor = C.borderStrong;
+        e.currentTarget.style.boxShadow = CARD_SHADOW_HOVER;
+        e.currentTarget.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = CARD_BG;
+        e.currentTarget.style.borderColor = C.border;
+        e.currentTarget.style.boxShadow = CARD_SHADOW;
+        e.currentTarget.style.transform = "translateY(0)";
+      }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", flexWrap: "wrap" }}>
+        <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
+        <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
+        {sim.id === "pd" && <Tag color={C.amber}>Start here</Tag>}
+      </div>
+      <h3 style={{ fontSize: "16px", fontFamily: F.body, fontWeight: 500, color: C.text, margin: "0 0 7px" }}>{sim.name} &rarr;</h3>
+      <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65, margin: "0 0 8px" }}>{sim.desc}</p>
+      <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic" }}>{sim.finance}</div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // HOME PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -3893,40 +3980,17 @@ function Home({ onNav }) {
         if (!items.length) return null;
         return (
           <div key={ck} style={{ marginBottom: "40px", paddingTop: "24px", borderTop: `1px solid ${C.border}` }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "14px", marginBottom: "16px", flexWrap: "wrap" }}>
+            <div style={{
+              position: "sticky", top: `${NAV_H}px`, zIndex: 20,
+              display: "flex", alignItems: "baseline", gap: "14px", flexWrap: "wrap",
+              padding: "11px 0 12px", marginBottom: "6px",
+              background: "rgba(14,13,11,0.9)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+            }}>
               <span style={{ fontSize: "12.5px", textTransform: "uppercase", letterSpacing: "0.14em", color: C.text, fontWeight: 600 }}>{cat.label}</span>
-              <span style={{ fontSize: "13px", color: C.textMut }}>{cat.blurb}</span>
+              <span className="sgx-blurb" style={{ fontSize: "13px", color: C.textMut }}>{cat.blurb}</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(268px, 1fr))", gap: "10px" }}>
-              {items.map(sim => (
-                <div key={sim.id} onClick={() => onNav(sim.id)}
-                  style={{
-                    background: CARD_BG, border: `1px solid ${C.border}`, borderRadius: "3px",
-                    padding: "20px", cursor: "pointer", boxShadow: CARD_SHADOW,
-                    transition: "background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s",
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = CARD_BG_HOVER;
-                    e.currentTarget.style.borderColor = C.borderStrong;
-                    e.currentTarget.style.boxShadow = CARD_SHADOW_HOVER;
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = CARD_BG;
-                    e.currentTarget.style.borderColor = C.border;
-                    e.currentTarget.style.boxShadow = CARD_SHADOW;
-                    e.currentTarget.style.transform = "translateY(0)";
-                  }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", flexWrap: "wrap" }}>
-                    <span style={{ fontFamily: F.mono, fontSize: "11.5px", color: C.textFaint }}>{String(MODELS[sim.id].n).padStart(2, "0")}</span>
-                    <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.11em", color: C.textMut, fontWeight: 600 }}>{sim.tag}</span>
-                    {sim.id === "pd" && <Tag color={C.amber}>Start here</Tag>}
-                  </div>
-                  <h3 style={{ fontSize: "16px", fontFamily: F.body, fontWeight: 500, color: C.text, margin: "0 0 7px" }}>{sim.name} &rarr;</h3>
-                  <p style={{ fontSize: "13.5px", color: C.textSec, lineHeight: 1.65, margin: "0 0 8px" }}>{sim.desc}</p>
-                  <div style={{ fontSize: "12px", color: C.textMut, fontStyle: "italic" }}>{sim.finance}</div>
-                </div>
-              ))}
+              {items.map((sim, i) => <SimCard key={sim.id} sim={sim} i={i} onNav={onNav} />)}
             </div>
           </div>
         );
@@ -3987,7 +4051,7 @@ export default function Sagax() {
       window.history.pushState({ page: p }, "", path);
     }
     setPageState(p);
-    if (typeof window !== "undefined") window.scrollTo(0, 0);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "instant" });
   };
 
   useEffect(() => {
@@ -3995,6 +4059,8 @@ export default function Sagax() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
+
+  const scrolled = useScrolled();
 
   // Arrow keys step between models. Skipped while a field or slider has focus.
   useEffect(() => {
@@ -4022,11 +4088,31 @@ export default function Sagax() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: F.body, position: "relative", overflowX: "hidden" }}>
-      <style>{`@media (max-width: 660px) { .sgx-gloss { display: none; } }`}</style>
+      <style>{`
+        html { scroll-behavior: smooth; }
+        @media (max-width: 660px) {
+          .sgx-gloss { display: none; }
+          .sgx-blurb { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          html { scroll-behavior: auto; }
+          * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+      `}</style>
+      <ScrollProgress />
       <BoardTexture />
       <div style={{ position: "relative", zIndex: 1 }}>
       {/* ── Nav ── */}
-      <nav style={{ maxWidth: "880px", margin: "0 auto", padding: "20px 24px", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 40,
+        padding: "19px 24px", display: "flex", alignItems: "baseline", justifyContent: "space-between",
+        maxWidth: "880px", margin: "0 auto",
+        background: scrolled ? "rgba(14,13,11,0.82)" : "transparent",
+        backdropFilter: scrolled ? "blur(14px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
+        borderBottom: `1px solid ${scrolled ? C.border : "transparent"}`,
+        transition: "background 0.25s, border-color 0.25s",
+      }}>
         {/* Lexical entry, not a tagline. The gloss is the literal root rather than a
             flattering triplet, and it drops out on narrow screens. */}
         <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}>
